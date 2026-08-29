@@ -84,11 +84,28 @@ Todas están documentadas en [`.env.example`](.env.example). Resumen:
 |---|---|---|
 | `DATABASE_URL` | Neon → Connect. Host **con** `-pooler` | No |
 | `DATABASE_URL_UNPOOLED` | Neon → Connect. Host **sin** `-pooler`. Solo migraciones | No |
-| `NEXT_PUBLIC_STACK_PROJECT_ID` | Neon → Auth → Configuration | Sí |
-| `NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY` | Neon → Auth → Configuration | Sí |
-| `STACK_SECRET_SERVER_KEY` | Neon → Auth → Configuration | **No** |
+| `NEON_AUTH_BASE_URL` | Neon → Auth → Configuration, campo «Auth URL» | No |
+| `NEON_AUTH_COOKIE_SECRET` | Se genera local: `openssl rand -base64 32` | **No** |
 | `NEXT_PUBLIC_APP_URL` | Se fija a mano | Sí |
 | `ADMIN_EMAILS` | Se fija a mano | No |
+
+### Sobre la autenticación
+
+Neon migró de **Stack Auth** a **Managed Better Auth** en enero de 2026. La documentación y
+los tutoriales que mencionan `NEXT_PUBLIC_STACK_PROJECT_ID`,
+`NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY` o `STACK_SECRET_SERVER_KEY` están
+**desactualizados**: esas variables ya no existen.
+
+El esquema actual son dos valores: el `Auth URL` que da la consola y un secreto de cookies
+que se genera localmente.
+
+El `JWKS URL` que también muestra la consola **no es una variable de entorno**: se deriva
+solo, como `${NEON_AUTH_BASE_URL}/.well-known/jwks.json`. Sirve para verificar la firma de
+los tokens y la biblioteca lo resuelve sin configuración.
+
+No hay ninguna variable de autenticación con prefijo `NEXT_PUBLIC_`: todo el manejo de
+sesión es del lado del servidor, que es justo lo que queremos según la §10 del documento de
+planificación.
 
 ### Cómo llenarlas
 
