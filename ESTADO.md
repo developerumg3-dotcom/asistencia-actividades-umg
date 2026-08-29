@@ -4,7 +4,8 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 
 - **Última actualización:** 29 de agosto de 2026
 - **Fase actual:** 1 en curso. Tareas 1 a 6 de [`docs/fase-1.md`](docs/fase-1.md) construidas y
-  probadas en local. Falta la tarea 7 (despliegue) y la carga de las clases reales de Daniel.
+  probadas en local, más el rediseño visual y la carga del catálogo del pensum. Falta la
+  tarea 7 (despliegue) y asignar los catedráticos.
 
 ---
 
@@ -22,13 +23,16 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Autenticación | Neon Auth (Managed Better Auth) integrado: registro, ingreso, recuperación de contraseña, sesión de servidor |
 | Perfil obligatorio (A3) | Bloquea navegación hasta cargar carné y nombre; carné único con mensaje de conflicto |
 | Catedráticos y clases (B2, B3) | Alta y edición manual, más importación por CSV |
-| Autoinscripción (A4, A8) | Agregar/quitar clases, con constancia en bitácora al quitar |
+| Autoinscripción (A4, A8) | Agregar/quitar clases, con constancia en bitácora al quitar. Buscador por texto, filtro por ciclo y «solo las mías» |
+| Diseño visual | Paleta del escudo UMG y primitivos en `src/componentes/ui/`. Norma en [`docs/diseno-visual.md`](docs/diseno-visual.md) |
+| Catálogo de cursos | Los 50 del pensum 0908 (jornada sábado, Escuintla) sembrados en `clase`, **sin catedrático ni sección** |
 
 ## Qué NO existe todavía
 
 - Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
 - Actividades, QR, kiosco, puntos, Excel, PWA: todo eso es de las fases 2 a 5
-- Clases reales de Daniel: la base está vacía de datos, solo tiene el esquema
+- **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
+  puede exportar el Excel, que es el entregable final del sistema.
 
 ---
 
@@ -40,8 +44,9 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
    cargar las 6 variables de entorno allá y confirmar el recorrido completo en
    `asistencia-umg.vercel.app`. No se hizo todavía porque implica push y una acción visible en
    un servicio externo — se espera pedido explícito.
-2. **Cargar las clases reales** de Daniel (catedrático, sección, jornada, ciclo) en `/admin/clases`,
-   a mano o con el importador de CSV.
+2. **Asignar los catedráticos** (nombre, correo y sección) a las clases que tengan alumnos
+   inscritos, desde `/admin/catedraticos` y `/admin/clases`. El catálogo ya está cargado; lo
+   que falta es quién imparte cada curso.
 
 Después de eso arranca la **Fase 2 — El QR**, con ensayo de campo obligatorio.
 
@@ -70,6 +75,24 @@ Deben aparecer seis, todas con ✓. Si falta alguna, ver [`ESTRUCTURA.md`](ESTRU
 
 Decisiones que ya se tomaron y **no hay que volver a discutir**. Están acá porque en cada una
 se descartó un diseño completo, y sin el contexto es fácil reintroducirlo.
+
+### El catálogo de clases sale del pensum, no de un listado por ciclo
+
+**Era:** cargar las clases del ciclo que cursa el alumno.
+
+**Es:** se siembran los 50 cursos del pensum 0908 y el alumno elige uno por uno los que lleva,
+con buscador y filtro por ciclo.
+
+**Por qué:** no se puede deducir qué cursa alguien a partir de su ciclo — hay quien lleva
+cursos atrasados y quien los lleva adelantados. Decisión del usuario, 29 de agosto de 2026.
+
+**Se llevó por delante:** `clase.docente_id` y `clase.seccion` dejaron de ser obligatorios
+(migración `0001`), porque un curso del catálogo existe antes de saber quién lo imparte. La
+consulta de A4 pasó de `innerJoin` a `leftJoin`: con `innerJoin` no se veía ninguna clase.
+
+**Lo que queda pendiente por esto:** la exportación a Excel agrupa por catedrático, así que
+una clase sin `docente_id` no se puede exportar. B10 debe avisarlo en vez de generar un libro
+incompleto en silencio.
 
 ### El diseño original con fotos y profesores quedó descartado
 
@@ -150,6 +173,7 @@ en esa ruta, el flujo terminaba en un 404. La solución fue agregar
 
 Ninguno bloquea la Fase 1. Hacen falta antes del primer evento.
 
-- Listado real de clases: nombre, código, sección, jornada, ciclo, y nombre y correo del catedrático
+- Nombre y correo de los catedráticos, y la sección de cada curso. El catálogo de cursos ya
+  entró desde el pensum oficial (PDF `Pensum 0908 2014`), pero el pensum no trae catedráticos
 - Fechas, horas y lugares de las 5 actividades globales y de la actividad extra
 - Confirmación de que el catedrático acepta un Excel como comprobante

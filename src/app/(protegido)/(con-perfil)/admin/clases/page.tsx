@@ -27,7 +27,8 @@ export default async function ClasesAdminPage() {
       <div>
         <h1 className="text-xl font-semibold">Clases</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Cada clase se asocia a un catedrático. Alta manual o importación por CSV.
+          El catálogo viene del pensum. El catedrático y la sección se asignan después, y hacen
+          falta antes de exportar el Excel de esa clase.
         </p>
       </div>
 

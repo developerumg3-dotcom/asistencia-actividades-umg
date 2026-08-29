@@ -21,24 +21,21 @@ export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
     <form action={accion} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <Campo id="codigo-nuevo" name="codigo" etiqueta="Código" required />
       <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required className="col-span-2" />
-      <Campo id="docenteId-nuevo" name="docenteId" etiqueta="Catedrático" as="select" required defaultValue="">
-        <option value="">Elegí uno</option>
+      <Campo id="docenteId-nuevo" name="docenteId" etiqueta="Catedrático" as="select" defaultValue="">
+        <option value="">Por asignar</option>
         {docentes.map((d) => (
           <option key={d.id} value={d.id}>
             {d.nombre}
           </option>
         ))}
       </Campo>
-      <Campo id="seccion-nuevo" name="seccion" etiqueta="Sección" required />
+      <Campo id="seccion-nuevo" name="seccion" etiqueta="Sección" />
       <Campo id="jornada-nuevo" name="jornada" etiqueta="Jornada" required />
       <Campo id="ciclo-nuevo" name="ciclo" etiqueta="Ciclo" required />
       <div className="col-span-full flex items-center gap-3">
         <Boton type="submit" disabled={enviando}>
           {enviando ? "Agregando…" : "Agregar clase"}
         </Boton>
-        {docentes.length === 0 && (
-          <p className="text-sm text-neutral-500">Primero cargá al menos un catedrático.</p>
-        )}
       </div>
       {estado.error && (
         <MensajeFormulario tipo="error" className="col-span-full">
@@ -63,11 +60,11 @@ export function FilaClase({
   id: string;
   codigo: string;
   nombre: string;
-  seccion: string;
+  seccion: string | null;
   jornada: string;
   ciclo: string;
   activa: boolean;
-  docenteId: string;
+  docenteId: string | null;
   docentes: Docente[];
 }) {
   const [estado, accion, enviando] = useActionState(actualizarClase, estadoInicial);
@@ -87,14 +84,21 @@ export function FilaClase({
         required
         className="col-span-2"
       />
-      <Campo id={`docenteId-${id}`} name="docenteId" etiqueta="Catedrático" as="select" defaultValue={docenteId} required>
+      <Campo
+        id={`docenteId-${id}`}
+        name="docenteId"
+        etiqueta="Catedrático"
+        as="select"
+        defaultValue={docenteId ?? ""}
+      >
+        <option value="">Por asignar</option>
         {docentes.map((d) => (
           <option key={d.id} value={d.id}>
             {d.nombre}
           </option>
         ))}
       </Campo>
-      <Campo id={`seccion-${id}`} name="seccion" etiqueta="Sección" defaultValue={seccion} required />
+      <Campo id={`seccion-${id}`} name="seccion" etiqueta="Sección" defaultValue={seccion ?? ""} />
       <Campo id={`jornada-${id}`} name="jornada" etiqueta="Jornada" defaultValue={jornada} required />
       <Campo id={`ciclo-${id}`} name="ciclo" etiqueta="Ciclo" defaultValue={ciclo} required />
       <label className="col-span-full flex items-center gap-2 text-sm">

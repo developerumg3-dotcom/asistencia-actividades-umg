@@ -15,12 +15,15 @@ export default async function ClasesPage() {
         nombre: clase.nombre,
         seccion: clase.seccion,
         jornada: clase.jornada,
+        ciclo: clase.ciclo,
         docenteNombre: docente.nombre,
       })
       .from(clase)
-      .innerJoin(docente, eq(clase.docenteId, docente.id))
+      // leftJoin y no innerJoin: el catalogo del pensum se siembra sin catedratico
+      // asignado (PLANIFICACION.md §4). Con innerJoin no se veria ninguna clase.
+      .leftJoin(docente, eq(clase.docenteId, docente.id))
       .where(eq(clase.activa, true))
-      .orderBy(asc(clase.nombre)),
+      .orderBy(asc(clase.codigo)),
     db.select({ claseId: inscripcion.claseId }).from(inscripcion).where(eq(inscripcion.alumnoId, alumnoActual.id)),
   ]);
 
@@ -29,7 +32,7 @@ export default async function ClasesPage() {
       <div>
         <h1 className="text-xl font-semibold">Tus clases</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Elegí las clases en las que estás inscrito. Podés agregar o quitar cuando quieras.
+          Elegí los cursos que estás llevando este ciclo. Podés agregar o quitar cuando quieras.
         </p>
       </div>
       <SelectorClases

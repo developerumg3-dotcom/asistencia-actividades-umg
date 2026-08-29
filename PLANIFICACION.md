@@ -128,11 +128,31 @@ Agrupa clases para la exportación. No es una cuenta.
 | `id` | uuid PK |
 | `codigo` | texto |
 | `nombre` | texto |
-| `docente_id` | → `docente` |
-| `seccion` | texto |
+| `docente_id` | → `docente`, **nulo permitido** |
+| `seccion` | texto, **nulo permitido** |
 | `jornada` | texto |
 | `ciclo` | texto |
 | `activa` | bool |
+
+#### El catálogo se carga del pensum, el catedrático se asigna después
+
+La base de clases se siembra con el **pensum completo de la carrera** (los 50 cursos de
+`0908 — Ingeniería en Sistemas, jornada sábado, Escuintla`), no con el listado de un ciclo.
+
+La razón es que **no se puede deducir qué cursa un alumno a partir de su ciclo**: hay quien
+lleva cursos atrasados y quien los lleva adelantados. Por eso el alumno elige sus cursos uno
+por uno de la lista completa (A4), con buscador por texto y filtro por ciclo para que
+encontrarlos entre cincuenta no sea una tarea.
+
+Consecuencia directa sobre el modelo: un curso del pensum existe antes de que se sepa quién
+lo imparte y en qué sección. Por eso `docente_id` y `seccion` **admiten nulo**. Una clase sin
+catedrático es un curso del catálogo todavía sin asignar; el alumno puede inscribirse igual y
+sus puntos se calculan igual.
+
+**Lo que sí bloquea el nulo:** la exportación a Excel (§9) agrupa por catedrático. Una clase
+sin `docente_id` no puede exportarse. Antes del primer envío hay que completar el catedrático
+de toda clase que tenga al menos un alumno inscrito, desde B2/B3. La pantalla de exportación
+debe advertirlo en lugar de producir un libro incompleto en silencio.
 
 ### `inscripcion`
 
@@ -443,7 +463,7 @@ pendiente sería el peor error posible del sistema.
 | A1 | Registro | Correo y contraseña. Abierto a cualquiera. |
 | A2 | Ingreso | Correo y contraseña, con recuperación por enlace. |
 | A3 | Completar perfil | Carné y nombre completo. **Obligatorio**, bloquea el resto de la app. |
-| A4 | Elegí tus clases | Buscador con selección múltiple. Sugerido tras el perfil, no bloqueante. |
+| A4 | Elegí tus clases | Catálogo completo del pensum, con buscador por texto y filtro por ciclo. Selección múltiple. Sugerido tras el perfil, no bloqueante. |
 | A5 | Inicio | Próxima actividad arriba, resumen de puntos por clase, aviso de saldo extra pendiente. |
 | A6 | Marcar asistencia | Página a la que llega el QR. Login en línea si hace falta, botón grande. |
 | A7 | Resultado | Éxito con la hora exacta, o el error correspondiente con su instrucción. |

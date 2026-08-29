@@ -22,8 +22,21 @@ function leerCamposClase(formData: FormData) {
   };
 }
 
+// `docenteId` y `seccion` quedan fuera: el catalogo del pensum se carga sin catedratico
+// asignado y hay que poder editar esas clases igual. Ver PLANIFICACION.md §4.
+const CAMPOS_OBLIGATORIOS = ["codigo", "nombre", "jornada", "ciclo"] as const;
+
 function camposIncompletos(campos: ReturnType<typeof leerCamposClase>): boolean {
-  return Object.values(campos).some((valor) => !valor);
+  return CAMPOS_OBLIGATORIOS.some((campo) => !campos[campo]);
+}
+
+/** Normaliza los opcionales: la cadena vacia del formulario se guarda como NULL. */
+function conOpcionalesNulos(campos: ReturnType<typeof leerCamposClase>) {
+  return {
+    ...campos,
+    docenteId: campos.docenteId || null,
+    seccion: campos.seccion || null,
+  };
 }
 
 export async function crearClase(
@@ -33,10 +46,10 @@ export async function crearClase(
   await requireAdmin();
   const campos = leerCamposClase(formData);
   if (camposIncompletos(campos)) {
-    return { error: "Completá todos los campos de la clase." };
+    return { error: "Completá código, nombre, jornada y ciclo." };
   }
 
-  await db.insert(clase).values(campos);
+  await db.insert(clase).values(conOpcionalesNulos(campos));
   revalidatePath("/admin/clases");
   return estadoOk;
 }
@@ -50,12 +63,12 @@ export async function actualizarClase(
   const campos = leerCamposClase(formData);
   const activa = formData.get("activa") === "on";
   if (!id || camposIncompletos(campos)) {
-    return { error: "Completá todos los campos de la clase." };
+    return { error: "Completá código, nombre, jornada y ciclo." };
   }
 
   await db
     .update(clase)
-    .set({ ...campos, activa })
+    .set({ ...conOpcionalesNulos(campos), activa })
     .where(eq(clase.id, id));
   revalidatePath("/admin/clases");
   return estadoOk;
