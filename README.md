@@ -8,16 +8,20 @@ administrador exporta un Excel por catedrático con los puntos de cada alumno.
 
 ## Estado
 
-**Fase 0 — definición.** No hay código todavía. El repositorio contiene únicamente la
-planificación.
+**Fase 0 cerrada.** El diseño está definido y el entorno configurado. No hay código todavía.
+Ver [ESTADO.md](ESTADO.md).
 
 ## Documentos
 
+Si sos un agente o asistente, **empezá por [AGENTS.md](AGENTS.md)**.
+
 | Archivo | Para qué |
 |---|---|
-| [PLANIFICACION.md](PLANIFICACION.md) | **Fuente de verdad.** Alcance, modelo de datos, reglas de negocio, pantallas, arquitectura y decisiones cerradas. |
+| [AGENTS.md](AGENTS.md) | **Punto de entrada.** Reglas de trabajo, convenciones y trampas conocidas. |
+| [ESTADO.md](ESTADO.md) | Qué existe hoy, qué sigue, y la bitácora de decisiones cerradas. |
+| [PLANIFICACION.md](PLANIFICACION.md) | **Fuente de verdad.** Alcance, modelo de datos, reglas de negocio, pantallas, arquitectura y las 14 decisiones. |
 | [ESTRUCTURA.md](ESTRUCTURA.md) | Mapa de carpetas, rutas previstas y variables de entorno. |
-| [AGENTS.md](AGENTS.md) | Contexto e instrucciones para agentes y asistentes que trabajen en este repo. |
+| [docs/fase-1.md](docs/fase-1.md) | Plan detallado de la fase que sigue, con criterios de aceptación. |
 
 ## Stack
 
