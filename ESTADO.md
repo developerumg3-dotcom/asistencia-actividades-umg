@@ -3,7 +3,8 @@
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
 - **Última actualización:** 29 de agosto de 2026
-- **Fase actual:** 0 cerrada. Lista para arrancar la Fase 1.
+- **Fase actual:** 1 en curso. Tareas 1 a 6 de [`docs/fase-1.md`](docs/fase-1.md) construidas y
+  probadas en local. Falta la tarea 7 (despliegue) y la carga de las clases reales de Daniel.
 
 ---
 
@@ -14,29 +15,35 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Documentación | Completa. Diseño cerrado, 14 decisiones tomadas. |
 | Repositorio | `developerumg3-dotcom/asistencia-actividades-umg`, privado, rama `main` |
 | Neon | Proyecto `app_asistencia_actividades` (`hidden-art-98202594`), org DeveloperUMG (`org-dawn-math-42337202`), región `us-east-2` |
-| Vercel | Proyecto `asistencia-umg` → `https://asistencia-umg.vercel.app` |
+| Vercel | Proyecto `asistencia-umg` → `https://asistencia-umg.vercel.app` (todavía no conectado) |
 | `.env.local` | Las 6 variables llenas y verificadas |
-| Carpetas | Esqueleto de `src/` creado, con `.gitkeep` |
+| Aplicación | Next.js 15 + TypeScript + Tailwind, `pnpm dev` sirve en `localhost:3000` |
+| Base de datos | Las 9 tablas de la §4 migradas en Neon (`src/db/migraciones/0000_...sql`) |
+| Autenticación | Neon Auth (Managed Better Auth) integrado: registro, ingreso, recuperación de contraseña, sesión de servidor |
+| Perfil obligatorio (A3) | Bloquea navegación hasta cargar carné y nombre; carné único con mensaje de conflicto |
+| Catedráticos y clases (B2, B3) | Alta y edición manual, más importación por CSV |
+| Autoinscripción (A4, A8) | Agregar/quitar clases, con constancia en bitácora al quitar |
 
 ## Qué NO existe todavía
 
-- `package.json`, `node_modules`, ninguna dependencia instalada
-- Next.js, Drizzle, Tailwind: nada configurado
-- Esquema de base de datos: ninguna tabla creada en Neon
-- Ninguna línea de código de aplicación
-- Nada desplegado en Vercel
-
-**La base de datos de Neon está vacía.** No se ha corrido ninguna migración.
+- Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
+- Actividades, QR, kiosco, puntos, Excel, PWA: todo eso es de las fases 2 a 5
+- Clases reales de Daniel: la base está vacía de datos, solo tiene el esquema
 
 ---
 
 ## Qué sigue
 
-**Fase 1 — Cuentas y clases.** El plan detallado, con criterios de aceptación, está en
-[`docs/fase-1.md`](docs/fase-1.md).
+**Terminar la Fase 1.** Falta:
 
-Al terminarla, Daniel tiene que poder crear su cuenta, completar su perfil, cargar sus
-clases reales y ver que la autoinscripción funciona, todo desplegado.
+1. **Desplegar** (tarea 7 de [`docs/fase-1.md`](docs/fase-1.md)): conectar el repo a Vercel,
+   cargar las 6 variables de entorno allá y confirmar el recorrido completo en
+   `asistencia-umg.vercel.app`. No se hizo todavía porque implica push y una acción visible en
+   un servicio externo — se espera pedido explícito.
+2. **Cargar las clases reales** de Daniel (catedrático, sección, jornada, ciclo) en `/admin/clases`,
+   a mano o con el importador de CSV.
+
+Después de eso arranca la **Fase 2 — El QR**, con ensayo de campo obligatorio.
 
 ---
 
@@ -114,6 +121,28 @@ Casi todo lo publicado sobre «Neon Auth + Next.js» es anterior a la migración
 menciona `stackframe` o variables `STACK_*`, está desactualizado.
 
 Lo actual son dos variables: `NEON_AUTH_BASE_URL` y `NEON_AUTH_COOKIE_SECRET`.
+
+### `alumno.id` es texto, no uuid
+
+La documentación de Neon Auth no publica el formato exacto del id que genera Better Auth para
+cada usuario. En vez de asumir que es un uuid válido, `alumno.id` (y las columnas `alumno_id`
+que lo referencian) se definieron como `text`. Es un superset seguro: cualquier uuid cabe como
+texto. Ver `PLANIFICACION.md` §4.
+
+### La recuperación de contraseña usa `@neondatabase/auth-ui`, no una acción a medida
+
+El resto de las pantallas (registro, ingreso, perfil, admin) son formularios propios en
+español que llaman al SDK directo. La recuperación de contraseña es la excepción: la
+documentación de Neon dice explícitamente que los métodos de SDK para esto "no están
+completamente soportados todavía" y recomienda los componentes prearmados
+`<ForgotPasswordForm>` / `<ResetPasswordForm>`, que sí soportan una prop `localization` para
+traducir los textos. Viven en `/auth/forgot-password` y `/auth/reset-password` (esas rutas las
+espera la librería por defecto para el enlace que manda el correo).
+
+Un detalle no documentado que costó tiempo: ambos formularios, al terminar, navegan solitos a
+`/auth/sign-in` (no a `/ingreso`, que es donde vive el login real de esta app). Sin una página
+en esa ruta, el flujo terminaba en un 404. La solución fue agregar
+`src/app/auth/sign-in/page.tsx`, que solo redirige a `/ingreso`.
 
 ---
 

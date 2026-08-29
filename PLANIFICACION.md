@@ -97,7 +97,7 @@ Perfil de la persona. Extiende la tabla de autenticación.
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `id` | uuid PK | |
+| `id` | text PK | Igual al id que genera Neon Auth (Managed Better Auth). No se garantiza que sea un UUID válido, por eso el campo es texto y no uuid. Las columnas `alumno_id` de otras tablas heredan este tipo. |
 | `email` | texto único | Identificador de login |
 | `carne` | texto único, nullable | Se pide después del registro, es obligatorio para continuar |
 | `nombre` | texto, nullable | Igual que el carné |
