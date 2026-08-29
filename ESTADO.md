@@ -3,9 +3,8 @@
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
 - **Última actualización:** 29 de agosto de 2026
-- **Fase actual:** 1 en curso. Tareas 1 a 6 de [`docs/fase-1.md`](docs/fase-1.md) construidas y
-  probadas en local, más el rediseño visual y la carga del catálogo del pensum. Falta la
-  tarea 7 (despliegue) y asignar los catedráticos.
+- **Fase actual:** 1 casi cerrada (falta la tarea 7, el despliegue) y **Fase 2 arrancada**:
+  la librería del código QR está construida y probada. Ver [`docs/fase-2.md`](docs/fase-2.md).
 
 ---
 
@@ -26,11 +25,18 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Autoinscripción (A4, A8) | Agregar/quitar clases, con constancia en bitácora al quitar. Buscador por texto, filtro por ciclo y «solo las mías» |
 | Diseño visual | Paleta del escudo UMG y primitivos en `src/componentes/ui/`. Norma en [`docs/diseno-visual.md`](docs/diseno-visual.md) |
 | Catálogo de cursos | Los 50 del pensum 0908 (jornada sábado, Escuintla) sembrados en `clase`, **sin catedrático ni sección** |
+| Perfil con ciclo (A3) | Carné, nombre y ciclo. El ciclo solo decide el filtro inicial de A4, no restringe |
+| Librería del QR | `src/lib/qr/codigo.ts` — derivación HMAC, ventana con gracia, precarga, contador. 21 pruebas: `pnpm probar` |
+| Cuentas de prueba | 7 en `.test`, `pnpm db:sembrar-usuarios`. **Borrar antes de usar el sistema de verdad** |
 
 ## Qué NO existe todavía
 
 - Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
-- Actividades, QR, kiosco, puntos, Excel, PWA: todo eso es de las fases 2 a 5
+- De la Fase 2 falta todo lo que toca la base y la pantalla: B4 actividades, la validación
+  del marcaje contra la base, A6/A7, el kiosco B5 y B6 en vivo. La librería del código está,
+  pero no la usa nadie todavía
+- Puntos, Excel, PWA: fases 3 a 5
+- La dependencia `qrcode` todavía no está en `package.json`
 - **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
   puede exportar el Excel, que es el entregable final del sistema.
 
@@ -48,7 +54,10 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
    inscritos, desde `/admin/catedraticos` y `/admin/clases`. El catálogo ya está cargado; lo
    que falta es quién imparte cada curso.
 
-Después de eso arranca la **Fase 2 — El QR**, con ensayo de campo obligatorio.
+La **Fase 2** ya arrancó por la librería del código. Lo que sigue ahí es la tarea 1 de
+[`docs/fase-2.md`](docs/fase-2.md): B4, la pantalla de actividades, que es la que genera el
+`secreto_qr`. La fase cierra con **ensayo de campo obligatorio**, y el despliegue lo bloquea:
+la URL del QR sale de `NEXT_PUBLIC_APP_URL` y hay que probarla con el dominio real.
 
 ---
 
