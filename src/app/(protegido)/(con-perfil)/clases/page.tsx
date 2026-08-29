@@ -28,7 +28,7 @@ export default async function ClasesPage() {
   ]);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-6 p-6">
+    <main className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 p-6">
       <div>
         <h1 className="text-xl font-semibold">Tus clases</h1>
         <p className="mt-1 text-sm text-neutral-600">
