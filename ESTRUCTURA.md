@@ -127,6 +127,8 @@ sube al repositorio.
    distinto al de esta tabla, se usa el de Neon y se actualiza este archivo.
 4. **El secreto del QR no es una variable de entorno.** Vive en la columna `secreto_qr` de
    cada actividad, se genera al crearla y nunca sale del servidor.
+5. **La Data API de Neon queda deshabilitada.** No hay ninguna variable relacionada porque
+   no la usamos. Ver §10 del documento de planificación.
 
 ### Producción
 

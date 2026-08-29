@@ -538,6 +538,13 @@ rutas de servidor y en las server actions.
 
 Reglas:
 
+**La Data API de Neon queda deshabilitada a propósito.** Expone las tablas como una API REST
+pública consultable desde el navegador. Con el registro abierto que decidimos en la §14, y con
+la opción «Grant public schema access» activa, cualquier alumno registrado podría escribir
+directo en `asistencia` desde la consola del navegador y regalarse los puntos, sin escanear
+ningún QR. Es exactamente lo que todo el diseño del QR existe para impedir. La Data API sirve
+para aplicaciones sin backend; nosotros tenemos backend.
+
 - Un alumno solo puede leer y modificar sus propias inscripciones y asignaciones.
 - Nadie escribe directo en `asistencia`. Solo la ruta de servidor que valida el código.
 - El `secreto_qr` no es legible por ningún cliente, ni siquiera el del administrador.

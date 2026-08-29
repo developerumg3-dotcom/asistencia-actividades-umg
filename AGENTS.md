@@ -81,9 +81,13 @@ Estas salen de decisiones de diseño ya tomadas y romperlas rompe el sistema:
 7. **La asistencia se guarda aunque el alumno no esté inscrito a ninguna clase.** Los puntos
    aparecen solos cuando se inscriba. Perder una asistencia real es el peor error posible.
 8. **Todo intento de marcaje, válido o no, va a `bitacora`.**
-9. **Nunca escribas un secreto real en un archivo versionado.** Los valores van en
+9. **La Data API de Neon queda deshabilitada.** Expondría las tablas como API REST pública
+   desde el navegador. Con registro abierto, un alumno podría escribir en `asistencia` y
+   regalarse puntos sin escanear nada. Si alguien la habilita, el sistema del QR deja de
+   servir para algo.
+10. **Nunca escribas un secreto real en un archivo versionado.** Los valores van en
    `.env.local`, que está en `.gitignore`. `.env.example` lleva solo los nombres.
-10. **Solo lleva prefijo `NEXT_PUBLIC_` lo que puede ver el mundo.** Ese prefijo mete la
+11. **Solo lleva prefijo `NEXT_PUBLIC_` lo que puede ver el mundo.** Ese prefijo mete la
     variable en el JavaScript del navegador.
 
 ## Convenciones
