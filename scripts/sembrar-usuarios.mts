@@ -30,7 +30,21 @@ const { alumno, clase, docente, inscripcion } = await import("../src/db/esquema/
 
 const PASSWORD_PRUEBA = "Ronda2026!";
 
-/** Correo real del administrador. Su cuenta ya existe: aca solo se le completa el perfil. */
+/**
+ * Administrador de prueba, con contrasena conocida. Es el que hay que usar para trabajar:
+ * no depende de la contrasena real de nadie.
+ */
+const ADMIN_PRUEBA = {
+  email: "admin@ronda.test",
+  nombre: "Admin de Prueba",
+  carne: "0908-00-00001",
+  ciclo: "1",
+};
+
+/**
+ * Correo real del administrador. Su cuenta es suya: no se crea ni se le toca la
+ * contrasena, solo se le completa el perfil si ya inicio sesion alguna vez.
+ */
 const ADMIN = {
   email: "jticasp@miumg.edu.gt",
   nombre: "Julio Cesar Ticas Palencia",
@@ -159,6 +173,33 @@ if (idAlumno) {
     });
   const nuevas = await inscribir(idAlumno, ALUMNO.cursos);
   console.log(`  ✓ alumno ${ALUMNO.email} — ciclo ${ALUMNO.ciclo}, ${nuevas} inscripciones nuevas`);
+}
+
+// ---- Administrador de prueba -------------------------------------------------------
+const idAdminPrueba = await asegurarCuenta(ADMIN_PRUEBA.email, ADMIN_PRUEBA.nombre);
+if (idAdminPrueba) {
+  await db
+    .insert(alumno)
+    .values({
+      id: idAdminPrueba,
+      email: ADMIN_PRUEBA.email,
+      carne: ADMIN_PRUEBA.carne,
+      nombre: ADMIN_PRUEBA.nombre,
+      ciclo: ADMIN_PRUEBA.ciclo,
+      rol: "admin",
+      perfilCompleto: true,
+    })
+    .onConflictDoUpdate({
+      target: alumno.id,
+      set: {
+        carne: ADMIN_PRUEBA.carne,
+        nombre: ADMIN_PRUEBA.nombre,
+        ciclo: ADMIN_PRUEBA.ciclo,
+        rol: "admin",
+        perfilCompleto: true,
+      },
+    });
+  console.log(`  ✓ admin de prueba ${ADMIN_PRUEBA.email}`);
 }
 
 // ---- Administrador -----------------------------------------------------------------
