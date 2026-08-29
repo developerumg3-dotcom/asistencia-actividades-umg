@@ -121,8 +121,8 @@ sube al repositorio.
 1. **`.env.local` nunca se versiona.** Si alguna vez aparece en un `git status`, algo se
    rompió en el `.gitignore` y hay que arreglarlo antes de hacer commit.
 2. **Solo lo que puede ver el mundo lleva `NEXT_PUBLIC_`.** Ese prefijo mete la variable en
-   el JavaScript que se descarga al navegador. `STACK_SECRET_SERVER_KEY` y las cadenas de
-   base de datos nunca lo llevan.
+   el JavaScript que se descarga al navegador. `NEON_AUTH_COOKIE_SECRET`, `NEON_AUTH_BASE_URL`
+   y las cadenas de base de datos nunca lo llevan.
 3. **Los nombres que manda son los de la consola de Neon.** Si Neon muestra un nombre
    distinto al de esta tabla, se usa el de Neon y se actualiza este archivo.
 4. **El secreto del QR no es una variable de entorno.** Vive en la columna `secreto_qr` de
