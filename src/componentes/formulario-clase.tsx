@@ -6,6 +6,9 @@ import {
   crearClase,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/clases/acciones";
+import { Boton } from "@/componentes/ui/boton";
+import { Campo } from "@/componentes/ui/campo";
+import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 const estadoInicial: EstadoFormulario = { error: null };
 
@@ -16,42 +19,32 @@ export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
 
   return (
     <form action={accion} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      <CampoTexto nombre="codigo" etiqueta="Código" />
-      <CampoTexto nombre="nombre" etiqueta="Nombre" className="col-span-2" />
-      <div className="flex flex-col gap-1">
-        <label htmlFor="docenteId-nuevo" className="text-sm font-medium">
-          Catedrático
-        </label>
-        <select
-          id="docenteId-nuevo"
-          name="docenteId"
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        >
-          <option value="">Elegí uno</option>
-          {docentes.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-      <CampoTexto nombre="seccion" etiqueta="Sección" />
-      <CampoTexto nombre="jornada" etiqueta="Jornada" />
-      <CampoTexto nombre="ciclo" etiqueta="Ciclo" />
+      <Campo id="codigo-nuevo" name="codigo" etiqueta="Código" required />
+      <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required className="col-span-2" />
+      <Campo id="docenteId-nuevo" name="docenteId" etiqueta="Catedrático" as="select" required defaultValue="">
+        <option value="">Elegí uno</option>
+        {docentes.map((d) => (
+          <option key={d.id} value={d.id}>
+            {d.nombre}
+          </option>
+        ))}
+      </Campo>
+      <Campo id="seccion-nuevo" name="seccion" etiqueta="Sección" required />
+      <Campo id="jornada-nuevo" name="jornada" etiqueta="Jornada" required />
+      <Campo id="ciclo-nuevo" name="ciclo" etiqueta="Ciclo" required />
       <div className="col-span-full flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={enviando}
-          className="rounded-md bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
+        <Boton type="submit" disabled={enviando}>
           {enviando ? "Agregando…" : "Agregar clase"}
-        </button>
+        </Boton>
         {docentes.length === 0 && (
           <p className="text-sm text-neutral-500">Primero cargá al menos un catedrático.</p>
         )}
       </div>
-      {estado.error && <p className="col-span-full text-sm text-red-600">{estado.error}</p>}
+      {estado.error && (
+        <MensajeFormulario tipo="error" className="col-span-full">
+          {estado.error}
+        </MensajeFormulario>
+      )}
     </form>
   );
 }
@@ -85,67 +78,39 @@ export function FilaClase({
       className="grid grid-cols-2 items-end gap-3 border-t border-neutral-200 py-3 sm:grid-cols-3"
     >
       <input type="hidden" name="id" value={id} />
-      <CampoTexto nombre="codigo" etiqueta="Código" valorInicial={codigo} />
-      <CampoTexto nombre="nombre" etiqueta="Nombre" valorInicial={nombre} className="col-span-2" />
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-neutral-500">Catedrático</label>
-        <select
-          name="docenteId"
-          defaultValue={docenteId}
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        >
-          {docentes.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-      <CampoTexto nombre="seccion" etiqueta="Sección" valorInicial={seccion} />
-      <CampoTexto nombre="jornada" etiqueta="Jornada" valorInicial={jornada} />
-      <CampoTexto nombre="ciclo" etiqueta="Ciclo" valorInicial={ciclo} />
+      <Campo id={`codigo-${id}`} name="codigo" etiqueta="Código" defaultValue={codigo} required />
+      <Campo
+        id={`nombre-${id}`}
+        name="nombre"
+        etiqueta="Nombre"
+        defaultValue={nombre}
+        required
+        className="col-span-2"
+      />
+      <Campo id={`docenteId-${id}`} name="docenteId" etiqueta="Catedrático" as="select" defaultValue={docenteId} required>
+        {docentes.map((d) => (
+          <option key={d.id} value={d.id}>
+            {d.nombre}
+          </option>
+        ))}
+      </Campo>
+      <Campo id={`seccion-${id}`} name="seccion" etiqueta="Sección" defaultValue={seccion} required />
+      <Campo id={`jornada-${id}`} name="jornada" etiqueta="Jornada" defaultValue={jornada} required />
+      <Campo id={`ciclo-${id}`} name="ciclo" etiqueta="Ciclo" defaultValue={ciclo} required />
       <label className="col-span-full flex items-center gap-2 text-sm">
-        <input type="checkbox" name="activa" defaultChecked={activa} />
+        <input type="checkbox" name="activa" defaultChecked={activa} className="h-4 w-4 accent-primary-600" />
         Activa
       </label>
       <div className="col-span-full flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={enviando}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium disabled:opacity-50"
-        >
+        <Boton type="submit" variante="secundario" disabled={enviando}>
           {enviando ? "Guardando…" : "Guardar"}
-        </button>
+        </Boton>
       </div>
-      {estado.error && <p className="col-span-full text-sm text-red-600">{estado.error}</p>}
+      {estado.error && (
+        <MensajeFormulario tipo="error" className="col-span-full">
+          {estado.error}
+        </MensajeFormulario>
+      )}
     </form>
-  );
-}
-
-function CampoTexto({
-  nombre,
-  etiqueta,
-  valorInicial,
-  className,
-}: {
-  nombre: string;
-  etiqueta: string;
-  valorInicial?: string;
-  className?: string;
-}) {
-  return (
-    <div className={`flex flex-col gap-1 ${className ?? ""}`}>
-      <label htmlFor={`${nombre}-${valorInicial ?? "nuevo"}`} className="text-sm font-medium">
-        {etiqueta}
-      </label>
-      <input
-        id={`${nombre}-${valorInicial ?? "nuevo"}`}
-        name={nombre}
-        required
-        defaultValue={valorInicial}
-        className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-      />
-    </div>
   );
 }

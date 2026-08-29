@@ -6,6 +6,9 @@ import {
   crearDocente,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/catedraticos/acciones";
+import { Boton } from "@/componentes/ui/boton";
+import { Campo } from "@/componentes/ui/campo";
+import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 const estadoInicial: EstadoFormulario = { error: null };
 
@@ -14,37 +17,16 @@ export function FormularioNuevoCatedratico() {
 
   return (
     <form action={accion} className="flex flex-wrap items-end gap-3">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="nombre-nuevo" className="text-sm font-medium">
-          Nombre
-        </label>
-        <input
-          id="nombre-nuevo"
-          name="nombre"
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="email-nuevo" className="text-sm font-medium">
-          Correo
-        </label>
-        <input
-          id="email-nuevo"
-          name="email"
-          type="email"
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={enviando}
-        className="rounded-md bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-50"
-      >
+      <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required />
+      <Campo id="email-nuevo" name="email" type="email" etiqueta="Correo" required />
+      <Boton type="submit" disabled={enviando}>
         {enviando ? "Agregando…" : "Agregar catedrático"}
-      </button>
-      {estado.error && <p className="w-full text-sm text-red-600">{estado.error}</p>}
+      </Boton>
+      {estado.error && (
+        <MensajeFormulario tipo="error" className="w-full">
+          {estado.error}
+        </MensajeFormulario>
+      )}
     </form>
   );
 }
@@ -55,33 +37,16 @@ export function FilaCatedratico({ id, nombre, email }: { id: string; nombre: str
   return (
     <form action={accion} className="flex flex-wrap items-end gap-3 border-t border-neutral-200 py-3">
       <input type="hidden" name="id" value={id} />
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-neutral-500">Nombre</label>
-        <input
-          name="nombre"
-          defaultValue={nombre}
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-neutral-500">Correo</label>
-        <input
-          name="email"
-          type="email"
-          defaultValue={email}
-          required
-          className="rounded-md border border-neutral-300 px-3 py-2 text-base"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={enviando}
-        className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium disabled:opacity-50"
-      >
+      <Campo id={`nombre-${id}`} name="nombre" etiqueta="Nombre" defaultValue={nombre} required />
+      <Campo id={`email-${id}`} name="email" type="email" etiqueta="Correo" defaultValue={email} required />
+      <Boton type="submit" variante="secundario" disabled={enviando}>
         {enviando ? "Guardando…" : "Guardar"}
-      </button>
-      {estado.error && <p className="w-full text-sm text-red-600">{estado.error}</p>}
+      </Boton>
+      {estado.error && (
+        <MensajeFormulario tipo="error" className="w-full">
+          {estado.error}
+        </MensajeFormulario>
+      )}
     </form>
   );
 }

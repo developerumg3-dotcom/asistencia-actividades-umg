@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { desinscribirse, inscribirse } from "@/app/(protegido)/(con-perfil)/clases/acciones";
+import { Campo } from "@/componentes/ui/campo";
+import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 type ClaseDisponible = {
   id: string;
@@ -58,14 +60,14 @@ export function SelectorClases({
 
   return (
     <div className="flex flex-col gap-4">
-      <input
+      <Campo
+        id="busqueda-clases"
         type="search"
         placeholder="Buscar por nombre, código o catedrático…"
         value={busqueda}
         onChange={(evento) => setBusqueda(evento.target.value)}
-        className="rounded-md border border-neutral-300 px-3 py-2 text-base"
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
       <ul className="flex flex-col divide-y divide-neutral-200">
         {clasesFiltradas.map((c) => {
           const marcada = inscritos.has(c.id);
@@ -76,7 +78,7 @@ export function SelectorClases({
                 checked={marcada}
                 disabled={pendiente}
                 onChange={(evento) => alternar(c.id, evento.target.checked)}
-                className="h-5 w-5 shrink-0"
+                className="h-5 w-5 shrink-0 accent-primary-600"
                 aria-label={`Inscribirme en ${c.nombre}`}
               />
               <div>

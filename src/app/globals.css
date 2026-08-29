@@ -1,9 +1,91 @@
+/*
+ * El CSS de @neondatabase/auth-ui viene sin @layer (confirmado leyendo su dist/style.css):
+ * todas sus reglas, incluido el reset de Tailwind que pone `background-color: transparent`
+ * y `border-radius: 0` en TODO <button>/<input>/<select>, y su propio `:root` con variables
+ * `--radius-md` etc., quedan en la capa implícita más alta de la cascada. Sin este `layer()`,
+ * le ganan a cualquier token o utilidad nuestra (`bg-primary-600`, `rounded-md`, las variables
+ * de `@theme`) sin importar especificidad, y corrompen el sistema de diseño de toda la app, no
+ * solo de sus dos pantallas.
+ *
+ * `neon-ui` va antes que todas las capas propias a propósito: nuestro `@theme`/tokens siempre
+ * ganan. El único costo es que el reset de `<button>` de nuestro propio `base` (que es el
+ * preflight normal de Tailwind, no algo de marca) le gana al `.bg-primary` interno de la
+ * librería en sus dos pantallas (recuperar/restablecer contraseña) — se corrige puntualmente
+ * más abajo, después de `@theme`, en vez de reordenar capas globales por dos botones.
+ */
+@layer neon-ui, theme, base, components, utilities;
+@import "@neondatabase/auth-ui/css" layer(neon-ui);
 @import "tailwindcss";
+
+@theme {
+  /* Azul del escudo UMG — color primario de acción (botones, enlaces, foco). */
+  --color-primary-50: #edf4f8;
+  --color-primary-100: #dae8f0;
+  --color-primary-200: #b4d0e1;
+  --color-primary-300: #8eb9d2;
+  --color-primary-400: #68a1c3;
+  --color-primary-500: #428ab4;
+  --color-primary-600: #1c72a5;
+  --color-primary-700: #1a608a;
+  --color-primary-800: #184e6f;
+  --color-primary-900: #163d54;
+
+  /* Dorado del escudo UMG — acento secundario (insignias, puntos). */
+  --color-accent-50: #f9f5ef;
+  --color-accent-100: #f1e9db;
+  --color-accent-200: #e0d0b3;
+  --color-accent-300: #d0b78b;
+  --color-accent-400: #c09f62;
+  --color-accent-500: #b0863a;
+  --color-accent-600: #9a7634;
+  --color-accent-700: #84662f;
+  --color-accent-800: #6e5629;
+  --color-accent-900: #594623;
+
+  /* Rojo del escudo UMG — exclusivamente semántico (errores). No es color de acción. */
+  --color-danger-50: #fbefef;
+  --color-danger-100: #f6dedd;
+  --color-danger-200: #eebbbb;
+  --color-danger-300: #e59999;
+  --color-danger-400: #dc7777;
+  --color-danger-500: #d45554;
+  --color-danger-600: #cb3332;
+  --color-danger-700: #a92d2c;
+  --color-danger-800: #872726;
+  --color-danger-900: #652020;
+}
 
 :root {
   color-scheme: light;
+
+  /* Tema de @neondatabase/auth-ui (ForgotPasswordForm/ResetPasswordForm) alineado a la marca. */
+  --neon-primary: var(--color-primary-600);
+  --neon-primary-foreground: #ffffff;
+  --neon-ring: var(--color-primary-600);
+  --neon-destructive: var(--color-danger-600);
+  --neon-destructive-foreground: #ffffff;
+  --neon-radius: 0.375rem;
 }
 
 body {
   min-height: 100dvh;
+}
+
+/*
+ * Con `neon-ui` como capa de menor prioridad (ver arriba), el reset de <button> de nuestro
+ * propio preflight le gana al `.bg-primary`/`.bg-destructive` internos de auth-ui. Solo pasa en
+ * sus dos pantallas (recuperar/restablecer contraseña), así que se corrige puntualmente acá en
+ * vez de tocar el orden de capas global.
+ */
+.bg-primary {
+  background-color: var(--neon-primary) !important;
+}
+.bg-destructive {
+  background-color: var(--neon-destructive) !important;
+}
+.text-primary-foreground {
+  color: var(--neon-primary-foreground) !important;
+}
+.text-destructive-foreground {
+  color: var(--neon-destructive-foreground) !important;
 }

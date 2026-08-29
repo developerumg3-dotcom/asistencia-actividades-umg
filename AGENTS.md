@@ -13,6 +13,7 @@ Instrucciones para cualquier agente o asistente que trabaje en este repositorio.
 | **[ESTADO.md](ESTADO.md)** | Qué existe hoy, qué sigue, decisiones ya cerradas | Siempre, segundo |
 | **[PLANIFICACION.md](PLANIFICACION.md)** | **Fuente de verdad.** Diseño completo | Antes de tocar código |
 | **[ESTRUCTURA.md](ESTRUCTURA.md)** | Carpetas, rutas, variables de entorno | Antes de crear archivos |
+| **[docs/diseno-visual.md](docs/diseno-visual.md)** | Paleta, tokens Tailwind, componentes base de interfaz | Antes de tocar o crear interfaz |
 | **[docs/](docs/)** | Plan detallado de la fase en curso | Al empezar una fase |
 
 Reglas sobre la planificación:
@@ -107,6 +108,16 @@ podría escribir directo en `asistencia` desde la consola del navegador y regala
 puntos**, sin escanear ningún QR.
 
 Es un cambio que no aparece en ningún diff y deja el sistema del QR de adorno.
+
+### `@neondatabase/auth-ui/css` sin `@layer` rompía el fondo de todos los botones
+
+Ese CSS viene sin `@layer`: en CSS, lo que no tiene capa le gana a cualquier CSS con capa, sin
+importar especificidad. Antes de corregirlo, su reset de `<button>` (`background-color:
+transparent`) le ganaba al `bg-primary-600`/`bg-neutral-900` de **cualquier** botón de la app,
+no solo de sus propios formularios — el botón existía y el texto se veía, pero el fondo era
+invisible. Se arregló envolviendo ese import en `@layer neon-ui` (de menor prioridad que las
+capas propias) dentro de `globals.css`, en vez de importarlo suelto en `layout.tsx`. Detalle
+completo en [`docs/diseno-visual.md`](docs/diseno-visual.md).
 
 ### Pooled contra directa
 

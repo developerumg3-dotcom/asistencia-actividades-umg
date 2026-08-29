@@ -22,6 +22,7 @@ para las reglas de trabajo.
 ├── src/
 │   ├── app/                Rutas de Next.js (App Router)
 │   ├── componentes/        Componentes de interfaz compartidos
+│   │   └── ui/             Primitivos de diseño (Boton, Campo, Tarjeta, MensajeFormulario)
 │   ├── db/
 │   │   ├── esquema/        Definición de tablas con Drizzle
 │   │   └── migraciones/    SQL generado por Drizzle. Se versiona.

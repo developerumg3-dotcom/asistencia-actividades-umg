@@ -1,11 +1,12 @@
 import { cerrarSesion } from "@/lib/auth/acciones";
+import { Boton } from "@/componentes/ui/boton";
 
 export function BotonCerrarSesion() {
   return (
     <form action={cerrarSesion}>
-      <button type="submit" className="text-sm text-neutral-600 underline">
+      <Boton type="submit" variante="enlace">
         Cerrar sesión
-      </button>
+      </Boton>
     </form>
   );
 }
