@@ -24,7 +24,7 @@ requisito para que el sistema funcione.
 ### Recorrido completo
 
 1. El alumno se registra con correo y contraseña.
-2. Completa su perfil: carné y nombre completo (paso obligatorio).
+2. Completa su perfil: carné, nombre completo y ciclo que cursa (paso obligatorio).
 3. Elige las clases en las que está inscrito.
 4. El administrador crea las actividades y proyecta la pantalla del QR en el evento.
 5. El alumno escanea el QR con la cámara de su teléfono, se abre el navegador, inicia
@@ -50,7 +50,7 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 ### Sí entra
 
 - Registro e inicio de sesión de alumnos, **abierto** (cualquiera puede crear cuenta).
-- Perfil obligatorio con carné y nombre completo.
+- Perfil obligatorio con carné, nombre completo y ciclo.
 - Autoinscripción del alumno a una o varias clases.
 - Creación de actividades por el administrador, de dos tipos.
 - Pantalla de kiosco con QR que rota cada 60 segundos.
@@ -101,6 +101,7 @@ Perfil de la persona. Extiende la tabla de autenticación.
 | `email` | texto único | Identificador de login |
 | `carne` | texto único, nullable | Se pide después del registro, es obligatorio para continuar |
 | `nombre` | texto, nullable | Igual que el carné |
+| `ciclo` | texto, nullable | Ciclo que cursa, «1» a «10». Se pide junto al carné. **No restringe** qué cursos puede elegir: solo hace que A4 arranque filtrada en su ciclo, que es donde estarán casi todos los suyos. Admite nulo por las cuentas creadas antes de pedirlo. |
 | `rol` | enum `alumno` \| `admin` | |
 | `estado` | enum `activo` \| `bloqueado` | |
 | `perfil_completo` | bool | Derivado de `carne` y `nombre`; controla el bloqueo de navegación |
@@ -462,8 +463,8 @@ pendiente sería el peor error posible del sistema.
 |---|---|---|
 | A1 | Registro | Correo y contraseña. Abierto a cualquiera. |
 | A2 | Ingreso | Correo y contraseña, con recuperación por enlace. |
-| A3 | Completar perfil | Carné y nombre completo. **Obligatorio**, bloquea el resto de la app. |
-| A4 | Elegí tus clases | Catálogo completo del pensum, con buscador por texto y filtro por ciclo. Selección múltiple. Sugerido tras el perfil, no bloqueante. |
+| A3 | Completar perfil | Carné, nombre completo y ciclo que cursa. **Obligatorio**, bloquea el resto de la app. |
+| A4 | Elegí tus clases | Catálogo completo del pensum, con buscador por texto y filtro por ciclo. Arranca filtrada en el ciclo del alumno, pero puede ver todos. Selección múltiple. Sugerido tras el perfil, no bloqueante. |
 | A5 | Inicio | Próxima actividad arriba, resumen de puntos por clase, aviso de saldo extra pendiente. |
 | A6 | Marcar asistencia | Página a la que llega el QR. Login en línea si hace falta, botón grande. |
 | A7 | Resultado | Éxito con la hora exacta, o el error correspondiente con su instrucción. |

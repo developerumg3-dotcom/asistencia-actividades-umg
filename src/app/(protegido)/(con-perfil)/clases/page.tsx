@@ -38,6 +38,7 @@ export default async function ClasesPage() {
       <SelectorClases
         clasesDisponibles={clasesDisponibles}
         idsInscritoInicial={inscripciones.map((i) => i.claseId)}
+        cicloAlumno={alumnoActual.ciclo}
       />
     </main>
   );

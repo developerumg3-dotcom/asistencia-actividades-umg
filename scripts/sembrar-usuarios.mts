@@ -27,6 +27,8 @@ type Semilla = {
   nombre: string;
   carne: string;
   rol: "alumno" | "admin";
+  /** Ciclo declarado en el perfil: decide el filtro inicial de A4. */
+  ciclo: string;
   /** Codigos del pensum en los que queda inscrito. */
   cursos: string[];
 };
@@ -39,6 +41,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Administrador de Prueba",
     carne: "0908-00-00001",
     rol: "admin",
+    ciclo: "1",
     cursos: [],
   },
   {
@@ -46,6 +49,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Ana Lucía López",
     carne: "0908-21-10001",
     rol: "alumno",
+    ciclo: "7",
     cursos: ["031", "032", "033", "034", "035"],
   },
   {
@@ -53,6 +57,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Carlos Méndez",
     carne: "0908-21-10002",
     rol: "alumno",
+    ciclo: "7",
     // Séptimo ciclo con dos materias atrasadas del quinto.
     cursos: ["031", "032", "033", "021", "025"],
   },
@@ -61,6 +66,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "María Tzoc",
     carne: "0908-22-10003",
     rol: "alumno",
+    ciclo: "8",
     // Octavo ciclo y una adelantada del noveno.
     cursos: ["036", "037", "038", "039", "044"],
   },
@@ -69,6 +75,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Jorge Ramírez",
     carne: "0908-20-10004",
     rol: "alumno",
+    ciclo: "10",
     cursos: ["046", "047", "048"],
   },
   {
@@ -76,6 +83,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Sofía Castillo",
     carne: "0908-23-10005",
     rol: "alumno",
+    ciclo: "1",
     cursos: ["001", "002", "003", "004", "005"],
   },
   {
@@ -83,6 +91,7 @@ const SEMILLAS: Semilla[] = [
     nombre: "Luis García",
     carne: "0908-23-10006",
     rol: "alumno",
+    ciclo: "3",
     // Sin inscripciones: sirve para ver A4 vacia y probar el filtro desde cero.
     cursos: [],
   },
@@ -145,6 +154,7 @@ for (const [indice, semilla] of SEMILLAS.entries()) {
       carne: semilla.carne,
       nombre: semilla.nombre,
       rol: semilla.rol,
+      ciclo: semilla.ciclo,
       perfilCompleto: true,
     })
     .onConflictDoUpdate({
@@ -153,6 +163,7 @@ for (const [indice, semilla] of SEMILLAS.entries()) {
         carne: semilla.carne,
         nombre: semilla.nombre,
         rol: semilla.rol,
+        ciclo: semilla.ciclo,
         perfilCompleto: true,
       },
     });

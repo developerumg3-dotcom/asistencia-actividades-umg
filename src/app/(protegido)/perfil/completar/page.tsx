@@ -13,12 +13,17 @@ export default async function CompletarPerfilPage() {
         <div>
           <h1 className="text-xl font-semibold">Completá tu perfil</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            Necesitamos tu carné y tu nombre completo para poder acreditarte los puntos.
+            Necesitamos tu carné y tu nombre completo para poder acreditarte los puntos, y tu
+            ciclo para mostrarte primero tus cursos.
           </p>
         </div>
       </div>
       <Tarjeta>
-        <FormularioPerfil carneActual={alumnoActual.carne} nombreActual={alumnoActual.nombre} />
+        <FormularioPerfil
+          carneActual={alumnoActual.carne}
+          nombreActual={alumnoActual.nombre}
+          cicloActual={alumnoActual.ciclo}
+        />
       </Tarjeta>
     </main>
   );

@@ -74,12 +74,17 @@ function Marca({ marcada }: { marcada: boolean }) {
 export function SelectorClases({
   clasesDisponibles,
   idsInscritoInicial,
+  cicloAlumno,
 }: {
   clasesDisponibles: ClaseDisponible[];
   idsInscritoInicial: string[];
+  /** Ciclo declarado en el perfil. Solo decide el filtro inicial; no restringe nada. */
+  cicloAlumno: string | null;
 }) {
   const [busqueda, setBusqueda] = useState("");
-  const [ciclo, setCiclo] = useState(TODOS);
+  // Arranca en el ciclo del alumno: ahi estan casi todos sus cursos. Si no lo declaro
+  // todavia (cuentas creadas antes de pedirlo), arranca en todos.
+  const [ciclo, setCiclo] = useState(cicloAlumno ?? TODOS);
   const [soloInscritas, setSoloInscritas] = useState(false);
   const [inscritos, setInscritos] = useState<Set<string>>(new Set(idsInscritoInicial));
   const [pendiente, iniciarTransicion] = useTransition();
@@ -170,14 +175,21 @@ export function SelectorClases({
         />
 
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {cicloAlumno && (
+            <Chip activo={ciclo === cicloAlumno} onClick={() => setCiclo(cicloAlumno)}>
+              Mi ciclo ({cicloAlumno})
+            </Chip>
+          )}
           <Chip activo={ciclo === TODOS} onClick={() => setCiclo(TODOS)}>
             Todos
           </Chip>
-          {ciclos.map((c) => (
-            <Chip key={c} activo={ciclo === c} onClick={() => setCiclo(c)}>
-              Ciclo {c}
-            </Chip>
-          ))}
+          {ciclos
+            .filter((c) => c !== cicloAlumno)
+            .map((c) => (
+              <Chip key={c} activo={ciclo === c} onClick={() => setCiclo(c)}>
+                Ciclo {c}
+              </Chip>
+            ))}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -194,6 +206,21 @@ export function SelectorClases({
             {clasesFiltradas.length} de {clasesDisponibles.length} cursos
           </p>
         </div>
+
+        {/* El catalogo completo existe justamente porque hay atrasados y adelantados: si
+            arrancamos filtrados en su ciclo, hay que decirle como salir de ahi. */}
+        {cicloAlumno && ciclo === cicloAlumno && (
+          <p className="text-xs text-neutral-500">
+            ¿Llevás cursos de otro ciclo?{" "}
+            <button
+              type="button"
+              onClick={() => setCiclo(TODOS)}
+              className="text-primary-700 underline hover:text-primary-800"
+            >
+              Ver los cincuenta
+            </button>
+          </p>
+        )}
       </div>
 
       {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}

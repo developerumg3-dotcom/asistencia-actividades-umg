@@ -1,0 +1,1 @@
+ALTER TABLE "alumno" ADD COLUMN "ciclo" text;

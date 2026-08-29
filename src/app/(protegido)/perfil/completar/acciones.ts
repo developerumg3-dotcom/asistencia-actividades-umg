@@ -8,6 +8,9 @@ import { requireAlumno } from "@/lib/sesion";
 
 export type EstadoFormulario = { error: string | null };
 
+/** Los diez ciclos del pensum. El <select> ya limita, pero el servidor no confia en el. */
+const CICLOS_VALIDOS = new Set(Array.from({ length: 10 }, (_, i) => String(i + 1)));
+
 // El driver de @neondatabase/serverless envuelve el error real de Postgres dentro de
 // `.cause` (drizzle solo expone un "Failed query" genérico en el nivel superior).
 function esViolacionDeUnicidad(error: unknown): boolean {
@@ -25,15 +28,19 @@ export async function completarPerfil(
 
   const carne = String(formData.get("carne") ?? "").trim();
   const nombre = String(formData.get("nombre") ?? "").trim();
+  const ciclo = String(formData.get("ciclo") ?? "").trim();
 
-  if (!carne || !nombre) {
-    return { error: "Completá tu carné y tu nombre completo." };
+  if (!carne || !nombre || !ciclo) {
+    return { error: "Completá tu carné, tu nombre completo y tu ciclo." };
+  }
+  if (!CICLOS_VALIDOS.has(ciclo)) {
+    return { error: "Elegí un ciclo de la lista." };
   }
 
   try {
     await db
       .update(alumno)
-      .set({ carne, nombre, perfilCompleto: true })
+      .set({ carne, nombre, ciclo, perfilCompleto: true })
       .where(eq(alumno.id, alumnoActual.id));
   } catch (error) {
     if (esViolacionDeUnicidad(error)) {

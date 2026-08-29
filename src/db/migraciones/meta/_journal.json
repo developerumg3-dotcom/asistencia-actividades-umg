@@ -15,6 +15,13 @@
       "when": 1788032964062,
       "tag": "0001_curious_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788034263466,
+      "tag": "0002_ambitious_toro",
+      "breakpoints": true
     }
   ]
 }

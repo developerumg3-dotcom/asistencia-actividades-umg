@@ -1,0 +1,842 @@
+{
+  "id": "59dafaa9-0b8a-42b1-9d53-9f5c23611261",
+  "prevId": "983db38a-d74f-46dc-a456-dba3c4a84539",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.alumno": {
+      "name": "alumno",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carne": {
+          "name": "carne",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ciclo": {
+          "name": "ciclo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rol": {
+          "name": "rol",
+          "type": "rol",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'alumno'"
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_alumno",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'activo'"
+        },
+        "perfil_completo": {
+          "name": "perfil_completo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "alumno_email_unique": {
+          "name": "alumno_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "alumno_carne_unique": {
+          "name": "alumno_carne_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "carne"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.docente": {
+      "name": "docente",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clase": {
+      "name": "clase",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "docente_id": {
+          "name": "docente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seccion": {
+          "name": "seccion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jornada": {
+          "name": "jornada",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ciclo": {
+          "name": "ciclo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "clase_docente_id_docente_id_fk": {
+          "name": "clase_docente_id_docente_id_fk",
+          "tableFrom": "clase",
+          "tableTo": "docente",
+          "columnsFrom": [
+            "docente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.inscripcion": {
+      "name": "inscripcion",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "alumno_id": {
+          "name": "alumno_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase_id": {
+          "name": "clase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inscrito_en": {
+          "name": "inscrito_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "inscripcion_alumno_id_alumno_id_fk": {
+          "name": "inscripcion_alumno_id_alumno_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "alumno",
+          "columnsFrom": [
+            "alumno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "inscripcion_clase_id_clase_id_fk": {
+          "name": "inscripcion_clase_id_clase_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "clase",
+          "columnsFrom": [
+            "clase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "inscripcion_alumno_id_clase_id_unique": {
+          "name": "inscripcion_alumno_id_clase_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "alumno_id",
+            "clase_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.actividad": {
+      "name": "actividad",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "codigo_corto": {
+          "name": "codigo_corto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lugar": {
+          "name": "lugar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_actividad",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "puntos": {
+          "name": "puntos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inicia_en": {
+          "name": "inicia_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "termina_en": {
+          "name": "termina_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcaje_abre_en": {
+          "name": "marcaje_abre_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcaje_cierra_en": {
+          "name": "marcaje_cierra_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_actividad",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'borrador'"
+        },
+        "secreto_qr": {
+          "name": "secreto_qr",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ventana_seg": {
+          "name": "ventana_seg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "actividad_codigo_corto_unique": {
+          "name": "actividad_codigo_corto_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "codigo_corto"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.asistencia": {
+      "name": "asistencia",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "alumno_id": {
+          "name": "alumno_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actividad_id": {
+          "name": "actividad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcada_en": {
+          "name": "marcada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "slot": {
+          "name": "slot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_asistencia",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nota_manual": {
+          "name": "nota_manual",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dispositivo_id": {
+          "name": "dispositivo_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clases_snapshot": {
+          "name": "clases_snapshot",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "asistencia_alumno_id_alumno_id_fk": {
+          "name": "asistencia_alumno_id_alumno_id_fk",
+          "tableFrom": "asistencia",
+          "tableTo": "alumno",
+          "columnsFrom": [
+            "alumno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "asistencia_actividad_id_actividad_id_fk": {
+          "name": "asistencia_actividad_id_actividad_id_fk",
+          "tableFrom": "asistencia",
+          "tableTo": "actividad",
+          "columnsFrom": [
+            "actividad_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "asistencia_alumno_id_actividad_id_unique": {
+          "name": "asistencia_alumno_id_actividad_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "alumno_id",
+            "actividad_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.asignacion_extra": {
+      "name": "asignacion_extra",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "alumno_id": {
+          "name": "alumno_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actividad_id": {
+          "name": "actividad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase_id": {
+          "name": "clase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "puntos": {
+          "name": "puntos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creada_en": {
+          "name": "creada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "asignacion_extra_alumno_id_alumno_id_fk": {
+          "name": "asignacion_extra_alumno_id_alumno_id_fk",
+          "tableFrom": "asignacion_extra",
+          "tableTo": "alumno",
+          "columnsFrom": [
+            "alumno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "asignacion_extra_actividad_id_actividad_id_fk": {
+          "name": "asignacion_extra_actividad_id_actividad_id_fk",
+          "tableFrom": "asignacion_extra",
+          "tableTo": "actividad",
+          "columnsFrom": [
+            "actividad_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "asignacion_extra_clase_id_clase_id_fk": {
+          "name": "asignacion_extra_clase_id_clase_id_fk",
+          "tableFrom": "asignacion_extra",
+          "tableTo": "clase",
+          "columnsFrom": [
+            "clase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pantalla": {
+      "name": "pantalla",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actividad_id": {
+          "name": "actividad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clave": {
+          "name": "clave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creada_en": {
+          "name": "creada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pantalla_actividad_id_actividad_id_fk": {
+          "name": "pantalla_actividad_id_actividad_id_fk",
+          "tableFrom": "pantalla",
+          "tableTo": "actividad",
+          "columnsFrom": [
+            "actividad_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "pantalla_clave_unique": {
+          "name": "pantalla_clave_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "clave"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bitacora": {
+      "name": "bitacora",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "alumno_id": {
+          "name": "alumno_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actividad_id": {
+          "name": "actividad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evento": {
+          "name": "evento",
+          "type": "evento_bitacora",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resultado": {
+          "name": "resultado",
+          "type": "resultado_bitacora",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ocurrio_en": {
+          "name": "ocurrio_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dispositivo_id": {
+          "name": "dispositivo_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bitacora_alumno_id_alumno_id_fk": {
+          "name": "bitacora_alumno_id_alumno_id_fk",
+          "tableFrom": "bitacora",
+          "tableTo": "alumno",
+          "columnsFrom": [
+            "alumno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bitacora_actividad_id_actividad_id_fk": {
+          "name": "bitacora_actividad_id_actividad_id_fk",
+          "tableFrom": "bitacora",
+          "tableTo": "actividad",
+          "columnsFrom": [
+            "actividad_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_actividad": {
+      "name": "estado_actividad",
+      "schema": "public",
+      "values": [
+        "borrador",
+        "publicada",
+        "cerrada"
+      ]
+    },
+    "public.estado_alumno": {
+      "name": "estado_alumno",
+      "schema": "public",
+      "values": [
+        "activo",
+        "bloqueado"
+      ]
+    },
+    "public.evento_bitacora": {
+      "name": "evento_bitacora",
+      "schema": "public",
+      "values": [
+        "registro",
+        "perfil_completado",
+        "inscripcion_creada",
+        "inscripcion_eliminada",
+        "marcaje"
+      ]
+    },
+    "public.origen_asistencia": {
+      "name": "origen_asistencia",
+      "schema": "public",
+      "values": [
+        "qr",
+        "manual"
+      ]
+    },
+    "public.resultado_bitacora": {
+      "name": "resultado_bitacora",
+      "schema": "public",
+      "values": [
+        "ok",
+        "expirado",
+        "duplicado",
+        "invalido",
+        "fuera_de_horario",
+        "sin_perfil"
+      ]
+    },
+    "public.rol": {
+      "name": "rol",
+      "schema": "public",
+      "values": [
+        "alumno",
+        "admin"
+      ]
+    },
+    "public.tipo_actividad": {
+      "name": "tipo_actividad",
+      "schema": "public",
+      "values": [
+        "global",
+        "extra"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
