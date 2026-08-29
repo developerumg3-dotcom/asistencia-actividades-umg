@@ -18,10 +18,12 @@ Reglas sobre ese documento:
 
 ## Estado actual del proyecto
 
-**Fase 0 — definición. No hay código escrito todavía.**
+**Fase 0 — definición cerrada. No hay código escrito todavía.**
 
 El repositorio contiene únicamente documentación. No hay `package.json`, ni esquema, ni
-dependencias instaladas. Git **no está inicializado** por decisión del usuario.
+dependencias instaladas.
+
+Remoto: `developerumg3-dotcom/asistencia-actividades-umg` (privado), rama `main`.
 
 No empieces a implementar por iniciativa propia. El usuario dirá cuándo arranca la Fase 1.
 
@@ -50,8 +52,10 @@ son un registro de datos que agrupa clases y reciben el Excel por fuera de la ap
 | QR | `qrcode` para generar. **No se implementa lector**: se usa la cámara nativa del teléfono. |
 | Excel | `exceljs` en rutas de servidor |
 
-El backend en .NET sigue sobre la mesa como alternativa (ver §10 del documento). Si el
-usuario lo elige, el modelo de datos y las reglas no cambian.
+Despliegue en **Vercel**, con el subdominio gratuito `{proyecto}.vercel.app`. No hay dominio
+propio. El nombre del proyecto en Vercel debe ser **corto**, porque forma parte de la URL que
+se codifica dentro del QR y una URL larga produce un código más denso y difícil de leer a
+distancia.
 
 ## Reglas técnicas que no se negocian
 
@@ -91,4 +95,5 @@ Estas salen de decisiones de diseño ya tomadas y romperlas rompe el sistema:
 - Si detectás un problema real en el diseño, decilo con claridad y proponé la alternativa.
   Ya pasó una vez: el diseño original con fotos y revisión de profesores se descartó entero a
   favor del QR, y el proyecto mejoró.
-- No inicialices git ni hagas commits salvo que el usuario lo pida.
+- No hagas commits ni push salvo que el usuario lo pida.
+- Escribí los mensajes de commit en español, en imperativo.

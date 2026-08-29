@@ -2,7 +2,7 @@
 
 Documento de definición del sistema de registro de participación en actividades para la UMG.
 
-- **Versión:** 2 · 29 de agosto de 2026
+- **Versión:** 3 · 29 de agosto de 2026
 - **Estado:** decisiones cerradas, sin código escrito
 - **Nombre de trabajo:** Ronda
 
@@ -292,6 +292,10 @@ repartirlos: elige clase, elige cuántos, confirma. El saldo baja.
   solo en pantalla.
 - Se puede deshacer y reasignar hasta la **fecha de corte de reparto**: 48 horas después de
   la última actividad. Después se congela.
+- **Si el alumno no reparte su saldo antes del corte, esos puntos se pierden.** No se
+  reparten solos: decidir por él sería peor. Mientras tenga saldo pendiente, la app le
+  muestra un aviso permanente en el inicio y en su perfil, y el aviso se vuelve más
+  insistente en las últimas 24 horas.
 
 ### Bajas de clase
 
@@ -506,6 +510,26 @@ un archivo. Ese archivo se envía por fuera de la app — no hay envío automát
 
 **Costo de infraestructura: cero** en los planes gratuitos de Vercel y Neon.
 
+### Dominio
+
+No se compra dominio por ahora. Se usa el **subdominio gratuito de Vercel**, del tipo
+`{proyecto}.vercel.app`.
+
+Esto tiene una consecuencia directa en el QR: el nombre del proyecto en Vercel **es** parte
+de la URL que se codifica, y una URL más corta produce un QR con módulos más grandes, que se
+lee desde más lejos. Por eso el nombre del proyecto debe ser corto.
+
+Con `ronda-umg` la URL queda así:
+
+```
+https://ronda-umg.vercel.app/a/x3/k9f2mq8w1p     (44 caracteres)
+```
+
+Son 44 caracteres, que en modo byte con corrección de errores M dan un QR de versión 3
+(29 × 29 módulos). Proyectado a pantalla completa se lee sin problema desde el fondo de un
+salón. Si más adelante se compra un dominio corto, el QR mejora todavía más, pero no es
+necesario para arrancar.
+
 ### Acceso a datos
 
 **Todo el acceso a la base pasa por el servidor.** No hay cliente de base de datos en el
@@ -620,15 +644,31 @@ ensayarla en campo antes de seguir.
 | 9 | ¿Cuántas actividades? | **5 globales de 1 punto + 1 extra de 2 puntos.** Faltan fechas y lugares. |
 | 10 | ¿Escáner dentro de la app? | **No.** Cámara nativa del teléfono. La página de marcaje maneja el caso de sesión ausente y código expirado. |
 | 11 | ¿Base de datos? | **Neon** (PostgreSQL serverless) con Neon Auth y Drizzle. |
+| 12 | ¿Backend en TypeScript o .NET? | **TypeScript**, con Next.js. Más fácil de desplegar y mantener: un solo proyecto, un solo despliegue. |
+| 13 | ¿Dominio propio? | **No por ahora.** Subdominio gratuito de Vercel. El nombre del proyecto debe ser corto porque va dentro del QR. |
+| 14 | ¿Saldo extra sin repartir? | **Se pierde**, con aviso permanente en la app mientras haya saldo pendiente. |
 
 ---
 
-## 15. Pendientes de definir
+## 15. Pendientes
 
-- **Dominio y nombre público de la app.** Afecta la longitud de la URL del QR y por lo tanto
-  su legibilidad a distancia. Cuanto más corto, mejor.
+Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del primer evento.
+
+- **Nombre exacto del proyecto en Vercel.** Propuesta: `ronda-umg`. Define la URL del QR.
 - **Fechas, horas y lugares** de las 5 actividades globales y de la actividad extra.
 - **Listado real de clases** con nombre y correo del catedrático, sección, jornada y ciclo.
 - **Confirmación** de que el catedrático acepta un Excel como comprobante.
-- **Backend definitivo:** TypeScript (recomendado) o .NET, según la soltura de quien
-  desarrolle.
+
+## 16. Cuentas y servicios
+
+| Servicio | Para qué | Estado |
+|---|---|---|
+| GitHub | Repositorio: `developerumg3-dotcom/asistencia-actividades-umg` (privado) | Listo |
+| Neon | Base de datos PostgreSQL y autenticación | Falta crear el proyecto |
+| Vercel | Hospedaje y despliegue continuo desde GitHub | Falta crear la cuenta |
+
+No hace falta nada más para arrancar. Posibles agregados posteriores:
+
+- **Servicio de correo** (Resend o similar), solo si el correo de recuperación de contraseña
+  que trae Neon Auth no alcanza.
+- **Registrador de dominio**, si más adelante se quiere una URL más corta para el QR.
