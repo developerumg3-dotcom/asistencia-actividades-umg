@@ -519,16 +519,16 @@ Esto tiene una consecuencia directa en el QR: el nombre del proyecto en Vercel *
 de la URL que se codifica, y una URL más corta produce un QR con módulos más grandes, que se
 lee desde más lejos. Por eso el nombre del proyecto debe ser corto.
 
-Con `ronda-umg` la URL queda así:
+El nombre elegido es **`asistencia-umg`**, así que la URL queda así:
 
 ```
-https://ronda-umg.vercel.app/a/x3/k9f2mq8w1p     (44 caracteres)
+https://asistencia-umg.vercel.app/a/x3/k9f2mq8w1p     (49 caracteres)
 ```
 
-Son 44 caracteres, que en modo byte con corrección de errores M dan un QR de versión 3
-(29 × 29 módulos). Proyectado a pantalla completa se lee sin problema desde el fondo de un
-salón. Si más adelante se compra un dominio corto, el QR mejora todavía más, pero no es
-necesario para arrancar.
+Son 49 caracteres, que en modo byte con corrección de errores M dan un QR de versión 4
+(33 × 33 módulos). Proyectado a pantalla completa se lee sin problema desde el fondo de un
+salón; se confirma en el ensayo de campo de la §12. Si más adelante se compra un dominio
+corto, el QR baja de versión y mejora todavía más, pero no hace falta para arrancar.
 
 ### Acceso a datos
 
@@ -654,7 +654,6 @@ ensayarla en campo antes de seguir.
 
 Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del primer evento.
 
-- **Nombre exacto del proyecto en Vercel.** Propuesta: `ronda-umg`. Define la URL del QR.
 - **Fechas, horas y lugares** de las 5 actividades globales y de la actividad extra.
 - **Listado real de clases** con nombre y correo del catedrático, sección, jornada y ciclo.
 - **Confirmación** de que el catedrático acepta un Excel como comprobante.
@@ -664,8 +663,10 @@ Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del pr
 | Servicio | Para qué | Estado |
 |---|---|---|
 | GitHub | Repositorio: `developerumg3-dotcom/asistencia-actividades-umg` (privado) | Listo |
-| Neon | Base de datos PostgreSQL y autenticación | Falta crear el proyecto |
-| Vercel | Hospedaje y despliegue continuo desde GitHub | Falta crear la cuenta |
+| Neon | Proyecto `app_asistencia_actividades` (`hidden-art-98202594`), organización DeveloperUMG (`org-dawn-math-42337202`) | Listo |
+| Vercel | Hospedaje y despliegue continuo. Proyecto: `asistencia-umg` | Listo |
+
+Nombre público: **`https://asistencia-umg.vercel.app`**
 
 No hace falta nada más para arrancar. Posibles agregados posteriores:
 

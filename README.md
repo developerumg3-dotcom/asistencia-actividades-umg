@@ -16,11 +16,22 @@ planificación.
 | Archivo | Para qué |
 |---|---|
 | [PLANIFICACION.md](PLANIFICACION.md) | **Fuente de verdad.** Alcance, modelo de datos, reglas de negocio, pantallas, arquitectura y decisiones cerradas. |
+| [ESTRUCTURA.md](ESTRUCTURA.md) | Mapa de carpetas, rutas previstas y variables de entorno. |
 | [AGENTS.md](AGENTS.md) | Contexto e instrucciones para agentes y asistentes que trabajen en este repo. |
 
-## Stack previsto
+## Stack
 
 Next.js 15 + TypeScript · Neon (PostgreSQL) · Drizzle · Neon Auth · Vercel · Tailwind CSS
+
+Nombre público: `https://asistencia-umg.vercel.app`
+
+## Configuración local
+
+```bash
+cp .env.example .env.local
+```
+
+Y llenar `.env.local` con los valores de Neon. Ese archivo nunca se versiona.
 
 ## Cómo funciona el QR
 

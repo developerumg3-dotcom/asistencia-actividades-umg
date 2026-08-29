@@ -8,6 +8,9 @@ Instrucciones para cualquier agente o asistente que trabaje en este repositorio.
 alcance, el modelo de datos, las reglas de negocio, las pantallas, la arquitectura y las
 decisiones ya cerradas.
 
+[`ESTRUCTURA.md`](ESTRUCTURA.md) tiene el mapa de carpetas, las rutas previstas y las
+variables de entorno.
+
 Reglas sobre ese documento:
 
 - **No propongas ni escribas código que lo contradiga.** Si algo hay que cambiar, se
@@ -20,10 +23,12 @@ Reglas sobre ese documento:
 
 **Fase 0 — definición cerrada. No hay código escrito todavía.**
 
-El repositorio contiene únicamente documentación. No hay `package.json`, ni esquema, ni
-dependencias instaladas.
+El repositorio contiene documentación, el esqueleto de carpetas y la plantilla de variables
+de entorno. No hay `package.json`, ni esquema, ni dependencias instaladas.
 
-Remoto: `developerumg3-dotcom/asistencia-actividades-umg` (privado), rama `main`.
+- Remoto: `developerumg3-dotcom/asistencia-actividades-umg` (privado), rama `main`
+- Neon: proyecto `app_asistencia_actividades` (`hidden-art-98202594`), org DeveloperUMG
+- Vercel: proyecto `asistencia-umg` → `https://asistencia-umg.vercel.app`
 
 No empieces a implementar por iniciativa propia. El usuario dirá cuándo arranca la Fase 1.
 
@@ -76,6 +81,10 @@ Estas salen de decisiones de diseño ya tomadas y romperlas rompe el sistema:
 7. **La asistencia se guarda aunque el alumno no esté inscrito a ninguna clase.** Los puntos
    aparecen solos cuando se inscriba. Perder una asistencia real es el peor error posible.
 8. **Todo intento de marcaje, válido o no, va a `bitacora`.**
+9. **Nunca escribas un secreto real en un archivo versionado.** Los valores van en
+   `.env.local`, que está en `.gitignore`. `.env.example` lleva solo los nombres.
+10. **Solo lleva prefijo `NEXT_PUBLIC_` lo que puede ver el mundo.** Ese prefijo mete la
+    variable en el JavaScript del navegador.
 
 ## Convenciones
 
