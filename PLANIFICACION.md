@@ -501,7 +501,7 @@ un archivo. Ese archivo se envía por fuera de la app — no hay envío automát
 | Aplicación | Next.js 15 (App Router) + TypeScript | Frontend y backend en un repo. Las rutas de servidor sirven la validación del QR y la generación del Excel. |
 | Base de datos | **Neon** (PostgreSQL serverless) | Postgres real, plan gratuito, buena experiencia de uso. |
 | ORM y migraciones | Drizzle | Encaja bien con Neon y con TypeScript. Migraciones versionadas en el repo. |
-| Autenticación | **Neon Auth** | Ya viene con la base. Alternativa de respaldo: Auth.js. |
+| Autenticación | **Neon Auth** (Managed Better Auth) | Ya viene con la base. Dos variables: `NEON_AUTH_BASE_URL` y `NEON_AUTH_COOKIE_SECRET`. Respaldo: Auth.js. |
 | Hospedaje | Vercel | Despliegue desde el repo, HTTPS automático. |
 | Generar QR | `qrcode` sobre canvas | Ligero y controlable en tamaño y corrección de errores. |
 | Leer QR | — | No se implementa. Se usa la cámara nativa del teléfono. |

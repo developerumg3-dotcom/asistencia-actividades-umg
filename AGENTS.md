@@ -51,7 +51,7 @@ son un registro de datos que agrupa clases y reciben el Excel por fuera de la ap
 | Aplicación | Next.js 15 (App Router) + TypeScript |
 | Base de datos | Neon (PostgreSQL serverless) |
 | ORM | Drizzle, con migraciones versionadas en el repo |
-| Autenticación | Neon Auth (respaldo: Auth.js) |
+| Autenticación | Neon Auth — **Managed Better Auth**, no Stack Auth (respaldo: Auth.js) |
 | Hospedaje | Vercel |
 | Estilos | Tailwind CSS |
 | QR | `qrcode` para generar. **No se implementa lector**: se usa la cámara nativa del teléfono. |
