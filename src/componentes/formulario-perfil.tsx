@@ -4,7 +4,10 @@ import { useActionState } from "react";
 import { completarPerfil, type EstadoFormulario } from "@/app/(protegido)/perfil/completar/acciones";
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
+import { ComboboxMultiple } from "@/componentes/ui/combobox-multiple";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
+import type { ClaseDisponible } from "@/lib/clases";
+import { enTitulo } from "@/lib/texto";
 
 const estadoInicial: EstadoFormulario = { error: null };
 
@@ -15,10 +18,14 @@ export function FormularioPerfil({
   carneActual,
   nombreActual,
   cicloActual,
+  cursosDisponibles,
+  idsInscritoInicial,
 }: {
   carneActual: string | null;
   nombreActual: string | null;
   cicloActual: string | null;
+  cursosDisponibles: ClaseDisponible[];
+  idsInscritoInicial: string[];
 }) {
   const [estado, accion, enviando] = useActionState(completarPerfil, estadoInicial);
 
@@ -58,6 +65,19 @@ export function FormularioPerfil({
           </option>
         ))}
       </Campo>
+      <ComboboxMultiple
+        id="cursos"
+        name="cursos"
+        etiqueta="Cursos en donde estás"
+        ayuda="Poné todos los cursos en donde estás."
+        placeholder="Buscar por nombre o código…"
+        opciones={cursosDisponibles.map((c) => ({
+          id: c.id,
+          etiqueta: enTitulo(c.nombre),
+          subEtiqueta: [c.codigo, c.seccion && `Sección ${c.seccion}`, c.jornada].filter(Boolean).join(" · "),
+        }))}
+        defaultSeleccionados={idsInscritoInicial}
+      />
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
       <Boton type="submit" disabled={enviando}>
         {enviando ? "Guardando…" : "Guardar y continuar"}

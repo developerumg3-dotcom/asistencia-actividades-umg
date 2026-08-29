@@ -1,30 +1,13 @@
-import { asc, eq } from "drizzle-orm";
-import { db } from "@/db/cliente";
-import { clase, docente, inscripcion } from "@/db/esquema";
 import { SelectorClases } from "@/componentes/selector-clases";
+import { obtenerClasesDisponibles, obtenerIdsInscritoDe } from "@/lib/clases";
 import { requireAlumno } from "@/lib/sesion";
 
 export default async function ClasesPage() {
   const alumnoActual = await requireAlumno();
 
-  const [clasesDisponibles, inscripciones] = await Promise.all([
-    db
-      .select({
-        id: clase.id,
-        codigo: clase.codigo,
-        nombre: clase.nombre,
-        seccion: clase.seccion,
-        jornada: clase.jornada,
-        ciclo: clase.ciclo,
-        docenteNombre: docente.nombre,
-      })
-      .from(clase)
-      // leftJoin y no innerJoin: el catalogo del pensum se siembra sin catedratico
-      // asignado (PLANIFICACION.md §4). Con innerJoin no se veria ninguna clase.
-      .leftJoin(docente, eq(clase.docenteId, docente.id))
-      .where(eq(clase.activa, true))
-      .orderBy(asc(clase.codigo)),
-    db.select({ claseId: inscripcion.claseId }).from(inscripcion).where(eq(inscripcion.alumnoId, alumnoActual.id)),
+  const [clasesDisponibles, idsInscritoInicial] = await Promise.all([
+    obtenerClasesDisponibles(),
+    obtenerIdsInscritoDe(alumnoActual.id),
   ]);
 
   return (
@@ -37,7 +20,7 @@ export default async function ClasesPage() {
       </div>
       <SelectorClases
         clasesDisponibles={clasesDisponibles}
-        idsInscritoInicial={inscripciones.map((i) => i.claseId)}
+        idsInscritoInicial={idsInscritoInicial}
         cicloAlumno={alumnoActual.ciclo}
       />
     </main>

@@ -1,9 +1,10 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
-import { alumno } from "@/db/esquema";
+import { alumno, clase, inscripcion } from "@/db/esquema";
 import { requireAlumno } from "@/lib/sesion";
 
 export type EstadoFormulario = { error: string | null };
@@ -29,12 +30,25 @@ export async function completarPerfil(
   const carne = String(formData.get("carne") ?? "").trim();
   const nombre = String(formData.get("nombre") ?? "").trim();
   const ciclo = String(formData.get("ciclo") ?? "").trim();
+  const cursosElegidos = [...new Set(formData.getAll("cursos").map((v) => String(v)))];
 
   if (!carne || !nombre || !ciclo) {
     return { error: "Completá tu carné, tu nombre completo y tu ciclo." };
   }
   if (!CICLOS_VALIDOS.has(ciclo)) {
     return { error: "Elegí un ciclo de la lista." };
+  }
+  if (cursosElegidos.length === 0) {
+    return { error: "Elegí al menos un curso en donde estás." };
+  }
+
+  // No se confía en los ids que manda el cliente: se valida que existan y esten activos.
+  const clasesValidas = await db
+    .select({ id: clase.id })
+    .from(clase)
+    .where(and(inArray(clase.id, cursosElegidos), eq(clase.activa, true)));
+  if (clasesValidas.length !== cursosElegidos.length) {
+    return { error: "Uno de los cursos elegidos ya no está disponible. Revisá la lista." };
   }
 
   try {
@@ -50,6 +64,12 @@ export async function completarPerfil(
     }
     throw error;
   }
+
+  await db
+    .insert(inscripcion)
+    .values(cursosElegidos.map((claseId) => ({ alumnoId: alumnoActual.id, claseId })))
+    .onConflictDoNothing();
+  revalidatePath("/clases");
 
   redirect("/");
 }
