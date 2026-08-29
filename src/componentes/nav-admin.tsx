@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const pestanas = [
+  { href: "/admin/actividades", etiqueta: "Actividades" },
   { href: "/admin/catedraticos", etiqueta: "Catedráticos" },
   { href: "/admin/clases", etiqueta: "Clases" },
 ];

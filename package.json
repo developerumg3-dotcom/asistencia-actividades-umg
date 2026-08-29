@@ -11,7 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:sembrar": "tsx scripts/sembrar-pensum.mts",
     "db:sembrar-usuarios": "tsx scripts/sembrar-usuarios.mts",
-    "probar": "tsx --test scripts/probar-qr.mts"
+    "probar": "tsx --test scripts/probar-*.mts"
   },
   "license": "UNLICENSED",
   "packageManager": "pnpm@10.33.0",

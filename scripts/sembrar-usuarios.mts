@@ -184,6 +184,46 @@ if (filaAdmin.length > 0) {
   );
 }
 
+// ---- Actividad de demostracion -----------------------------------------------------
+// Arranca en el momento de sembrar y deja el marcaje abierto 24 h, para poder probar el
+// kiosco y el marcaje sin tener que editar fechas a mano cada vez.
+const { generarSecreto } = await import("../src/lib/qr/codigo.ts");
+const { codigoCortoAleatorio } = await import("../src/lib/qr/codigo-corto.ts");
+const { actividad } = await import("../src/db/esquema/index.ts");
+
+const NOMBRE_DEMO = "Conferencia de ciberseguridad";
+const [demoExistente] = await db
+  .select({ id: actividad.id, codigoCorto: actividad.codigoCorto })
+  .from(actividad)
+  .where(eq(actividad.nombre, NOMBRE_DEMO))
+  .limit(1);
+
+if (demoExistente) {
+  console.log(`  · actividad "${NOMBRE_DEMO}" ya existe (/${demoExistente.codigoCorto})`);
+} else {
+  const ahora = new Date();
+  const enHoras = (h: number) => new Date(ahora.getTime() + h * 3600_000);
+  const [creada] = await db
+    .insert(actividad)
+    .values({
+      codigoCorto: codigoCortoAleatorio(),
+      nombre: NOMBRE_DEMO,
+      descripcion: "Actividad de prueba para el kiosco y el marcaje.",
+      lugar: "Salón 201",
+      tipo: "global",
+      puntos: 1,
+      iniciaEn: ahora,
+      terminaEn: enHoras(2),
+      marcajeAbreEn: ahora,
+      marcajeCierraEn: enHoras(24),
+      estado: "publicada",
+      ventanaSeg: 60,
+      secretoQr: generarSecreto(),
+    })
+    .returning({ codigoCorto: actividad.codigoCorto });
+  console.log(`  ✓ actividad "${NOMBRE_DEMO}" creada (/${creada.codigoCorto})`);
+}
+
 // ---- Resumen -----------------------------------------------------------------------
 const conDocente = await db
   .select({ id: clase.id })
