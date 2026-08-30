@@ -2,10 +2,12 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
-- **Última actualización:** 29 de agosto de 2026
+- **Última actualización:** 30 de agosto de 2026
 - **Fase actual:** Fase 2 construida entera salvo el ensayo en campo (tarea 7), que es
-  presencial. Falta también el despliegue, tarea 7 de la Fase 1. Ver
-  [`docs/fase-2.md`](docs/fase-2.md).
+  presencial, y el despliegue (tarea 7 de la Fase 1). Ver [`docs/fase-2.md`](docs/fase-2.md).
+  En paralelo, **Fase 3 adelantada**: el motor de cálculo y las pantallas A9/A10 (tareas 1 a
+  4) ya están construidos y probados; falta la tarea 5, cerrarla contra asistencias reales —
+  ver [`docs/fase-3.md`](docs/fase-3.md).
 
 ---
 
@@ -35,13 +37,21 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Kiosco (B5) | `/kiosco/{clave}`, QR rotativo con precarga y Wake Lock |
 | Asistencias en vivo (B6) | `/admin/actividades/{id}/en-vivo` |
 | Inicio del alumno (A5) | `/inicio`, la actividad abierta y qué hacer |
+| Motor de puntos | `src/lib/puntos/calculo.ts` (puro) + `consulta.ts` (base). Participaciones, saldo extra, fecha de corte. 13 pruebas: `pnpm probar` |
+| Participaciones (A9) | `/participaciones` — tabla clase × actividad, igual formato que la hoja de Excel de la §9 |
+| Puntos extra (A10) | `/puntos-extra` — saldo, repartir, deshacer hasta la fecha de corte (48 h después del cierre de marcaje de la última actividad) |
+| Datos de prueba de actividades | `pnpm db:sembrar-actividades` — 5 actividades globales + 1 extra con `codigo_corto` `demo-*`, para probar A9/A10 sin esperar a B4. **Borrar (ver el propio script) antes de que B4 esté en uso real** |
 
 ## Qué NO existe todavía
 
 - Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
 - **El ensayo en campo** (tarea 7 de la Fase 2). Es presencial y obligatorio: salón real,
   cinco teléfonos, al menos un iPhone y un Android viejo. La fase no está cerrada sin eso
-- Puntos, Excel, PWA: fases 3 a 5
+- **De la Fase 3 falta la tarea 5** de [`docs/fase-3.md`](docs/fase-3.md): cerrarla contra
+  asistencias reales generadas por el flujo terminado de la Fase 2. Las tareas 1 a 4 (motor,
+  A9, A10) están hechas y probadas con datos sembrados a mano
+  (`pnpm db:sembrar-actividades`), no con el marcaje de verdad todavía
+- Excel, PWA: fases 4 y 5
 - La cuenta de catedrático que decidió el consejo (§3): falta `docente.alumno_id`, el valor
   `catedratico` en el enum `rol`, y decidir cómo obtiene su cuenta
 - **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
@@ -63,7 +73,19 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 
 La Fase 2 está construida. Lo que queda es **desplegar y ensayar en campo**, en ese orden:
 la URL del QR sale de `NEXT_PUBLIC_APP_URL`, así que el escaneo hay que probarlo con el
-dominio real y no con `localhost`. Después arranca la Fase 3 (puntos).
+dominio real y no con `localhost`.
+
+La **Fase 3** se adelantó en paralelo a la 2, porque el motor de puntos solo necesita las
+tablas ya migradas, no las pantallas de la Fase 2 (ver «Por qué se puede trabajar en
+paralelo» en [`docs/fase-3.md`](docs/fase-3.md)). Motor, A9 y A10 (tareas 1 a 4) están
+construidos y probados con datos sembrados a mano. Lo único que falta ahí es la **tarea 5**:
+repetir la prueba contra asistencias reales una vez que la Fase 2 esté terminada, para
+confirmar que el motor lee exactamente lo que el marcaje de verdad escribe.
+
+Dos hallazgos de la implementación de la Fase 3 quedan anotados en «Trampas conocidas» de
+[`AGENTS.md`](AGENTS.md) porque van a volver a aparecer en la Fase 2: `neon-http` (el driver
+de Neon que usa esta app) no soporta transacciones interactivas, y `Intl.DateTimeFormat`
+puede formatear fechas distinto entre el servidor y el navegador para `es-GT`.
 
 ---
 

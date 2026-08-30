@@ -132,6 +132,37 @@ aparece deslogueado. Por eso la página de marcaje **tiene que llevar el formula
 en la misma página**, sin redirecciones, y decir claramente *«El código ya cambió, escaneá
 otra vez»* cuando expira. Nunca fallar en silencio ahí.
 
+### `neon-http` no soporta transacciones interactivas
+
+El driver que usa esta app (`drizzle-orm/neon-http`, ver ESTRUCTURA.md) tira `Error: No
+transactions support in neon-http driver` en cuanto se llama `db.transaction(...)`. Cualquier
+regla que necesite "leer, decidir, escribir" de forma atómica (por ejemplo, que un total no
+supere un saldo — §5) no se puede resolver con una transacción de Drizzle.
+
+La salida que se usó en la Fase 3 ([`src/lib/puntos/consulta.ts`](src/lib/puntos/consulta.ts),
+`repartirPuntos`): una sola sentencia `INSERT ... SELECT ... WHERE` con
+`pg_advisory_xact_lock` en una CTE al principio. Postgres envuelve cada sentencia suelta en su
+propia transacción implícita, así que el candado y el chequeo quedan atómicos igual, sin
+depender de `db.transaction()`. Sirve como patrón para cualquier otra escritura de la Fase 2
+en adelante que necesite la misma garantía (por ejemplo, `asistencia` + `bitacora` al validar
+un marcaje).
+
+### `Intl.DateTimeFormat` no siempre coincide entre servidor y navegador
+
+El ICU de Node (servidor) y el de Chromium (navegador) pueden formatear el mismo `Date` con
+texto distinto para `es-GT`, y React lo marca como error de hidratación en cualquier
+componente cliente que reciba una fecha ya formateada desde el servidor. Dos formas en que
+aparece, ambas resueltas en [`src/lib/fecha.ts`](src/lib/fecha.ts):
+
+- Un `skeleton` con fecha y hora juntas (`day` + `month` + `hour` + `minute` en el mismo
+  `Intl.DateTimeFormat`) puede elegir un conector distinto ("29 de agosto **a las** 6:17 p.
+  m." contra "29 de agosto**,** 6:17 p. m."). Se resuelve formateando fecha y hora por
+  separado y uniéndolas con un separador fijo, en vez de dejar que el `skeleton` combinado lo
+  decida.
+- El espacio antes de "p. m." puede ser un espacio normal en un ICU y un espacio angosto de
+  no separación (U+202F) o de no separación común (U+00A0) en el otro — invisible a simple
+  vista. Se resuelve normalizando esos espacios a uno común después de formatear.
+
 ### Neon se suspende por inactividad
 
 La primera consulta tras un rato de reposo tarda cientos de milisegundos. Irrelevante en
