@@ -249,7 +249,7 @@ test("el inicio de slot es coherente con el slot", () => {
 
 test("la url del QR queda corta y sin barra doble", () => {
   assert.equal(
-    urlDeMarcaje("https://asistencia-umg.vercel.app/", "a7", "AbCdEfGhIj"),
-    "https://asistencia-umg.vercel.app/a/a7/AbCdEfGhIj",
+    urlDeMarcaje("https://app-asist-actividades-umg.netlify.app/", "a7", "AbCdEfGhIj"),
+    "https://app-asist-actividades-umg.netlify.app/a/a7/AbCdEfGhIj",
   );
 });

@@ -133,8 +133,8 @@ sube al repositorio.
 
 ### Producción
 
-Las mismas variables se cargan en Vercel → Settings → Environment Variables, con dos
-diferencias:
+Las mismas variables se cargan en Netlify → Site configuration → Environment variables, con
+dos diferencias:
 
-- `NEXT_PUBLIC_APP_URL` pasa a ser `https://asistencia-umg.vercel.app`.
+- `NEXT_PUBLIC_APP_URL` pasa a ser `https://app-asist-actividades-umg.netlify.app`.
 - El resto se copia igual desde Neon.

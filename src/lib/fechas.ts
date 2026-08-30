@@ -85,7 +85,8 @@ function desfaseMinutos(instante: Date): number {
  * lleva zona— al instante UTC que representa **en hora de Guatemala**.
  *
  * Sin esto, `new Date("2026-09-05T14:00")` se interpreta en la zona del servidor, que en
- * Vercel es UTC: la actividad quedaria seis horas corrida.
+ * hospedaje serverless (Netlify, Vercel, o el que sea) suele ser UTC: la actividad quedaria
+ * seis horas corrida.
  */
 export function desdeCampoLocal(valor: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(valor)) return null;

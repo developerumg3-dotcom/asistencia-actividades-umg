@@ -100,20 +100,22 @@ recargar.
 
 ### 7. Despliegue
 
-- Proyecto conectado en Vercel al repositorio
-- Las 6 variables cargadas en Vercel, con `NEXT_PUBLIC_APP_URL` apuntando a
-  `https://asistencia-umg.vercel.app`
+- Proyecto conectado en Netlify al repositorio (era Vercel en el plan original; se cambió a
+  Netlify el 30 de agosto de 2026, sin ningún efecto sobre el resto de esta tarea)
+- Las 6 variables cargadas en Netlify, con `NEXT_PUBLIC_APP_URL` apuntando a
+  `https://app-asist-actividades-umg.netlify.app`
 - Despliegue automático desde `main`
 
-**Listo cuando:** el recorrido completo funciona en `asistencia-umg.vercel.app`, no solo en
-local.
+**Listo cuando:** el recorrido completo funciona en `app-asist-actividades-umg.netlify.app`,
+no solo en local.
 
 ---
 
 ## Criterio de aceptación de la fase
 
-Daniel entra a `asistencia-umg.vercel.app` desde su teléfono, crea su cuenta, completa carné
-y nombre, ve sus clases reales ya cargadas, elige las suyas, y al volver a entrar siguen ahí.
+Daniel entra a `app-asist-actividades-umg.netlify.app` desde su teléfono, crea su cuenta,
+completa carné y nombre, ve sus clases reales ya cargadas, elige las suyas, y al volver a
+entrar siguen ahí.
 
 ---
 

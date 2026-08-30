@@ -41,9 +41,8 @@ export function FormularioNuevoCatedratico() {
           id="email-nuevo"
           name="email"
           type="email"
-          etiqueta="Correo"
-          required
-          ayuda="A esta dirección se le envía su Excel."
+          etiqueta="Correo (opcional)"
+          ayuda="No hace falta para asignar cursos ni para descargar el Excel."
         />
       </div>
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
@@ -64,7 +63,7 @@ export function FilaCatedratico({
 }: {
   id: string;
   nombre: string;
-  email: string;
+  email: string | null;
   clases: number;
 }) {
   const [estado, accion, enviando] = useActionState(actualizarDocente, estadoInicial);
@@ -75,7 +74,7 @@ export function FilaCatedratico({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-medium text-neutral-900">{nombre}</h2>
-          <p className="truncate text-sm text-neutral-600">{email}</p>
+          {email && <p className="truncate text-sm text-neutral-600">{email}</p>}
         </div>
         {/* Un catedratico sin clases no recibe Excel: es un dato huerfano y conviene verlo. */}
         <span
@@ -98,9 +97,8 @@ export function FilaCatedratico({
               id={`email-${id}`}
               name="email"
               type="email"
-              etiqueta="Correo"
-              defaultValue={email}
-              required
+              etiqueta="Correo (opcional)"
+              defaultValue={email ?? ""}
             />
           </div>
           {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}

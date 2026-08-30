@@ -128,16 +128,16 @@ con la red desconectada un minuto.
 
 ---
 
-## Dependencias que faltan
+## Dependencias
 
-- `qrcode` para generar la imagen del QR en el servidor. Todavía no está en `package.json`.
+- `qrcode`, para generar la imagen del QR en el servidor. Ya está en `package.json`.
 - **Nada de librerías de lectura**: la cámara nativa hace el escaneo (decisión 10).
 
 ## Prerrequisito externo
 
-El despliegue en Vercel (tarea 7 de la Fase 1) **bloquea el ensayo**, no el desarrollo: la
+El despliegue (tarea 7 de la Fase 1, en Netlify) **bloqueaba el ensayo**, no el desarrollo: la
 URL que se codifica en el QR sale de `NEXT_PUBLIC_APP_URL` y hay que probar el escaneo con
-el dominio real, no con `localhost`.
+el dominio real, no con `localhost`. Ya está desplegado; falta solo el ensayo en sí.
 
 ---
 

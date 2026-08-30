@@ -32,15 +32,16 @@ registra, declara su carné y sus clases, y marca asistencia escaneando un **có
 rota cada 60 segundos** proyectado en el evento. Al final, el administrador exporta un Excel
 por catedrático con los puntos de cada alumno.
 
-Nombre de trabajo: **Ronda**. Nombre público: `https://asistencia-umg.vercel.app`.
+Nombre de trabajo: **Ronda**. Nombre público: `https://app-asist-actividades-umg.netlify.app`.
 
 Dos roles con cuenta: **alumno** y **administrador**. Los catedráticos **no tienen cuenta**;
 son un registro de datos que agrupa clases y reciben el Excel por fuera de la app.
 
 ## Estado actual
 
-Ver **[ESTADO.md](ESTADO.md)**, que es el archivo que se mantiene al día. Resumen: Fase 0
-cerrada, sin código, base de datos vacía, entorno configurado.
+Ver **[ESTADO.md](ESTADO.md)**, que es el archivo que se mantiene al día. Resumen: Fases 1 y 2
+construidas y desplegadas (falta el ensayo en campo, presencial), Fase 3 adelantada en
+paralelo.
 
 ## Stack
 
@@ -50,7 +51,7 @@ cerrada, sin código, base de datos vacía, entorno configurado.
 | Base de datos | Neon (PostgreSQL serverless), región `us-east-2` |
 | ORM | Drizzle, con migraciones versionadas en el repo |
 | Autenticación | Neon Auth — **Managed Better Auth**, no Stack Auth |
-| Hospedaje | Vercel, proyecto `asistencia-umg` |
+| Hospedaje | Netlify, proyecto `app-asist-actividades-umg` |
 | Estilos | Tailwind CSS |
 | QR | `qrcode` para generar. **No se implementa lector**: se usa la cámara nativa. |
 | Excel | `exceljs` en rutas de servidor |

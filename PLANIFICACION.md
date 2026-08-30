@@ -38,7 +38,7 @@ requisito para que el sistema funcione.
 El planteamiento inicial contemplaba profesores revisando fotos subidas por los alumnos.
 Se descartó a favor del QR rotativo. Como consecuencia:
 
-- **No hay revisión manual de profesores.** El catedrático no aprueba ni rechaza puntos. (Sí tiene cuenta, desde el 29/08/2026, pero solo para descargar sus reportes — ver §3.)
+- **No hay cuentas de profesor.** El catedrático es un registro de datos que agrupa clases.
 - No hay subida ni almacenamiento de imágenes.
 - No hay cola de aprobación ni estado intermedio de "punto posible".
 - Un alumno tiene el punto o no lo tiene.
@@ -62,7 +62,7 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 
 ### No entra
 
-- ~~Cuentas de profesor.~~ **Revisado el 29/08/2026:** el catedrático sí tiene cuenta, de solo lectura sobre sus clases (§3). Lo que sigue fuera es que apruebe o rechace puntos.
+- Cuentas de profesor. No hay login docente ni vista de catedrático.
 - Subida de fotos o evidencias.
 - Aprobación o rechazo manual de puntos. Solo corrección administrativa puntual.
 - Escáner de QR dentro de la app (ver §6.4 — se usa la cámara nativa del teléfono).
@@ -79,34 +79,10 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 |---|---|---|
 | **Alumno** | Sí | Registrarse · completar perfil · inscribirse a clases · ver actividades · marcar asistencia · repartir puntos extra · ver sus puntos por clase |
 | **Administrador** | Sí | Todo lo del alumno, más: gestionar catedráticos, clases y actividades · abrir la pantalla del QR · ver asistencias en vivo · corregir inscripciones · marcaje manual · revisar bitácora · exportar Excel |
-| **Catedrático** | **Sí** | Iniciar sesión y **descargar el Excel de sus propias clases**. Nada más: no ve otras clases, no crea actividades, no corrige asistencias, no marca. |
+| **Catedrático** | **No** | Es un registro de datos (nombre, correo opcional) que agrupa clases. El administrador lo crea a mano y le asigna cursos; después descarga el Excel de esas clases y se lo hace llegar por fuera de la app. |
 
 El rol se guarda como campo `rol` en la tabla `alumno`. Un solo administrador basta para
 el piloto.
-
-### El catedrático pasó a tener cuenta (cambio del 29 de agosto de 2026)
-
-**Antes:** el catedrático no tenía cuenta. Era solo un registro de datos y el administrador
-le enviaba el Excel por fuera de la app.
-
-**Ahora:** por decisión del consejo de organizadores, el catedrático inicia sesión y se
-descarga él mismo el reporte de sus clases.
-
-Esto **no revive el diseño descartado.** Aquel tenía profesores revisando fotos y aprobando
-puntos uno por uno, con una cola de aprobación y un estado intermedio. Nada de eso vuelve: la
-verificación sigue siendo automática por QR y el catedrático **no aprueba ni rechaza nada**.
-Su cuenta es de solo lectura sobre sus propias clases.
-
-Consecuencias sobre el modelo:
-
-- `docente` necesita vincularse con una cuenta. Se agrega `docente.alumno_id` (nulo mientras
-  no haya reclamado su cuenta), y no al revés: un catedrático existe como dato antes de
-  tener con qué entrar.
-- El enum `rol` suma el valor `catedratico`.
-- Toda consulta de la vista del catedrático **se filtra por sus clases**. Que vea las notas
-  de un colega sería una fuga de datos de alumnos, no un detalle de permisos.
-- Cómo obtiene la cuenta queda pendiente (§15): registro abierto validando el correo contra
-  `docente.email`, o alta por el administrador. Lo segundo es más control y menos superficie.
 
 ---
 
@@ -137,14 +113,16 @@ administrador puede liberar o reasignar un carné desde la pantalla de alumnos.
 
 ### `docente`
 
-Agrupa clases para la exportación. No es una cuenta.
+Agrupa clases para la exportación. No es una cuenta: el administrador lo crea a mano con
+solo el nombre, y le asigna cursos desde `/admin/clases`. Ese vínculo (`clase.docente_id`) es
+lo único que hace falta para exportar el Excel de esas clases.
 
-| Campo | Tipo |
-|---|---|
-| `id` | uuid PK |
-| `nombre` | texto |
-| `email` | texto |
-| `creado_en` | timestamptz |
+| Campo | Tipo | Notas |
+|---|---|---|
+| `id` | uuid PK | |
+| `nombre` | texto | Único dato obligatorio al crear el registro |
+| `email` | texto, nullable | Opcional. No hace falta ni para crear el registro ni para exportar el Excel — el administrador lo descarga y lo hace llegar por fuera de la app, no la app por correo. |
+| `creado_en` | timestamptz | |
 
 ### `clase`
 
@@ -547,33 +525,45 @@ un archivo. Ese archivo se envía por fuera de la app — no hay envío automát
 | Base de datos | **Neon** (PostgreSQL serverless) | Postgres real, plan gratuito, buena experiencia de uso. |
 | ORM y migraciones | Drizzle | Encaja bien con Neon y con TypeScript. Migraciones versionadas en el repo. |
 | Autenticación | **Neon Auth** (Managed Better Auth) | Ya viene con la base. Dos variables: `NEON_AUTH_BASE_URL` y `NEON_AUTH_COOKIE_SECRET`. Respaldo: Auth.js. |
-| Hospedaje | Vercel | Despliegue desde el repo, HTTPS automático. |
+| Hospedaje | **Netlify** | Despliegue desde el repo, HTTPS automático. Era Vercel hasta el 30 de agosto de 2026 — ver «Netlify en vez de Vercel» más abajo. |
 | Generar QR | `qrcode` sobre canvas | Ligero y controlable en tamaño y corrección de errores. |
 | Leer QR | — | No se implementa. Se usa la cámara nativa del teléfono. |
 | Excel | `exceljs` en ruta de servidor | Control total sobre formato, anchos y negritas. |
 | Estilos | Tailwind CSS | Velocidad de iteración en pantallas móviles. |
 
-**Costo de infraestructura: cero** en los planes gratuitos de Vercel y Neon.
+**Costo de infraestructura: cero** en los planes gratuitos de Netlify y Neon.
+
+### Netlify en vez de Vercel
+
+Desplegado desde el 30 de agosto de 2026 en **Netlify**, no en Vercel como decía este
+documento hasta esa fecha. Decisión del usuario; no cambia nada del diseño, solo el
+hospedaje. Todo lo demás de esta sección sigue igual, incluido el cálculo del largo del QR
+más abajo: solo cambió el dominio del que sale la URL.
 
 ### Dominio
 
-No se compra dominio por ahora. Se usa el **subdominio gratuito de Vercel**, del tipo
-`{proyecto}.vercel.app`.
-
-Esto tiene una consecuencia directa en el QR: el nombre del proyecto en Vercel **es** parte
-de la URL que se codifica, y una URL más corta produce un QR con módulos más grandes, que se
-lee desde más lejos. Por eso el nombre del proyecto debe ser corto.
-
-El nombre elegido es **`asistencia-umg`**, así que la URL queda así:
+No se compra dominio propio por ahora. Se usa el **subdominio gratuito de Netlify**:
 
 ```
-https://asistencia-umg.vercel.app/a/x3/k9f2mq8w1p     (49 caracteres)
+https://app-asist-actividades-umg.netlify.app
 ```
 
-Son 49 caracteres, que en modo byte con corrección de errores M dan un QR de versión 4
-(33 × 33 módulos). Proyectado a pantalla completa se lee sin problema desde el fondo de un
-salón; se confirma en el ensayo de campo de la §12. Si más adelante se compra un dominio
-corto, el QR baja de versión y mejora todavía más, pero no hace falta para arrancar.
+Esto tiene una consecuencia directa en el QR: el dominio **es** parte de la URL que se
+codifica, y una URL más corta produce un QR con módulos más grandes, que se lee desde más
+lejos. Con el nombre de proyecto de Netlify la URL queda así:
+
+```
+https://app-asist-actividades-umg.netlify.app/a/x3/k9f2mq8w1p     (61 caracteres)
+```
+
+Son 61 caracteres, que en modo byte con corrección de errores M **siguen entrando** en un QR
+de versión 4 (33 × 33 módulos, capacidad máxima 62 caracteres en modo byte con nivel M) — pero
+raspando el límite, con un solo carácter de margen. Con el dominio de Vercel el margen era de
+13 caracteres (49 de 62); con este dominio, más largo, un `codigo_corto` de tres caracteres en
+vez de dos ya empujaría el QR a versión 5 (37 × 37, un módulo más denso, más difícil de leer
+desde el fondo del salón). **Mientras se use este dominio, conviene mantener `codigo_corto`
+en dos caracteres.** Se confirma que el QR se lee bien de todos modos en el ensayo de campo de
+la §12; si en algún momento no alcanza, la salida más simple es comprar un dominio corto.
 
 ### Acceso a datos
 
@@ -609,8 +599,9 @@ la elección son prácticas:
 
 - **Un solo proyecto y un solo despliegue.** Con .NET serían una API de ASP.NET Core más un
   frontend aparte, o Blazor. Dos cosas que desplegar en vez de una.
-- **Hospedaje gratuito y sencillo.** Vercel despliega Next.js desde el repositorio sin
-  configuración. Para .NET habría que ir a Azure, Render o Fly.io, con más pasos.
+- **Hospedaje gratuito y sencillo.** Netlify (o Vercel, cualquiera de los dos) despliega
+  Next.js desde el repositorio sin configuración. Para .NET habría que ir a Azure, Render o
+  Fly.io, con más pasos.
 - **La pantalla del QR es JavaScript de todos modos.** Generar el código en canvas, el
   contador regresivo y el Wake Lock viven en el navegador. Con .NET igual habría que escribir
   esa parte en JS.
@@ -691,13 +682,13 @@ ensayarla en campo antes de seguir.
 | 4 | ¿Bajas de clase? | **No se registran.** El alumno quita la clase y desaparece; el catedrático ignora lo que no reconoce. |
 | 5 | ¿Duración de la ventana del QR? | **60 s por defecto, configurable por actividad.** |
 | 6 | ¿Uno o dos escaneos? | **Uno.** |
-| 7 | ¿Formato del Excel? | **Un libro por catedrático, una hoja por clase.** Requiere entidad `docente`. Descarga manual. **Revisada el 29/08/2026:** además del administrador, el propio catedrático puede descargarlo desde su cuenta (§3). |
+| 7 | ¿Formato del Excel? | **Un libro por catedrático, una hoja por clase.** Requiere entidad `docente`. Descarga manual, solo por el administrador. |
 | 8 | ¿Alumnos sin teléfono? | **Marcaje manual del administrador** con justificación obligatoria. |
 | 9 | ¿Cuántas actividades? | **5 globales de 1 punto + 1 extra de 2 puntos.** Faltan fechas y lugares. |
 | 10 | ¿Escáner dentro de la app? | **No.** Cámara nativa del teléfono. La página de marcaje maneja el caso de sesión ausente y código expirado. |
 | 11 | ¿Base de datos? | **Neon** (PostgreSQL serverless) con Neon Auth y Drizzle. |
 | 12 | ¿Backend en TypeScript o .NET? | **TypeScript**, con Next.js. Más fácil de desplegar y mantener: un solo proyecto, un solo despliegue. |
-| 13 | ¿Dominio propio? | **No por ahora.** Subdominio gratuito de Vercel. El nombre del proyecto debe ser corto porque va dentro del QR. |
+| 13 | ¿Dominio propio? | **No por ahora.** Subdominio gratuito de Netlify. El nombre del proyecto debe ser corto porque va dentro del QR — ver «Dominio» en §10. |
 | 14 | ¿Saldo extra sin repartir? | **Se pierde**, con aviso permanente en la app mientras haya saldo pendiente. |
 
 ---
@@ -706,11 +697,10 @@ ensayarla en campo antes de seguir.
 
 Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del primer evento.
 
-- **Fechas, horas y lugares** de las 5 actividades globales y de la actividad extra.
-- **Listado real de clases** con nombre y correo del catedrático, sección, jornada y ciclo.
-- **Confirmación** de que el catedrático acepta un Excel como comprobante.
-- **Cómo obtiene su cuenta el catedrático:** registro abierto validando el correo contra
-  `docente.email`, o alta por el administrador. Bloquea la vista de catedrático, no la Fase 2.
+- **Fechas, horas y lugares** de las 5 actividades globales y de la actividad extra. Se van
+  cargando en `/admin/actividades` conforme se crean, no hace falta tenerlas todas de una vez.
+- **Listado real de clases** con nombre del catedrático, sección, jornada y ciclo. El correo
+  del catedrático es opcional (§3, §4).
 
 ## 16. Cuentas y servicios
 
@@ -718,9 +708,9 @@ Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del pr
 |---|---|---|
 | GitHub | Repositorio: `developerumg3-dotcom/asistencia-actividades-umg` (privado) | Listo |
 | Neon | Proyecto `app_asistencia_actividades` (`hidden-art-98202594`), organización DeveloperUMG (`org-dawn-math-42337202`) | Listo |
-| Vercel | Hospedaje y despliegue continuo. Proyecto: `asistencia-umg` | Listo |
+| Netlify | Hospedaje y despliegue continuo. Proyecto: `app-asist-actividades-umg` | Listo |
 
-Nombre público: **`https://asistencia-umg.vercel.app`**
+Nombre público: **`https://app-asist-actividades-umg.netlify.app`**
 
 No hace falta nada más para arrancar. Posibles agregados posteriores:
 

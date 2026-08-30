@@ -15,11 +15,11 @@ export async function crearDocente(
   await requireAdmin();
   const nombre = String(formData.get("nombre") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  if (!nombre || !email) {
-    return { error: "Completá el nombre y el correo del catedrático." };
+  if (!nombre) {
+    return { error: "Completá el nombre del catedrático." };
   }
 
-  await db.insert(docente).values({ nombre, email });
+  await db.insert(docente).values({ nombre, email: email || null });
   revalidatePath("/admin/catedraticos");
   return { error: null };
 }
@@ -32,11 +32,11 @@ export async function actualizarDocente(
   const id = String(formData.get("id") ?? "");
   const nombre = String(formData.get("nombre") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  if (!id || !nombre || !email) {
-    return { error: "Completá el nombre y el correo." };
+  if (!id || !nombre) {
+    return { error: "Completá el nombre." };
   }
 
-  await db.update(docente).set({ nombre, email }).where(eq(docente.id, id));
+  await db.update(docente).set({ nombre, email: email || null }).where(eq(docente.id, id));
   revalidatePath("/admin/catedraticos");
   return { error: null };
 }

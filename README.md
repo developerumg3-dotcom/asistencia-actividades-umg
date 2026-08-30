@@ -8,8 +8,8 @@ administrador exporta un Excel por catedrático con los puntos de cada alumno.
 
 ## Estado
 
-**Fase 0 cerrada.** El diseño está definido y el entorno configurado. No hay código todavía.
-Ver [ESTADO.md](ESTADO.md).
+Fases 1 y 2 construidas y desplegadas; a la Fase 2 le falta el ensayo en campo, presencial.
+Fase 3 adelantada en paralelo. Ver [ESTADO.md](ESTADO.md), que es el que se mantiene al día.
 
 ## Documentos
 
@@ -25,9 +25,9 @@ Si sos un agente o asistente, **empezá por [AGENTS.md](AGENTS.md)**.
 
 ## Stack
 
-Next.js 15 + TypeScript · Neon (PostgreSQL) · Drizzle · Neon Auth · Vercel · Tailwind CSS
+Next.js 15 + TypeScript · Neon (PostgreSQL) · Drizzle · Neon Auth · Netlify · Tailwind CSS
 
-Nombre público: `https://asistencia-umg.vercel.app`
+Nombre público: `https://app-asist-actividades-umg.netlify.app`
 
 ## Configuración local
 

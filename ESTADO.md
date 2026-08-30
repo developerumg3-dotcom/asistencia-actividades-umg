@@ -3,11 +3,12 @@
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
 - **Última actualización:** 30 de agosto de 2026
-- **Fase actual:** Fase 2 construida entera salvo el ensayo en campo (tarea 7), que es
-  presencial, y el despliegue (tarea 7 de la Fase 1). Ver [`docs/fase-2.md`](docs/fase-2.md).
-  En paralelo, **Fase 3 adelantada**: el motor de cálculo y las pantallas A9/A10 (tareas 1 a
-  4) ya están construidos y probados; falta la tarea 5, cerrarla contra asistencias reales —
-  ver [`docs/fase-3.md`](docs/fase-3.md).
+- **Fase actual:** Fase 2 construida entera y ya desplegada en Netlify
+  (`https://app-asist-actividades-umg.netlify.app`). Solo falta el ensayo en campo (tarea 7),
+  presencial, estimado para dentro de una semana. Ver [`docs/fase-2.md`](docs/fase-2.md). En
+  paralelo, **Fase 3 adelantada**: el motor de cálculo y las pantallas A9/A10 (tareas 1 a 4) ya
+  están construidos y probados; falta la tarea 5, cerrarla contra asistencias reales — ver
+  [`docs/fase-3.md`](docs/fase-3.md).
 
 ---
 
@@ -18,7 +19,7 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Documentación | Completa. Diseño cerrado, 14 decisiones tomadas. |
 | Repositorio | `developerumg3-dotcom/asistencia-actividades-umg`, privado, rama `main` |
 | Neon | Proyecto `app_asistencia_actividades` (`hidden-art-98202594`), org DeveloperUMG (`org-dawn-math-42337202`), región `us-east-2` |
-| Vercel | Proyecto `asistencia-umg` → `https://asistencia-umg.vercel.app` (todavía no conectado) |
+| Netlify | Proyecto `app-asist-actividades-umg` → `https://app-asist-actividades-umg.netlify.app`, desplegado. Era Vercel hasta el 30/08/2026 — ver PLANIFICACION.md §10 |
 | `.env.local` | Las 6 variables llenas y verificadas |
 | Aplicación | Next.js 15 + TypeScript + Tailwind, `pnpm dev` sirve en `localhost:3000` |
 | Base de datos | Las 9 tablas de la §4 migradas en Neon (`src/db/migraciones/0000_...sql`) |
@@ -41,10 +42,10 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Participaciones (A9) | `/participaciones` — tabla clase × actividad, igual formato que la hoja de Excel de la §9 |
 | Puntos extra (A10) | `/puntos-extra` — saldo, repartir, deshacer hasta la fecha de corte (48 h después del cierre de marcaje de la última actividad) |
 | Datos de prueba de actividades | `pnpm db:sembrar-actividades` — 5 actividades globales + 1 extra con `codigo_corto` `demo-*`, para probar A9/A10 sin esperar a B4. **Borrar (ver el propio script) antes de que B4 esté en uso real** |
+| Catedrático sin cuenta | `docente.email` es opcional (migración `0003`): se crea con solo el nombre en `/admin/catedraticos` y se le asignan cursos desde `/admin/clases`. Ver bitácora |
 
 ## Qué NO existe todavía
 
-- Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
 - **El ensayo en campo** (tarea 7 de la Fase 2). Es presencial y obligatorio: salón real,
   cinco teléfonos, al menos un iPhone y un Android viejo. La fase no está cerrada sin eso
 - **De la Fase 3 falta la tarea 5** de [`docs/fase-3.md`](docs/fase-3.md): cerrarla contra
@@ -52,28 +53,29 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   A9, A10) están hechas y probadas con datos sembrados a mano
   (`pnpm db:sembrar-actividades`), no con el marcaje de verdad todavía
 - Excel, PWA: fases 4 y 5
-- La cuenta de catedrático que decidió el consejo (§3): falta `docente.alumno_id`, el valor
-  `catedratico` en el enum `rol`, y decidir cómo obtiene su cuenta
 - **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
-  puede exportar el Excel, que es el entregable final del sistema.
+  puede exportar el Excel, que es el entregable final del sistema. El flujo para cargarlos es
+  simple: crear el catedrático con solo el nombre en `/admin/catedraticos`, y asignarle sus
+  cursos desde `/admin/clases` — ver «El catedrático no tiene cuenta» en la bitácora
 
 ---
 
 ## Qué sigue
 
-**Terminar la Fase 1.** Falta:
+**Terminar la Fase 1.** Falta solo:
 
-1. **Desplegar** (tarea 7 de [`docs/fase-1.md`](docs/fase-1.md)): conectar el repo a Vercel,
-   cargar las 6 variables de entorno allá y confirmar el recorrido completo en
-   `asistencia-umg.vercel.app`. No se hizo todavía porque implica push y una acción visible en
-   un servicio externo — se espera pedido explícito.
-2. **Asignar los catedráticos** (nombre, correo y sección) a las clases que tengan alumnos
-   inscritos, desde `/admin/catedraticos` y `/admin/clases`. El catálogo ya está cargado; lo
-   que falta es quién imparte cada curso.
+1. **Asignar los catedráticos** a las clases que tengan alumnos inscritos. El flujo es
+   simple: crear el catedrático con su nombre en `/admin/catedraticos` (correo opcional) y
+   asignarle sus cursos desde `/admin/clases`. El catálogo ya está cargado; falta quién imparte
+   cada curso.
 
-La Fase 2 está construida. Lo que queda es **desplegar y ensayar en campo**, en ese orden:
-la URL del QR sale de `NEXT_PUBLIC_APP_URL`, así que el escaneo hay que probarlo con el
-dominio real y no con `localhost`.
+El despliegue (tarea 7) ya está hecho, en Netlify:
+`https://app-asist-actividades-umg.netlify.app`.
+
+La Fase 2 está construida y **ya está desplegada**. Lo único que le falta a la fase es el
+**ensayo en campo**, estimado para dentro de aproximadamente una semana desde el 30 de agosto
+de 2026 (posiblemente el sábado 5 de septiembre). Mientras tanto la semana se usa para
+avanzar: cargar catedráticos y crear las actividades reales con sus fechas.
 
 La **Fase 3** se adelantó en paralelo a la 2, porque el motor de puntos solo necesita las
 tablas ya migradas, no las pantallas de la Fase 2 (ver «Por qué se puede trabajar en
@@ -112,6 +114,45 @@ Deben aparecer seis, todas con ✓. Si falta alguna, ver [`ESTRUCTURA.md`](ESTRU
 
 Decisiones que ya se tomaron y **no hay que volver a discutir**. Están acá porque en cada una
 se descartó un diseño completo, y sin el contexto es fácil reintroducirlo.
+
+### Netlify en vez de Vercel (30 de agosto de 2026)
+
+**Era:** hospedaje en Vercel, proyecto `asistencia-umg`,
+`https://asistencia-umg.vercel.app`. Así está en la mayoría de los ejemplos y URLs viejas que
+puedan quedar sueltas en algún lado.
+
+**Es:** hospedaje en Netlify, proyecto `app-asist-actividades-umg`,
+`https://app-asist-actividades-umg.netlify.app`. Decisión del usuario, sin efecto en el diseño
+más allá del nombre del dominio.
+
+**Se llevó por delante:** el dominio nuevo es más largo (45 caracteres contra 33), lo que le
+deja al QR mucho menos margen del que tenía — con `codigo_corto` de dos caracteres la URL
+completa da 61 de los 62 que caben en un QR versión 4 con corrección M. Ver «Dominio» en
+PLANIFICACION.md §10: mientras se use este dominio, `codigo_corto` no puede pasar de dos
+caracteres sin subir de versión de QR.
+
+### El catedrático no tiene cuenta (revertido el 30 de agosto de 2026)
+
+**Era, desde el diseño original:** el catedrático es solo un registro de datos (nombre +
+correo) que agrupa clases. No hay login docente ni vista de catedrático.
+
+**Pasó a ser, el 29 de agosto de 2026:** por decisión del consejo de organizadores,
+`PLANIFICACION.md` se actualizó para que el catedrático tuviera cuenta y descargara él mismo
+su Excel — de solo lectura, sin aprobar ni rechazar puntos. Traía consigo `docente.alumno_id`,
+un valor `catedratico` en el enum `rol`, y una decisión pendiente sobre cómo se le da la
+cuenta. Nada de esto llegó a tocar el código: quedó solo documentado.
+
+**Es, otra vez, desde el 30 de agosto de 2026:** el catedrático sigue sin cuenta. El
+administrador lo crea a mano con solo el nombre y le asigna cursos desde `/admin/clases`; ese
+vínculo (`clase.docente_id`) es lo único que hace falta para descargar su Excel. El correo
+queda como dato opcional (`docente.email` es nullable), no obligatorio como antes.
+
+**Por qué se revirtió:** simplifica bastante y no hacía falta — el administrador ya podía
+descargar el Excel sin que el catedrático tuviera que entrar a ningún lado. Decisión del
+usuario, 30 de agosto de 2026.
+
+**Se llevó por delante:** el pendiente de "cómo obtiene su cuenta el catedrático" (§15 de
+`PLANIFICACION.md`) desapareció entero, porque ya no hay cuenta que obtener.
 
 ### El catálogo de clases sale del pensum, no de un listado por ciclo
 
@@ -161,7 +202,8 @@ servidor, la seguridad a nivel de fila —que era la ventaja fuerte de Supabase�
 ### .NET quedó descartado a favor de TypeScript
 
 Nada del sistema exigía TypeScript; la decisión fue por despliegue. Un solo proyecto, un solo
-despliegue, hospedaje gratuito en Vercel, y la pantalla del QR es JavaScript de todos modos.
+despliegue, hospedaje gratuito (Vercel en ese momento, Netlify desde el 30/08/2026), y la
+pantalla del QR es JavaScript de todos modos.
 
 ### La Data API de Neon queda deshabilitada
 
@@ -210,7 +252,9 @@ en esa ruta, el flujo terminaba en un 404. La solución fue agregar
 
 Ninguno bloquea la Fase 1. Hacen falta antes del primer evento.
 
-- Nombre y correo de los catedráticos, y la sección de cada curso. El catálogo de cursos ya
-  entró desde el pensum oficial (PDF `Pensum 0908 2014`), pero el pensum no trae catedráticos
-- Fechas, horas y lugares de las 5 actividades globales y de la actividad extra
-- Confirmación de que el catedrático acepta un Excel como comprobante
+- **Asignar catedráticos a las clases.** El catálogo de cursos ya entró desde el pensum
+  oficial (PDF `Pensum 0908 2014`), pero el pensum no trae catedráticos ni secciones. El flujo
+  es crear el catedrático con su nombre en `/admin/catedraticos` y asignarle sus cursos desde
+  `/admin/clases` — el correo es opcional, no hace falta para nada de esto (ver la bitácora)
+- Fechas, horas y lugares de las 5 actividades globales y de la actividad extra — se van
+  cargando en `/admin/actividades` conforme se crean, no hace falta juntarlas todas antes

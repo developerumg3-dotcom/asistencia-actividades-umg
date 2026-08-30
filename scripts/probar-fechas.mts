@@ -3,8 +3,8 @@
  *
  *     pnpm probar
  *
- * Es donde se esconden los errores de seis horas: el servidor en Vercel corre en UTC y el
- * <input type="datetime-local"> no lleva zona.
+ * Es donde se esconden los errores de seis horas: el servidor corre en UTC (Netlify, Vercel,
+ * o el que sea) y el <input type="datetime-local"> no lleva zona.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";

@@ -16,6 +16,7 @@ dist/
 
 # despliegue
 .vercel
+.netlify
 
 # typescript
 *.tsbuildinfo
