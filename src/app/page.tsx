@@ -12,5 +12,7 @@ export default async function RaizPage() {
   // El administrador entra a su panel: durante un evento lo que necesita es la actividad,
   // no sus propias clases. Sigue llegando a /clases por "Mis clases" en la barra del panel.
   if (alumnoActual.rol === "admin") redirect("/admin/actividades");
-  redirect("/clases");
+  // El alumno ya eligio sus cursos al crear la cuenta (A3), asi que mandarlo de nuevo a esa
+  // pantalla no le dice nada. Lo que necesita al entrar es la actividad abierta.
+  redirect("/inicio");
 }

@@ -489,7 +489,7 @@ pendiente sería el peor error posible del sistema.
 | A2 | Ingreso | Correo y contraseña, con recuperación por enlace. |
 | A3 | Completar perfil | Carné, nombre completo, ciclo que cursa y al menos un curso (combobox tipo select2, sin límite, sobre el mismo catálogo de A4). **Obligatorio**, bloquea el resto de la app. |
 | A4 | Elegí tus clases | Catálogo completo del pensum, con buscador por texto y filtro por ciclo. Arranca filtrada en el ciclo del alumno, pero puede ver todos. Selección múltiple. Sugerido tras el perfil, no bloqueante. |
-| A5 | Inicio | Próxima actividad arriba, resumen de puntos por clase, aviso de saldo extra pendiente. |
+| A5 | Inicio | **Pantalla de entrada del alumno.** La actividad con el marcaje abierto y qué hacer para marcarla, o la próxima si no hay ninguna abierta. Resumen de puntos y aviso de saldo extra se suman en la Fase 3. |
 | A6 | Marcar asistencia | Página a la que llega el QR. Login en línea si hace falta, botón grande. |
 | A7 | Resultado | Éxito con la hora exacta, o el error correspondiente con su instrucción. |
 | A8 | Mis clases | Agregar o quitar clases, y total de puntos de cada una. |
