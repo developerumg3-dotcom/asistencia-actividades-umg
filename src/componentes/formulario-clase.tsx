@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   actualizarClase,
   crearClase,
@@ -9,54 +9,13 @@ import {
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
+import { enTitulo } from "@/lib/texto";
 
 const estadoInicial: EstadoFormulario = { error: null };
 
-type Docente = { id: string; nombre: string };
+export type Docente = { id: string; nombre: string };
 
-export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
-  const [estado, accion, enviando] = useActionState(crearClase, estadoInicial);
-
-  return (
-    <form action={accion} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      <Campo id="codigo-nuevo" name="codigo" etiqueta="Código" required />
-      <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required className="col-span-2" />
-      <Campo id="docenteId-nuevo" name="docenteId" etiqueta="Catedrático" as="select" defaultValue="">
-        <option value="">Por asignar</option>
-        {docentes.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.nombre}
-          </option>
-        ))}
-      </Campo>
-      <Campo id="seccion-nuevo" name="seccion" etiqueta="Sección" />
-      <Campo id="jornada-nuevo" name="jornada" etiqueta="Jornada" required />
-      <Campo id="ciclo-nuevo" name="ciclo" etiqueta="Ciclo" required />
-      <div className="col-span-full flex items-center gap-3">
-        <Boton type="submit" disabled={enviando}>
-          {enviando ? "Agregando…" : "Agregar clase"}
-        </Boton>
-      </div>
-      {estado.error && (
-        <MensajeFormulario tipo="error" className="col-span-full">
-          {estado.error}
-        </MensajeFormulario>
-      )}
-    </form>
-  );
-}
-
-export function FilaClase({
-  id,
-  codigo,
-  nombre,
-  seccion,
-  jornada,
-  ciclo,
-  activa,
-  docenteId,
-  docentes,
-}: {
+export type ClaseAdmin = {
   id: string;
   codigo: string;
   nombre: string;
@@ -65,31 +24,30 @@ export function FilaClase({
   ciclo: string;
   activa: boolean;
   docenteId: string | null;
-  docentes: Docente[];
-}) {
-  const [estado, accion, enviando] = useActionState(actualizarClase, estadoInicial);
+  docenteNombre: string | null;
+};
+
+/** Campos compartidos por el alta y la edicion. */
+function CamposClase({ valores, docentes }: { valores?: ClaseAdmin; docentes: Docente[] }) {
+  const sufijo = valores?.id ?? "nuevo";
 
   return (
-    <form
-      action={accion}
-      className="grid grid-cols-2 items-end gap-3 border-t border-neutral-200 py-3 sm:grid-cols-3"
-    >
-      <input type="hidden" name="id" value={id} />
-      <Campo id={`codigo-${id}`} name="codigo" etiqueta="Código" defaultValue={codigo} required />
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Campo id={`codigo-${sufijo}`} name="codigo" etiqueta="Código" defaultValue={valores?.codigo ?? ""} required />
       <Campo
-        id={`nombre-${id}`}
+        id={`nombre-${sufijo}`}
         name="nombre"
         etiqueta="Nombre"
-        defaultValue={nombre}
+        defaultValue={valores?.nombre ?? ""}
         required
-        className="col-span-2"
       />
       <Campo
-        id={`docenteId-${id}`}
+        id={`docenteId-${sufijo}`}
         name="docenteId"
         etiqueta="Catedrático"
         as="select"
-        defaultValue={docenteId ?? ""}
+        defaultValue={valores?.docenteId ?? ""}
+        ayuda="Hace falta antes de exportar el Excel de esta clase."
       >
         <option value="">Por asignar</option>
         {docentes.map((d) => (
@@ -98,23 +56,124 @@ export function FilaClase({
           </option>
         ))}
       </Campo>
-      <Campo id={`seccion-${id}`} name="seccion" etiqueta="Sección" defaultValue={seccion ?? ""} />
-      <Campo id={`jornada-${id}`} name="jornada" etiqueta="Jornada" defaultValue={jornada} required />
-      <Campo id={`ciclo-${id}`} name="ciclo" etiqueta="Ciclo" defaultValue={ciclo} required />
-      <label className="col-span-full flex items-center gap-2 text-sm">
-        <input type="checkbox" name="activa" defaultChecked={activa} className="h-4 w-4 accent-primary-600" />
-        Activa
-      </label>
-      <div className="col-span-full flex items-center gap-3">
-        <Boton type="submit" variante="secundario" disabled={enviando}>
-          {enviando ? "Guardando…" : "Guardar"}
+      <Campo
+        id={`seccion-${sufijo}`}
+        name="seccion"
+        etiqueta="Sección"
+        defaultValue={valores?.seccion ?? ""}
+        placeholder="A"
+      />
+      <Campo
+        id={`jornada-${sufijo}`}
+        name="jornada"
+        etiqueta="Jornada"
+        defaultValue={valores?.jornada ?? "Sábado"}
+        required
+      />
+      <Campo
+        id={`ciclo-${sufijo}`}
+        name="ciclo"
+        etiqueta="Ciclo"
+        defaultValue={valores?.ciclo ?? ""}
+        required
+      />
+    </div>
+  );
+}
+
+export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
+  const [estado, accion, enviando] = useActionState(crearClase, estadoInicial);
+  const [abierto, setAbierto] = useState(false);
+
+  if (!abierto) {
+    return (
+      <div className="flex justify-end">
+        <Boton onClick={() => setAbierto(true)}>Nueva clase</Boton>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      action={accion}
+      className="flex w-full flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="font-medium text-neutral-900">Nueva clase</h2>
+        <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
+          Cancelar
         </Boton>
       </div>
-      {estado.error && (
-        <MensajeFormulario tipo="error" className="col-span-full">
-          {estado.error}
-        </MensajeFormulario>
-      )}
+      <CamposClase docentes={docentes} />
+      {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
+      <div>
+        <Boton type="submit" disabled={enviando}>
+          {enviando ? "Agregando…" : "Agregar clase"}
+        </Boton>
+      </div>
     </form>
+  );
+}
+
+export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Docente[] }) {
+  const [estado, accion, enviando] = useActionState(actualizarClase, estadoInicial);
+  const [abierto, setAbierto] = useState(false);
+
+  return (
+    <article className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-medium text-neutral-900">
+            {enTitulo(clase.nombre)}{" "}
+            <span className="font-mono text-sm font-normal text-neutral-500">{clase.codigo}</span>
+          </h2>
+          <p className="text-sm text-neutral-500">
+            Ciclo {clase.ciclo} · {clase.jornada}
+            {clase.seccion && <> · Sección {clase.seccion}</>}
+            {!clase.activa && <> · inactiva</>}
+          </p>
+        </div>
+        {clase.docenteNombre ? (
+          <span className="shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs font-medium text-neutral-600">
+            {clase.docenteNombre}
+          </span>
+        ) : (
+          <span className="shrink-0 rounded-full border border-accent-300 bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-800">
+            Sin catedrático
+          </span>
+        )}
+      </div>
+
+      {abierto ? (
+        <form action={accion} className="flex flex-col gap-4 border-t border-neutral-200 pt-4">
+          <input type="hidden" name="id" value={clase.id} />
+          <CamposClase valores={clase} docentes={docentes} />
+          <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              name="activa"
+              defaultChecked={clase.activa}
+              className="h-4 w-4 accent-primary-600"
+            />
+            Activa — los alumnos pueden inscribirse
+          </label>
+          {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
+          <div className="flex items-center gap-3">
+            <Boton type="submit" disabled={enviando}>
+              {enviando ? "Guardando…" : "Guardar cambios"}
+            </Boton>
+            <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
+              Cerrar
+            </Boton>
+          </div>
+        </form>
+      ) : (
+        <div className="flex justify-end">
+          <Boton variante="secundario" onClick={() => setAbierto(true)}>
+            Editar
+          </Boton>
+        </div>
+      )}
+    </article>
   );
 }
