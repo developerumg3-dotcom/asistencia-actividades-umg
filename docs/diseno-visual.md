@@ -74,6 +74,7 @@ agrega acá, no se improvisa en el componente que la necesita.
 | Componente | Cuándo usarlo |
 |---|---|
 | `Boton` (`boton.tsx`) | `variante="primario"` para el submit principal de un formulario. `variante="secundario"` para acciones secundarias tipo "Guardar" en una fila de edición o "Importar". `variante="enlace"` para una acción con apariencia de texto subrayado (ej. cerrar sesión). |
+| `EnlaceBoton` (`boton.tsx`) | Un enlace con apariencia de botón. Para **navegar**, no para ejecutar una acción: un `<button>` con `onClick` que navega rompe abrir en pestaña nueva y el clic con el medio. Mismas variantes que `Boton`. |
 | `Campo` (`campo.tsx`) | Cualquier input de texto/email/password/search, o un `<select>` con `as="select"`. Incluye label y texto de ayuda opcional (`ayuda`). No cubre checkboxes ni `<input type="file">` — esos se estilizan en el propio componente con `accent-primary-600` para el check y clases de texto consistentes. |
 | `Tarjeta` (`tarjeta.tsx`) | Envolver un formulario o sección para darle borde y separación del fondo (pantallas de entrada, bloques de importación). |
 | `Chip` (`chip.tsx`) | Filtro en forma de pastilla, en fila horizontal desplazable. Se usa cuando las opciones son pocas y conviene verlas todas de un vistazo en vez de esconderlas en un `<select>` — por ejemplo el filtro de ciclo en A4. Estado activo con `aria-pressed`. |

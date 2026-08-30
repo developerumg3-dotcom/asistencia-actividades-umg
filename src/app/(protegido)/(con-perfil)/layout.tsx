@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BotonCerrarSesion } from "@/componentes/boton-cerrar-sesion";
+import { EnlaceBoton } from "@/componentes/ui/boton";
 import { requireAlumno } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +20,9 @@ export default async function ConPerfilLayout({ children }: { children: ReactNod
         </div>
         <div className="flex items-center gap-4">
           {alumnoActual.rol === "admin" && (
-            <Link href="/admin/catedraticos" className="text-sm text-neutral-600 underline hover:text-primary-700">
+            <EnlaceBoton href="/admin/actividades" variante="secundario">
               Administración
-            </Link>
+            </EnlaceBoton>
           )}
           <BotonCerrarSesion />
         </div>

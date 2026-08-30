@@ -1,6 +1,7 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
+import Link from "next/link";
 
-type Variante = "primario" | "secundario" | "enlace";
+export type Variante = "primario" | "secundario" | "enlace";
 
 const clasesBase =
   "font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2";
@@ -12,15 +13,31 @@ const clasesPorVariante: Record<Variante, string> = {
   enlace: "text-sm text-neutral-600 underline hover:text-primary-700",
 };
 
+/** Las clases de una variante, para reusarlas en algo que no es un <button>. */
+export function clasesDeBoton(variante: Variante = "primario", extra?: string) {
+  return `${clasesBase} ${clasesPorVariante[variante]} ${extra ?? ""}`;
+}
+
 export function Boton({
   variante = "primario",
   className,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante }) {
+  return <button className={clasesDeBoton(variante, className)} {...props} />;
+}
+
+/**
+ * Un enlace con la apariencia de un boton. Navegar no es lo mismo que ejecutar una accion:
+ * usar un <button> con onClick para ir a otra pagina rompe abrir en pestaña nueva y el
+ * clic con el medio. Por eso es un <Link> de verdad, con las clases del boton.
+ */
+export function EnlaceBoton({
+  variante = "primario",
+  className,
+  href,
+  ...props
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { variante?: Variante; href: string }) {
   return (
-    <button
-      className={`${clasesBase} ${clasesPorVariante[variante]} ${className ?? ""}`}
-      {...props}
-    />
+    <Link href={href} className={`inline-block ${clasesDeBoton(variante, className)}`} {...props} />
   );
 }
