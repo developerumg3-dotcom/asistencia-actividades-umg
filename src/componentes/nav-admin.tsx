@@ -13,7 +13,8 @@ export function NavAdmin() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1 border-b border-neutral-200 text-sm font-medium">
+    // En un telefono las cuatro entradas no caben: la barra se desplaza en vez de partirse.
+    <nav className="-mx-6 flex items-center gap-1 overflow-x-auto border-b border-neutral-200 px-6 text-sm font-medium sm:mx-0 sm:px-0">
       {pestanas.map((p) => {
         const activa = pathname.startsWith(p.href);
         return (
@@ -22,15 +23,18 @@ export function NavAdmin() {
             href={p.href}
             className={
               activa
-                ? "rounded-t-md border-b-2 border-primary-600 px-3 py-2 text-primary-700"
-                : "rounded-t-md px-3 py-2 text-neutral-600 hover:bg-primary-50 hover:text-primary-700"
+                ? "shrink-0 whitespace-nowrap rounded-t-md border-b-2 border-primary-600 px-3 py-2 text-primary-700"
+                : "shrink-0 whitespace-nowrap rounded-t-md px-3 py-2 text-neutral-600 hover:bg-primary-50 hover:text-primary-700"
             }
           >
             {p.etiqueta}
           </Link>
         );
       })}
-      <Link href="/clases" className="ml-auto text-neutral-500 underline hover:text-primary-700">
+      <Link
+        href="/clases"
+        className="ml-auto shrink-0 whitespace-nowrap py-2 pl-4 text-neutral-500 underline hover:text-primary-700"
+      >
         Mis clases
       </Link>
     </nav>

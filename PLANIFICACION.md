@@ -38,7 +38,7 @@ requisito para que el sistema funcione.
 El planteamiento inicial contemplaba profesores revisando fotos subidas por los alumnos.
 Se descartó a favor del QR rotativo. Como consecuencia:
 
-- **No hay cuentas de profesor.** El catedrático es un registro de datos que agrupa clases.
+- **No hay revisión manual de profesores.** El catedrático no aprueba ni rechaza puntos. (Sí tiene cuenta, desde el 29/08/2026, pero solo para descargar sus reportes — ver §3.)
 - No hay subida ni almacenamiento de imágenes.
 - No hay cola de aprobación ni estado intermedio de "punto posible".
 - Un alumno tiene el punto o no lo tiene.
@@ -62,7 +62,7 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 
 ### No entra
 
-- Cuentas de profesor. No hay login docente ni vista de catedrático.
+- ~~Cuentas de profesor.~~ **Revisado el 29/08/2026:** el catedrático sí tiene cuenta, de solo lectura sobre sus clases (§3). Lo que sigue fuera es que apruebe o rechace puntos.
 - Subida de fotos o evidencias.
 - Aprobación o rechazo manual de puntos. Solo corrección administrativa puntual.
 - Escáner de QR dentro de la app (ver §6.4 — se usa la cámara nativa del teléfono).
@@ -79,10 +79,34 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 |---|---|---|
 | **Alumno** | Sí | Registrarse · completar perfil · inscribirse a clases · ver actividades · marcar asistencia · repartir puntos extra · ver sus puntos por clase |
 | **Administrador** | Sí | Todo lo del alumno, más: gestionar catedráticos, clases y actividades · abrir la pantalla del QR · ver asistencias en vivo · corregir inscripciones · marcaje manual · revisar bitácora · exportar Excel |
-| **Catedrático** | **No** | Es un registro de datos (nombre + correo) que agrupa clases. Recibe el Excel fuera de la app. |
+| **Catedrático** | **Sí** | Iniciar sesión y **descargar el Excel de sus propias clases**. Nada más: no ve otras clases, no crea actividades, no corrige asistencias, no marca. |
 
 El rol se guarda como campo `rol` en la tabla `alumno`. Un solo administrador basta para
 el piloto.
+
+### El catedrático pasó a tener cuenta (cambio del 29 de agosto de 2026)
+
+**Antes:** el catedrático no tenía cuenta. Era solo un registro de datos y el administrador
+le enviaba el Excel por fuera de la app.
+
+**Ahora:** por decisión del consejo de organizadores, el catedrático inicia sesión y se
+descarga él mismo el reporte de sus clases.
+
+Esto **no revive el diseño descartado.** Aquel tenía profesores revisando fotos y aprobando
+puntos uno por uno, con una cola de aprobación y un estado intermedio. Nada de eso vuelve: la
+verificación sigue siendo automática por QR y el catedrático **no aprueba ni rechaza nada**.
+Su cuenta es de solo lectura sobre sus propias clases.
+
+Consecuencias sobre el modelo:
+
+- `docente` necesita vincularse con una cuenta. Se agrega `docente.alumno_id` (nulo mientras
+  no haya reclamado su cuenta), y no al revés: un catedrático existe como dato antes de
+  tener con qué entrar.
+- El enum `rol` suma el valor `catedratico`.
+- Toda consulta de la vista del catedrático **se filtra por sus clases**. Que vea las notas
+  de un colega sería una fuga de datos de alumnos, no un detalle de permisos.
+- Cómo obtiene la cuenta queda pendiente (§15): registro abierto validando el correo contra
+  `docente.email`, o alta por el administrador. Lo segundo es más control y menos superficie.
 
 ---
 
@@ -667,7 +691,7 @@ ensayarla en campo antes de seguir.
 | 4 | ¿Bajas de clase? | **No se registran.** El alumno quita la clase y desaparece; el catedrático ignora lo que no reconoce. |
 | 5 | ¿Duración de la ventana del QR? | **60 s por defecto, configurable por actividad.** |
 | 6 | ¿Uno o dos escaneos? | **Uno.** |
-| 7 | ¿Formato del Excel? | **Un libro por catedrático, una hoja por clase.** Requiere entidad `docente`. Descarga manual. |
+| 7 | ¿Formato del Excel? | **Un libro por catedrático, una hoja por clase.** Requiere entidad `docente`. Descarga manual. **Revisada el 29/08/2026:** además del administrador, el propio catedrático puede descargarlo desde su cuenta (§3). |
 | 8 | ¿Alumnos sin teléfono? | **Marcaje manual del administrador** con justificación obligatoria. |
 | 9 | ¿Cuántas actividades? | **5 globales de 1 punto + 1 extra de 2 puntos.** Faltan fechas y lugares. |
 | 10 | ¿Escáner dentro de la app? | **No.** Cámara nativa del teléfono. La página de marcaje maneja el caso de sesión ausente y código expirado. |
@@ -685,6 +709,8 @@ Ninguno bloquea el arranque de la Fase 1. Son datos que hacen falta antes del pr
 - **Fechas, horas y lugares** de las 5 actividades globales y de la actividad extra.
 - **Listado real de clases** con nombre y correo del catedrático, sección, jornada y ciclo.
 - **Confirmación** de que el catedrático acepta un Excel como comprobante.
+- **Cómo obtiene su cuenta el catedrático:** registro abierto validando el correo contra
+  `docente.email`, o alta por el administrador. Bloquea la vista de catedrático, no la Fase 2.
 
 ## 16. Cuentas y servicios
 
