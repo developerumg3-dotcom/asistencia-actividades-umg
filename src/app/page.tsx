@@ -9,5 +9,8 @@ export default async function RaizPage() {
   const alumnoActual = await obtenerAlumnoActual();
   if (!alumnoActual) redirect("/ingreso");
   if (!alumnoActual.perfilCompleto) redirect("/perfil/completar");
+  // El administrador entra a su panel: durante un evento lo que necesita es la actividad,
+  // no sus propias clases. Sigue llegando a /clases por "Mis clases" en la barra del panel.
+  if (alumnoActual.rol === "admin") redirect("/admin/actividades");
   redirect("/clases");
 }
