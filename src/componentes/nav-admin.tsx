@@ -7,6 +7,9 @@ const pestanas = [
   { href: "/admin/actividades", etiqueta: "Actividades" },
   { href: "/admin/catedraticos", etiqueta: "Catedráticos" },
   { href: "/admin/clases", etiqueta: "Clases" },
+  // Los cursos propios de quien administra. Es una pestaña mas y no un enlace de salida:
+  // mandarlo a /clases lo sacaba del panel y le hacia perder estas opciones.
+  { href: "/admin/mis-clases", etiqueta: "Mis clases" },
 ];
 
 export function NavAdmin() {
@@ -31,12 +34,6 @@ export function NavAdmin() {
           </Link>
         );
       })}
-      <Link
-        href="/clases"
-        className="ml-auto shrink-0 whitespace-nowrap py-2 pl-4 text-neutral-500 underline hover:text-primary-700"
-      >
-        Mis clases
-      </Link>
     </nav>
   );
 }
