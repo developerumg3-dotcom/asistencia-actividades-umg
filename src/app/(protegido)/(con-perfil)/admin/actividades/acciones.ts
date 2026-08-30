@@ -1,9 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
+
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
-import { actividad } from "@/db/esquema";
+import { actividad, pantalla } from "@/db/esquema";
 import { desdeCampoLocal } from "@/lib/fechas";
 import { codigoCortoAleatorio } from "@/lib/qr/codigo-corto";
 import { generarSecreto } from "@/lib/qr/codigo";
@@ -125,4 +127,32 @@ export async function actualizarActividad(
 
   revalidatePath("/admin/actividades");
   return { error: null, mensaje: "Cambios guardados." };
+}
+
+/**
+ * Crea (o reutiliza) la clave con la que se abre el kiosco de una actividad.
+ *
+ * La clave es la credencial de la pantalla del salon. Se genera larga a proposito: no se
+ * dicta ni se escribe a mano, se abre desde acá, y si se filtra solo deja ver un QR — pero
+ * dejarla adivinable seria regalar el codigo vigente a cualquiera.
+ */
+export async function asegurarPantalla(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const actividadId = String(formData.get("actividadId") ?? "");
+  if (!actividadId) return;
+
+  const [existente] = await db
+    .select({ id: pantalla.id })
+    .from(pantalla)
+    .where(and(eq(pantalla.actividadId, actividadId), eq(pantalla.activa, true)))
+    .limit(1);
+
+  if (!existente) {
+    await db.insert(pantalla).values({
+      actividadId,
+      clave: randomBytes(16).toString("base64url"),
+    });
+  }
+
+  revalidatePath("/admin/actividades");
 }

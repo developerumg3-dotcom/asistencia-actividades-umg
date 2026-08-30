@@ -8,11 +8,12 @@ import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 const estadoInicial: EstadoFormulario = { error: null };
 
-export function FormularioIngreso() {
+export function FormularioIngreso({ destino }: { destino?: string }) {
   const [estado, accion, enviando] = useActionState(iniciarSesion, estadoInicial);
 
   return (
     <form action={accion} className="flex flex-col gap-4">
+      {destino && <input type="hidden" name="destino" value={destino} />}
       <Campo id="email" name="email" type="email" etiqueta="Correo" required autoComplete="email" />
       <Campo
         id="password"

@@ -1,6 +1,9 @@
-import { asc } from "drizzle-orm";
+import Link from "next/link";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db/cliente";
-import { actividad } from "@/db/esquema";
+import { actividad, pantalla } from "@/db/esquema";
+import { asegurarPantalla } from "@/app/(protegido)/(con-perfil)/admin/actividades/acciones";
+import { Boton } from "@/componentes/ui/boton";
 import {
   FormularioEditarActividad,
   FormularioNuevaActividad,
@@ -57,6 +60,12 @@ export default async function ActividadesAdminPage() {
     })
     .from(actividad)
     .orderBy(asc(actividad.iniciaEn));
+
+  const pantallas = await db
+    .select({ actividadId: pantalla.actividadId, clave: pantalla.clave })
+    .from(pantalla)
+    .where(eq(pantalla.activa, true));
+  const claveDe = new Map(pantallas.map((p) => [p.actividadId, p.clave]));
 
   const publicadas = actividades.filter((a) => a.estado === "publicada").length;
 
@@ -148,7 +157,30 @@ export default async function ActividadesAdminPage() {
                     </Dato>
                   </dl>
 
-                  <div className="flex justify-end">
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/actividades/${a.id}/en-vivo`}
+                      className="text-sm text-primary-700 underline hover:text-primary-800"
+                    >
+                      Ver en vivo
+                    </Link>
+                    {claveDe.has(a.id) ? (
+                      <a
+                        href={`/kiosco/${claveDe.get(a.id)}`}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-sm text-primary-700 underline hover:text-primary-800"
+                      >
+                        Abrir kiosco ↗
+                      </a>
+                    ) : (
+                      <form action={asegurarPantalla}>
+                        <input type="hidden" name="actividadId" value={a.id} />
+                        <Boton type="submit" variante="enlace">
+                          Generar pantalla de kiosco
+                        </Boton>
+                      </form>
+                    )}
                     <FormularioEditarActividad actividad={editable} />
                   </div>
                 </div>

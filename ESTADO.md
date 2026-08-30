@@ -3,8 +3,9 @@
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
 - **Última actualización:** 29 de agosto de 2026
-- **Fase actual:** 1 casi cerrada (falta la tarea 7, el despliegue) y **Fase 2 arrancada**:
-  la librería del código QR está construida y probada. Ver [`docs/fase-2.md`](docs/fase-2.md).
+- **Fase actual:** Fase 2 construida entera salvo el ensayo en campo (tarea 7), que es
+  presencial. Falta también el despliegue, tarea 7 de la Fase 1. Ver
+  [`docs/fase-2.md`](docs/fase-2.md).
 
 ---
 
@@ -27,16 +28,22 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Catálogo de cursos | Los 50 del pensum 0908 (jornada sábado, Escuintla) sembrados en `clase`, **sin catedrático ni sección** |
 | Perfil con ciclo (A3) | Carné, nombre y ciclo. El ciclo solo decide el filtro inicial de A4, no restringe |
 | Librería del QR | `src/lib/qr/codigo.ts` — derivación HMAC, ventana con gracia, precarga, contador. 21 pruebas: `pnpm probar` |
-| Cuentas de prueba | 7 en `.test`, `pnpm db:sembrar-usuarios`. **Borrar antes de usar el sistema de verdad** |
+| Cuentas de prueba | `admin@ronda.test` y `alumno@ronda.test`, `pnpm db:sembrar-usuarios`. **Borrar antes de usar el sistema de verdad** |
+| Actividades (B4) | `/admin/actividades`. El `secreto_qr` se genera al crear y no sale del servidor |
+| Marcaje contra la base | `src/lib/qr/marcaje.ts`. 11 pruebas de integración: `pnpm probar:base` |
+| Marcar asistencia (A6, A7) | `/a/{codigo_corto}/{codigo}`, con ingreso en la misma página |
+| Kiosco (B5) | `/kiosco/{clave}`, QR rotativo con precarga y Wake Lock |
+| Asistencias en vivo (B6) | `/admin/actividades/{id}/en-vivo` |
+| Inicio del alumno (A5) | `/inicio`, la actividad abierta y qué hacer |
 
 ## Qué NO existe todavía
 
 - Nada desplegado en Vercel (tarea 7 de la Fase 1, pendiente a propósito — ver más abajo)
-- De la Fase 2 falta todo lo que toca la base y la pantalla: B4 actividades, la validación
-  del marcaje contra la base, A6/A7, el kiosco B5 y B6 en vivo. La librería del código está,
-  pero no la usa nadie todavía
+- **El ensayo en campo** (tarea 7 de la Fase 2). Es presencial y obligatorio: salón real,
+  cinco teléfonos, al menos un iPhone y un Android viejo. La fase no está cerrada sin eso
 - Puntos, Excel, PWA: fases 3 a 5
-- La dependencia `qrcode` todavía no está en `package.json`
+- La cuenta de catedrático que decidió el consejo (§3): falta `docente.alumno_id`, el valor
+  `catedratico` en el enum `rol`, y decidir cómo obtiene su cuenta
 - **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
   puede exportar el Excel, que es el entregable final del sistema.
 
@@ -54,10 +61,9 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
    inscritos, desde `/admin/catedraticos` y `/admin/clases`. El catálogo ya está cargado; lo
    que falta es quién imparte cada curso.
 
-La **Fase 2** ya arrancó por la librería del código. Lo que sigue ahí es la tarea 1 de
-[`docs/fase-2.md`](docs/fase-2.md): B4, la pantalla de actividades, que es la que genera el
-`secreto_qr`. La fase cierra con **ensayo de campo obligatorio**, y el despliegue lo bloquea:
-la URL del QR sale de `NEXT_PUBLIC_APP_URL` y hay que probarla con el dominio real.
+La Fase 2 está construida. Lo que queda es **desplegar y ensayar en campo**, en ese orden:
+la URL del QR sale de `NEXT_PUBLIC_APP_URL`, así que el escaneo hay que probarlo con el
+dominio real y no con `localhost`. Después arranca la Fase 3 (puntos).
 
 ---
 
