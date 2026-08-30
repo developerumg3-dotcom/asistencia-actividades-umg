@@ -151,8 +151,10 @@ un marcaje).
 
 El ICU de Node (servidor) y el de Chromium (navegador) pueden formatear el mismo `Date` con
 texto distinto para `es-GT`, y React lo marca como error de hidratación en cualquier
-componente cliente que reciba una fecha ya formateada desde el servidor. Dos formas en que
-aparece, ambas resueltas en [`src/lib/fecha.ts`](src/lib/fecha.ts):
+componente cliente que reciba una fecha ya formateada desde el servidor y la vuelva a
+formatear en su propio render. Dos formas en que aparece, ambas resueltas en
+[`src/lib/fechas.ts`](src/lib/fechas.ts) — el único módulo de fechas del proyecto, usarlo
+siempre en vez de armar un `Intl.DateTimeFormat` suelto en otro archivo:
 
 - Un `skeleton` con fecha y hora juntas (`day` + `month` + `hour` + `minute` en el mismo
   `Intl.DateTimeFormat`) puede elegir un conector distinto ("29 de agosto **a las** 6:17 p.

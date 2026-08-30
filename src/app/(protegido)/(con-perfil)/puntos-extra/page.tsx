@@ -2,7 +2,7 @@ import { NavAlumno } from "@/componentes/nav-alumno";
 import { RepartoPuntosExtra } from "@/componentes/reparto-puntos-extra";
 import { avisoEsUrgente } from "@/lib/puntos/calculo";
 import { obtenerEstadoPuntosExtra } from "@/lib/puntos/consulta";
-import { formatearFechaHora } from "@/lib/fecha";
+import { enGuatemala } from "@/lib/fechas";
 import { requireAlumno } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
@@ -44,13 +44,13 @@ export default async function PuntosExtraPage() {
         {estado.saldoDisponible > 0 && estado.fechaDeCorte && estado.repartoAbierto && (
           <p className={`mt-1 text-xs ${urgente ? "font-medium text-danger-700" : "text-primary-700"}`}>
             {urgente ? "¡Se pierden si no repartís antes del " : "Repartilos antes del "}
-            {formatearFechaHora(estado.fechaDeCorte)}
+            {enGuatemala(estado.fechaDeCorte)}
             {urgente ? "!" : "."}
           </p>
         )}
         {!estado.repartoAbierto && (
           <p className="mt-1 text-xs text-neutral-500">
-            El reparto ya está cerrado{estado.fechaDeCorte ? ` desde el ${formatearFechaHora(estado.fechaDeCorte)}` : ""}.
+            El reparto ya está cerrado{estado.fechaDeCorte ? ` desde el ${enGuatemala(estado.fechaDeCorte)}` : ""}.
           </p>
         )}
       </div>

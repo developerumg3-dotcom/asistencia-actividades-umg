@@ -5,7 +5,7 @@ import { deshacer, repartir } from "@/app/(protegido)/(con-perfil)/puntos-extra/
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
-import { formatearFechaHora } from "@/lib/fecha";
+import { enGuatemala } from "@/lib/fechas";
 import type { AsignacionExtraVisible } from "@/lib/puntos/consulta";
 
 export function RepartoPuntosExtra({
@@ -92,7 +92,7 @@ export function RepartoPuntosExtra({
               >
                 <div>
                   <p className="text-neutral-900">{asignacion.claseNombre}</p>
-                  <p className="text-xs text-neutral-500">{formatearFechaHora(asignacion.creadaEn)}</p>
+                  <p className="text-xs text-neutral-500">{enGuatemala(asignacion.creadaEn)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="tabular-nums font-semibold text-primary-700">+{asignacion.puntos}</span>

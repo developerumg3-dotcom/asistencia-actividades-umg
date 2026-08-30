@@ -9,10 +9,9 @@
 
 export const ZONA = "America/Guatemala";
 
-const FORMATO_LARGO = new Intl.DateTimeFormat("es-GT", {
+const FORMATO_FECHA = new Intl.DateTimeFormat("es-GT", {
   timeZone: ZONA,
   dateStyle: "medium",
-  timeStyle: "short",
 });
 
 const FORMATO_HORA = new Intl.DateTimeFormat("es-GT", {
@@ -20,14 +19,35 @@ const FORMATO_HORA = new Intl.DateTimeFormat("es-GT", {
   timeStyle: "short",
 });
 
-/** "5 sept 2026, 14:30" */
-export function enGuatemala(fecha: Date): string {
-  return FORMATO_LARGO.format(fecha);
+/**
+ * El ICU de Node (servidor) y el del navegador (cliente) no siempre coinciden byte a byte
+ * para `es-GT`. Dos formas en que aparece:
+ *
+ * - Un `dateStyle` + `timeStyle` combinados en un solo `Intl.DateTimeFormat` pueden elegir un
+ *   conector distinto entre fecha y hora segun el ICU. Por eso `enGuatemala` no usa un solo
+ *   formateador combinado: formatea fecha y hora por separado y las une con un separador
+ *   fijo, para que el resultado sea identico en los dos lados.
+ * - El espacio antes de "p. m." puede ser uno normal en un ICU y un espacio angosto de no
+ *   separacion (U+202F) o de no separacion comun (U+00A0) en el otro — invisible a simple
+ *   vista. `normalizarEspacios` lo deja siempre en un espacio comun.
+ *
+ * Si alguna de estas dos funciones llega a usarse dentro de un componente cliente (hoy solo
+ * se usan en componentes de servidor, donde esto no aplica), la diferencia se manifiesta como
+ * un error de hidratacion de React: "Hydration failed because the server rendered text didn't
+ * match the client." Ver la nota en AGENTS.md.
+ */
+function normalizarEspacios(texto: string): string {
+  return texto.replace(/[  ]/g, " ");
 }
 
-/** "14:30" */
+/** "5 sept 2026, 2:30 p. m." */
+export function enGuatemala(fecha: Date): string {
+  return normalizarEspacios(`${FORMATO_FECHA.format(fecha)}, ${FORMATO_HORA.format(fecha)}`);
+}
+
+/** "2:30 p. m." */
 export function horaEnGuatemala(fecha: Date): string {
-  return FORMATO_HORA.format(fecha);
+  return normalizarEspacios(FORMATO_HORA.format(fecha));
 }
 
 /**
