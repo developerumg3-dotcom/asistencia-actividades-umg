@@ -88,9 +88,17 @@ export default async function InicioPage() {
         </section>
       )}
 
-      <Link href="/clases" className="text-sm text-primary-700 underline hover:text-primary-800">
-        Mis cursos
-      </Link>
+      <div className="flex flex-col gap-1">
+        <Link href="/clases" className="text-sm text-primary-700 underline hover:text-primary-800">
+          Mis cursos
+        </Link>
+        <Link
+          href="/ayuda/instalar-ios"
+          className="text-sm text-neutral-600 underline hover:text-primary-700"
+        >
+          ¿Cómo instalo esta app en mi iPhone?
+        </Link>
+      </div>
     </main>
   );
 }

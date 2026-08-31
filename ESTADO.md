@@ -10,8 +10,12 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   están construidos y probados; falta la tarea 5, cerrarla contra asistencias reales — ver
   [`docs/fase-3.md`](docs/fase-3.md). **Fase 4 también adelantada y construida entera**:
   Tablero, Alumnos, marcaje manual, Bitácora y exportación a Excel (B1, B7, B8, B9, B10) — ver
-  [`docs/fase-4.md`](docs/fase-4.md). Se pudo adelantar por la misma razón que la Fase 3: solo
-  necesita las tablas ya migradas, no el ensayo en campo de la Fase 2.
+  [`docs/fase-4.md`](docs/fase-4.md). **Fase 5 (PWA y endurecimiento) también construida
+  entera**: manifiesto, service worker, guía de instalación iOS, cabeceras de seguridad,
+  `robots.txt` y auditoría de dependencias — ver [`docs/fase-5.md`](docs/fase-5.md). Falta
+  únicamente la instalación real en un Android y un iPhone físicos (tarea 9 de esa fase); no se
+  pudo probar en este entorno porque no tiene Xcode instalado para el simulador de iOS. Se
+  puede aprovechar el mismo ensayo en campo de la Fase 2 para eso.
 
 ---
 
@@ -51,6 +55,12 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Marcaje manual (B8) | Dentro de `/admin/actividades/{id}/en-vivo` (B6). Sin restricción de horario ni de estado de la actividad; justificación obligatoria en `asistencia.nota_manual` |
 | Bitácora (B9) | `/admin/bitacora` — filtros por alumno, actividad, evento, resultado y fecha; resalta (sin actuar) intentos fallidos repetidos y dispositivos compartidos entre alumnos |
 | Exportar Excel (B10) | Detalle de catedrático en `/admin/catedraticos/{id}` con botón de reporte individual; botón de reporte global en `/admin`. `exceljs`, probado contra datos reales bajado y leído de vuelta — 10 pruebas nuevas entre reportes y señales de bitácora: `pnpm probar` (52 en total) |
+| PWA | Manifiesto (`src/app/manifest.ts`), íconos 192/512/180 con fondo blanco sobre el escudo de la UMG, `theme-color` `#1C72A5`. Instalable en Android (Chrome ofrece el botón solo) |
+| Service worker | `public/sw.js`, registrado desde `src/componentes/registrar-service-worker.tsx`. Cachea solo el armazón estático (`/_next/static/*`, `/iconos/*`) y la página `/sin-conexion`; nunca intercepta `POST`, Server Actions ni `/api/*` — el marcaje nunca puede parecer que funciona sin red |
+| Guía de instalación iOS | `/ayuda/instalar-ios`, enlazada desde `/inicio` |
+| Cabeceras de seguridad | `next.config.ts` → `headers()`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`. Verificado que no rompen el login de Neon Auth |
+| `robots.txt` | `src/app/robots.ts`, bloquea `/admin`, `/a/`, `/kiosco`, `/api/` |
+| Auditoría de dependencias | `pnpm audit` limpio (`No known vulnerabilities found`) tras fijar `postcss`, `uuid` y `esbuild` a versiones parchadas vía `pnpm.overrides` en `package.json` — eran transitivas de `next`, `exceljs` y `drizzle-kit`, no dependencias directas desactualizadas |
 
 ## Qué NO existe todavía
 
@@ -60,7 +70,12 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   asistencias reales generadas por el flujo terminado de la Fase 2. Las tareas 1 a 4 (motor,
   A9, A10) están hechas y probadas con datos sembrados a mano
   (`pnpm db:sembrar-actividades`), no con el marcaje de verdad todavía
-- PWA: fase 5. La Fase 4 (Excel, tablero, alumnos, marcaje manual, bitácora) ya está construida
+- **Instalación real de la PWA en un Android y un iPhone físicos.** El manifiesto, el service
+  worker y la guía de iOS están construidos y probados en el navegador (`pnpm build`, cabeceras,
+  cachés, service worker activo), pero no hay confirmación en hardware real todavía — este
+  entorno no tiene Xcode para el simulador de iOS. Ver [`docs/fase-5.md`](docs/fase-5.md) tarea 9
+- **CSP completa y límite de intentos en el marcaje.** Quedaron fuera de la Fase 5 a propósito,
+  ver bitácora de cambios de rumbo más abajo
 - **Bloquear/desbloquear cuentas.** La columna `alumno.estado` existe desde la Fase 1 pero
   nada la revisa todavía. Se decidió dejarlo para más adelante — ver bitácora de cambios de
   rumbo — porque generaba dudas de diseño (qué pasa con una sesión ya abierta) y no era una
@@ -108,8 +123,17 @@ asistencia marcada manualmente en B8 se reflejó correctamente en el Excel desca
 B10, con las cifras exactas de `/participaciones`. Lo único que quedó fuera a propósito es
 bloquear/desbloquear cuentas (ver «Qué NO existe todavía»).
 
-Con las fases 1 a 4 construidas, solo falta el **ensayo en campo** de la Fase 2 y la **Fase
-5** (PWA y endurecimiento) para cerrar todo el alcance de `PLANIFICACION.md`.
+La **Fase 5** (PWA y endurecimiento) también está **completa**: manifiesto, íconos, service
+worker que nunca cachea el marcaje, página de "sin conexión", guía de instalación en iOS,
+cabeceras de seguridad, `robots.txt` y auditoría de dependencias — ver
+[`docs/fase-5.md`](docs/fase-5.md). Verificada con `pnpm build`, las cuatro cabeceras
+confirmadas en la respuesta real y el service worker activo cacheando el armazón en el
+navegador. Lo único que falta es instalarla de verdad en un Android y un iPhone físicos —
+puede esperar al mismo ensayo en campo de la Fase 2.
+
+Con las fases 1 a 5 construidas, solo falta el **ensayo en campo** de la Fase 2 (que de paso
+sirve para probar la instalación real de la PWA) para cerrar todo el alcance de
+`PLANIFICACION.md`.
 
 ---
 
@@ -175,6 +199,32 @@ usuario, 30 de agosto de 2026.
 
 **Se llevó por delante:** el pendiente de "cómo obtiene su cuenta el catedrático" (§15 de
 `PLANIFICACION.md`) desapareció entero, porque ya no hay cuenta que obtener.
+
+### CSP completa y límite de intentos en el marcaje quedaron fuera de la Fase 5 (30 de agosto de 2026)
+
+**Era, según §13 de `PLANIFICACION.md`:** la Fase 5 es "PWA y endurecimiento", sin más detalle
+de qué cubre "endurecimiento".
+
+**Es:** el endurecimiento de esta fase se limitó a cabeceras de seguridad simples
+(`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`),
+`robots.txt` y auditoría de dependencias. Quedaron fuera dos cosas que también entran bajo
+"endurecimiento" pero no se tocaron:
+
+- **Una `Content-Security-Policy` completa.** Escribirla sin romper `@neondatabase/auth-ui`
+  (que inyecta su propio formulario) exige probarla a fondo contra el login real; el riesgo es
+  el mismo tipo de falla en silencio que ya costó tiempo con la Data API de Neon (ver más
+  abajo). Queda para una fase posterior si hace falta.
+- **Límite de intentos (throttling) en `marcarAsistencia`.** Tocaría una decisión de diseño ya
+  cerrada del antifraude (§7, §12): la ventana de 60 s es la única defensa contra compartir el
+  QR, a propósito. Agregar throttling ahí reabriría esa decisión sin que nadie lo haya pedido.
+
+**Por qué:** decisión de Daniel al confirmar el alcance de la Fase 5, para no reabrir una
+decisión de antifraude ya cerrada ni introducir un cambio de alto riesgo (CSP) sin la prueba a
+fondo que necesita.
+
+**Se llevó por delante:** nada del código existente. Si se retoma la CSP, probar primero contra
+`/ingreso`, `/registro` y `/auth/forgot-password` — son las pantallas donde vive
+`@neondatabase/auth-ui`.
 
 ### Bloquear cuentas se dejó pendiente (30 de agosto de 2026)
 
