@@ -38,13 +38,38 @@ type CamposActividad = {
 };
 
 /**
+ * Parte un "lat, lon" pegado de Google Maps.
+ *
+ * Solo lo acepta si las dos mitades caen en rango: asi "14,3086" —alguien escribiendo el
+ * decimal con coma, que es lo normal en español— no se convierte en latitud 14 y longitud
+ * 3086, sino que sigue de largo y falla con un mensaje que se entiende.
+ */
+function separarPar(texto: string): { lat: string; lon: string } | null {
+  const m = texto.match(/^(-?\d+(?:\.\d+)?)\s*[,;]\s*(-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const lat = Number(m[1]);
+  const lon = Number(m[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return { lat: m[1], lon: m[2] };
+}
+
+/**
  * Zona del evento. O van los tres o no va ninguno: media zona no sirve para nada. Vacio
  * significa "esta actividad no usa ubicacion" (docs/plan-geolocalizacion.md).
  */
 function leerZona(formData: FormData): { lat: number | null; lon: number | null; radioM: number | null } | string {
-  const crudoLat = String(formData.get("lat") ?? "").trim();
-  const crudoLon = String(formData.get("lon") ?? "").trim();
+  let crudoLat = String(formData.get("lat") ?? "").trim();
+  let crudoLon = String(formData.get("lon") ?? "").trim();
   const crudoRadio = String(formData.get("radioM") ?? "").trim();
+
+  // Google Maps copia las dos coordenadas juntas ("14.3086, -90.7862"), asi que es lo mas
+  // natural pegarlas de una en el primer campo. Se acepta y se parten solas en vez de
+  // devolver un error que no explica nada.
+  const par = separarPar(crudoLat);
+  if (par) {
+    crudoLat = par.lat;
+    if (!crudoLon) crudoLon = par.lon;
+  }
 
   if (!crudoLat && !crudoLon && !crudoRadio) return { lat: null, lon: null, radioM: null };
   if (!crudoLat || !crudoLon || !crudoRadio) {
@@ -55,8 +80,12 @@ function leerZona(formData: FormData): { lat: number | null; lon: number | null;
   const lon = Number(crudoLon);
   const radioM = Number(crudoRadio);
 
-  if (!Number.isFinite(lat) || Math.abs(lat) > 90) return "La latitud tiene que ir entre -90 y 90.";
-  if (!Number.isFinite(lon) || Math.abs(lon) > 180) return "La longitud tiene que ir entre -180 y 180.";
+  if (!Number.isFinite(lat) || Math.abs(lat) > 90) {
+    return "La latitud no se entiende. Pegá las coordenadas de Google Maps tal cual, o escribila con punto decimal.";
+  }
+  if (!Number.isFinite(lon) || Math.abs(lon) > 180) {
+    return "La longitud no se entiende. Debe ir entre -180 y 180, con punto decimal.";
+  }
   if (!Number.isInteger(radioM) || radioM < 20 || radioM > 5000) {
     return "El radio va de 20 a 5000 metros.";
   }

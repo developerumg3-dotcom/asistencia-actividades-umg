@@ -187,6 +187,20 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           defaultValue={valores?.lat ?? ""}
           placeholder="14.308601"
           inputMode="decimal"
+          // Google Maps copia el par junto: si se pega aca, se reparte solo en los dos
+          // campos en vez de obligar a cortarlo a mano.
+          onPaste={(evento) => {
+            const texto = evento.clipboardData.getData("text").trim();
+            const par = texto.match(/^(-?\d+(?:\.\d+)?)\s*[,;]\s*(-?\d+(?:\.\d+)?)$/);
+            // Solo si las dos mitades son coordenadas plausibles: "14,3086" es un decimal
+            // escrito con coma, no un par.
+            if (!par || Math.abs(Number(par[1])) > 90 || Math.abs(Number(par[2])) > 180) return;
+            evento.preventDefault();
+            const campoLat = evento.currentTarget as HTMLInputElement;
+            campoLat.value = par[1];
+            const campoLon = document.getElementById(`lon-${sufijo}`) as HTMLInputElement | null;
+            if (campoLon) campoLon.value = par[2];
+          }}
         />
         <Campo
           id={`lon-${sufijo}`}
@@ -205,7 +219,7 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           max={5000}
           defaultValue={valores?.radioM ?? ""}
           placeholder="250"
-          ayuda="Clic derecho en Google Maps sobre el lugar para copiar las coordenadas."
+          ayuda="Pegá acá el par que copiás de Google Maps: se reparte solo en los dos campos."
         />
       </Seccion>
     </div>
