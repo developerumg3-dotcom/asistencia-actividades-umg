@@ -6,7 +6,7 @@ import {
   crearDocente,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/catedraticos/acciones";
-import { Boton } from "@/componentes/ui/boton";
+import { Boton, EnlaceBoton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
@@ -114,7 +114,10 @@ export function FilaCatedratico({
       )}
 
       {!abierto && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <EnlaceBoton href={`/admin/catedraticos/${id}`} variante="secundario">
+            Ver clases y descargar reporte
+          </EnlaceBoton>
           <Boton variante="secundario" onClick={() => setAbierto(true)}>
             Editar
           </Boton>

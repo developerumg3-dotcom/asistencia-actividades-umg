@@ -82,6 +82,70 @@ export function calcularParticipaciones(params: {
   return { columnas: actividadesGlobales, filas };
 }
 
+export type AlumnoParaReporte = {
+  id: string;
+  carne: string | null;
+  nombre: string | null;
+  email: string;
+};
+
+export type FilaReporte = {
+  alumnoId: string;
+  carne: string | null;
+  /** `nombre` si el perfil lo tiene, si no el correo — nunca una fila en blanco. */
+  nombreOCorreo: string;
+  /** 1 si el alumno marco esa actividad global, 0 si no. Clave = actividad.id. */
+  marcas: Record<string, 0 | 1>;
+  extra: number;
+  total: number;
+};
+
+/**
+ * La tabla alumno x actividad de una sola clase, para B7 (ficha del alumno) y B10 (hoja de
+ * Excel, §9): mismo calculo que `calcularParticipaciones`, pivotado — ahi las filas eran
+ * clases de un alumno, aca son alumnos de una clase. Un solo motor alimenta las tres
+ * pantallas, como pide PLANIFICACION.md.
+ *
+ * Alumnos con carne vacio o inventado no se filtran aca (decision 1 de §14): es el
+ * catedratico quien los ignora al revisar el Excel, no la aplicacion en silencio.
+ *
+ * Orden: por `nombreOCorreo`, que es lo mas cercano a "por apellido" que da el dato
+ * disponible — `alumno.nombre` es un solo campo de texto libre, sin apellido separado
+ * (PLANIFICACION.md §4).
+ */
+export function calcularReporteDeClase(params: {
+  alumnos: AlumnoParaReporte[];
+  actividadesGlobales: ActividadGlobal[];
+  /** Ids de actividad global en las que cada alumno tiene asistencia registrada. */
+  asistenciasPorAlumno: ReadonlyMap<string, ReadonlySet<string>>;
+  /** Puntos extra ya asignados a esta clase, por alumno. */
+  extraPorAlumno: ReadonlyMap<string, number>;
+}): FilaReporte[] {
+  const { alumnos, actividadesGlobales, asistenciasPorAlumno, extraPorAlumno } = params;
+
+  const filas = alumnos.map((alumno): FilaReporte => {
+    const marcadas = asistenciasPorAlumno.get(alumno.id) ?? new Set<string>();
+    const marcas: Record<string, 0 | 1> = {};
+    let sumaGlobal = 0;
+    for (const actividad of actividadesGlobales) {
+      const marco = marcadas.has(actividad.id) ? 1 : 0;
+      marcas[actividad.id] = marco;
+      sumaGlobal += marco;
+    }
+    const extra = extraPorAlumno.get(alumno.id) ?? 0;
+    return {
+      alumnoId: alumno.id,
+      carne: alumno.carne,
+      nombreOCorreo: alumno.nombre ?? alumno.email,
+      marcas,
+      extra,
+      total: sumaGlobal + extra,
+    };
+  });
+
+  return filas.sort((a, b) => a.nombreOCorreo.localeCompare(b.nombreOCorreo, "es"));
+}
+
 export type AsistenciaExtra = {
   actividadId: string;
   /** Puntos que otorga esa actividad extra (`actividad.puntos`, 2 por defecto). */

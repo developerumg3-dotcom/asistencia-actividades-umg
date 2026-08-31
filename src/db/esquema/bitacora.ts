@@ -14,4 +14,8 @@ export const bitacora = pgTable("bitacora", {
   ocurrioEn: timestamp("ocurrio_en", { withTimezone: true }).notNull().defaultNow(),
   ip: inet("ip"),
   dispositivoId: text("dispositivo_id"),
+  // Fase 4: campo libre de contexto. Guarda el carné liberado (`carne_liberado`) o quién de
+  // administración corrigió una inscripción ajena (`inscripcion_creada`/`inscripcion_eliminada`
+  // disparados desde /admin/alumnos en vez de por el propio alumno).
+  detalle: text("detalle"),
 });

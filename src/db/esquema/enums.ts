@@ -21,6 +21,8 @@ export const eventoBitacoraEnum = pgEnum("evento_bitacora", [
   "inscripcion_creada",
   "inscripcion_eliminada",
   "marcaje",
+  // Fase 4: el administrador limpia `alumno.carne` para resolver un conflicto de carné.
+  "carne_liberado",
 ]);
 
 // Los cinco literales de la §7 de PLANIFICACION.md.

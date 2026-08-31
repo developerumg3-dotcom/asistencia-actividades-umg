@@ -106,3 +106,16 @@ export function haciaCampoLocal(fecha: Date): string {
   const local = new Date(fecha.getTime() + desfase * 60000);
   return local.toISOString().slice(0, 16);
 }
+
+/**
+ * Medianoche de "hoy" en hora de Guatemala, como instante UTC. Para el Tablero (B1, Fase 4):
+ * "asistencias marcadas hoy" se cuenta contra el dia calendario de Guatemala, no contra las
+ * ultimas 24 horas exactas. Reusa `desdeCampoLocal` sobre la fecha Y-M-D que da `Intl` para
+ * esa zona, igual patron que el resto de este modulo.
+ */
+export function inicioDeHoyEnGuatemala(momento: Date = new Date()): Date {
+  const fechaYmd = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA }).format(momento);
+  const inicio = desdeCampoLocal(`${fechaYmd}T00:00`);
+  // fechaYmd siempre matchea el patron que espera desdeCampoLocal: no puede dar null.
+  return inicio as Date;
+}

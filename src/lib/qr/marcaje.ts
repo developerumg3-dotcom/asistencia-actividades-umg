@@ -1,8 +1,8 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db/cliente";
-import { actividad, asistencia, bitacora, inscripcion } from "@/db/esquema";
+import { actividad, alumno, asistencia, bitacora, inscripcion } from "@/db/esquema";
 import { slotDe, validarCodigo } from "@/lib/qr/codigo";
 
 /**
@@ -192,6 +192,89 @@ export async function registrarMarcaje({
 
   await anotar(alumno.id, laActividad.id, "ok", datos);
   return { resultado: "ok", marcadaEn: momento, actividadNombre: nombre };
+}
+
+export type ResultadoMarcajeManual =
+  | { resultado: "ok"; marcadaEn: Date }
+  | { resultado: "duplicado"; marcadaEn: Date }
+  | { resultado: "sin_perfil" }
+  | { resultado: "no_encontrado" }
+  | { resultado: "actividad_no_encontrada" };
+
+/**
+ * B8 — marcaje manual, para quien no tiene telefono o tuvo un problema tecnico durante la
+ * ventana. Confirmado con Daniel el 30 de agosto de 2026: se permite **sin restriccion de
+ * horario ni de estado de la actividad** — es justo el mecanismo para cubrir ese caso. La
+ * justificacion obligatoria mas el propio acto del administrador de crearlo son la
+ * aprobacion; no hay un paso adicional. Sigue valiendo "un escaneo por actividad" (duplicado)
+ * y el perfil incompleto, igual que el marcaje por QR — ver `registrarMarcaje`.
+ */
+export async function registrarMarcajeManual({
+  actividadId,
+  identificadorAlumno,
+  justificacion,
+}: {
+  actividadId: string;
+  /** Carne o correo, coincidencia exacta: es una busqueda puntual durante un evento en vivo. */
+  identificadorAlumno: string;
+  justificacion: string;
+}): Promise<ResultadoMarcajeManual> {
+  const [laActividad] = await db
+    .select({ ventanaSeg: actividad.ventanaSeg })
+    .from(actividad)
+    .where(eq(actividad.id, actividadId))
+    .limit(1);
+  if (!laActividad) return { resultado: "actividad_no_encontrada" };
+
+  const termino = identificadorAlumno.trim();
+  const [elAlumno] = await db
+    .select({ id: alumno.id, perfilCompleto: alumno.perfilCompleto })
+    .from(alumno)
+    .where(or(eq(alumno.carne, termino), eq(alumno.email, termino)))
+    .limit(1);
+  if (!elAlumno) return { resultado: "no_encontrado" };
+
+  if (!elAlumno.perfilCompleto) {
+    await anotar(elAlumno.id, actividadId, "sin_perfil", {});
+    return { resultado: "sin_perfil" };
+  }
+
+  const [yaMarco] = await db
+    .select({ marcadaEn: asistencia.marcadaEn })
+    .from(asistencia)
+    .where(and(eq(asistencia.alumnoId, elAlumno.id), eq(asistencia.actividadId, actividadId)))
+    .limit(1);
+  if (yaMarco) {
+    await anotar(elAlumno.id, actividadId, "duplicado", {});
+    return { resultado: "duplicado", marcadaEn: yaMarco.marcadaEn };
+  }
+
+  const momento = new Date();
+  const inscripciones = await db
+    .select({ claseId: inscripcion.claseId })
+    .from(inscripcion)
+    .where(eq(inscripcion.alumnoId, elAlumno.id));
+
+  try {
+    await db.insert(asistencia).values({
+      alumnoId: elAlumno.id,
+      actividadId,
+      marcadaEn: momento,
+      slot: BigInt(slotDe(momento, laActividad.ventanaSeg)),
+      origen: "manual",
+      notaManual: justificacion,
+      clasesSnapshot: inscripciones.map((i) => i.claseId),
+    });
+  } catch (error) {
+    if (esViolacionDeUnicidad(error)) {
+      await anotar(elAlumno.id, actividadId, "duplicado", {});
+      return { resultado: "duplicado", marcadaEn: momento };
+    }
+    throw error;
+  }
+
+  await anotar(elAlumno.id, actividadId, "ok", {});
+  return { resultado: "ok", marcadaEn: momento };
 }
 
 /**

@@ -52,8 +52,12 @@ export async function obtenerParticipaciones(alumnoId: string): Promise<TablaPar
   });
 }
 
-/** `null` si todavia no hay ninguna actividad publicada o cerrada: no hay nada que cortar. */
-async function fechaDeCorteVigente(): Promise<Date | null> {
+/**
+ * `null` si todavia no hay ninguna actividad publicada o cerrada: no hay nada que cortar.
+ * Exportada para el Tablero (B1, Fase 4): la alerta de saldo pendiente cerca del corte usa la
+ * misma fecha que ya decide si el reparto sigue abierto en A10.
+ */
+export async function fechaDeCorteVigente(): Promise<Date | null> {
   const [fila] = await db
     .select({ maxCierre: max(actividad.marcajeCierraEn) })
     .from(actividad)
@@ -197,6 +201,32 @@ export async function repartirPuntos(
   }
 
   return { ok: true };
+}
+
+/**
+ * Cuántos alumnos tienen saldo de puntos extra sin repartir, ahora mismo — para la alerta del
+ * Tablero (B1, Fase 4). Agregado en SQL en vez de recorrer alumno por alumno con
+ * `calcularSaldoPorActividad`: el saldo por alumno es una resta de dos sumas, y hacerla en la
+ * base evita traer toda `asistencia`/`asignacion_extra` a memoria para solo contar.
+ */
+export async function contarAlumnosConSaldoPendiente(): Promise<number> {
+  const resultado = await db.execute(sql`
+    with ganado as (
+      select a.alumno_id, sum(act.puntos) as puntos
+      from asistencia a
+      join actividad act on act.id = a.actividad_id
+      where act.tipo = 'extra' and act.estado in ('publicada', 'cerrada')
+      group by a.alumno_id
+    ),
+    repartido as (
+      select alumno_id, sum(puntos) as puntos from asignacion_extra group by alumno_id
+    )
+    select count(*)::int as total
+    from ganado g
+    left join repartido r on r.alumno_id = g.alumno_id
+    where g.puntos - coalesce(r.puntos, 0) > 0
+  `);
+  return (resultado.rows[0] as { total: number } | undefined)?.total ?? 0;
 }
 
 export async function deshacerAsignacion(alumnoId: string, asignacionId: string): Promise<ResultadoReparto> {

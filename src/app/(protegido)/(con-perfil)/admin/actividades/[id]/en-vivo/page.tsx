@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db/cliente";
 import { actividad, alumno, asistencia } from "@/db/esquema";
+import { FormularioMarcajeManual } from "@/componentes/formulario-marcaje-manual";
 import { enGuatemala, horaEnGuatemala } from "@/lib/fechas";
 import { requireAdmin } from "@/lib/sesion";
 
@@ -34,6 +35,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
       id: asistencia.id,
       marcadaEn: asistencia.marcadaEn,
       origen: asistencia.origen,
+      notaManual: asistencia.notaManual,
       nombre: alumno.nombre,
       carne: alumno.carne,
       email: alumno.email,
@@ -97,7 +99,11 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
                   </td>
                   <td className="py-2 pr-4 font-mono text-neutral-600">{m.carne ?? "—"}</td>
                   <td className="py-2 text-neutral-500">
-                    {m.origen === "manual" ? "Manual" : "QR"}
+                    {m.origen === "manual" ? (
+                      <span title={m.notaManual ?? undefined}>Manual</span>
+                    ) : (
+                      "QR"
+                    )}
                   </td>
                 </tr>
               ))}
@@ -105,6 +111,8 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
           </table>
         </div>
       )}
+
+      <FormularioMarcajeManual actividadId={id} />
     </div>
   );
 }

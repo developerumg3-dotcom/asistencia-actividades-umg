@@ -8,7 +8,10 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   presencial, estimado para dentro de una semana. Ver [`docs/fase-2.md`](docs/fase-2.md). En
   paralelo, **Fase 3 adelantada**: el motor de cálculo y las pantallas A9/A10 (tareas 1 a 4) ya
   están construidos y probados; falta la tarea 5, cerrarla contra asistencias reales — ver
-  [`docs/fase-3.md`](docs/fase-3.md).
+  [`docs/fase-3.md`](docs/fase-3.md). **Fase 4 también adelantada y construida entera**:
+  Tablero, Alumnos, marcaje manual, Bitácora y exportación a Excel (B1, B7, B8, B9, B10) — ver
+  [`docs/fase-4.md`](docs/fase-4.md). Se pudo adelantar por la misma razón que la Fase 3: solo
+  necesita las tablas ya migradas, no el ensayo en campo de la Fase 2.
 
 ---
 
@@ -43,6 +46,11 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 | Puntos extra (A10) | `/puntos-extra` — saldo, repartir, deshacer hasta la fecha de corte (48 h después del cierre de marcaje de la última actividad) |
 | Datos de prueba de actividades | `pnpm db:sembrar-actividades` — 5 actividades globales + 1 extra con `codigo_corto` `demo-*`, para probar A9/A10 sin esperar a B4. **Borrar (ver el propio script) antes de que B4 esté en uso real** |
 | Catedrático sin cuenta | `docente.email` es opcional (migración `0003`): se crea con solo el nombre en `/admin/catedraticos` y se le asignan cursos desde `/admin/clases`. Ver bitácora |
+| Tablero (B1) | `/admin` — actividad con marcaje abierto, asistencias de hoy, alumnos registrados, alertas (clases sin catedrático, saldo extra por vencer, picos de fallos en bitácora) y el botón de reporte global |
+| Alumnos (B7) | `/admin/alumnos` — buscar por carné, nombre o correo; ficha con sus clases y puntos (mismo motor que A9), corregir inscripciones, liberar carné |
+| Marcaje manual (B8) | Dentro de `/admin/actividades/{id}/en-vivo` (B6). Sin restricción de horario ni de estado de la actividad; justificación obligatoria en `asistencia.nota_manual` |
+| Bitácora (B9) | `/admin/bitacora` — filtros por alumno, actividad, evento, resultado y fecha; resalta (sin actuar) intentos fallidos repetidos y dispositivos compartidos entre alumnos |
+| Exportar Excel (B10) | Detalle de catedrático en `/admin/catedraticos/{id}` con botón de reporte individual; botón de reporte global en `/admin`. `exceljs`, probado contra datos reales bajado y leído de vuelta — 10 pruebas nuevas entre reportes y señales de bitácora: `pnpm probar` (52 en total) |
 
 ## Qué NO existe todavía
 
@@ -52,7 +60,11 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   asistencias reales generadas por el flujo terminado de la Fase 2. Las tareas 1 a 4 (motor,
   A9, A10) están hechas y probadas con datos sembrados a mano
   (`pnpm db:sembrar-actividades`), no con el marcaje de verdad todavía
-- Excel, PWA: fases 4 y 5
+- PWA: fase 5. La Fase 4 (Excel, tablero, alumnos, marcaje manual, bitácora) ya está construida
+- **Bloquear/desbloquear cuentas.** La columna `alumno.estado` existe desde la Fase 1 pero
+  nada la revisa todavía. Se decidió dejarlo para más adelante — ver bitácora de cambios de
+  rumbo — porque generaba dudas de diseño (qué pasa con una sesión ya abierta) y no era una
+  necesidad real del sistema en este momento
 - **Ningún catedrático cargado.** Las 50 clases tienen `docente_id` en NULL. Sin eso no se
   puede exportar el Excel, que es el entregable final del sistema. El flujo para cargarlos es
   simple: crear el catedrático con solo el nombre en `/admin/catedraticos`, y asignarle sus
@@ -88,6 +100,16 @@ Dos hallazgos de la implementación de la Fase 3 quedan anotados en «Trampas co
 [`AGENTS.md`](AGENTS.md) porque van a volver a aparecer en la Fase 2: `neon-http` (el driver
 de Neon que usa esta app) no soporta transacciones interactivas, y `Intl.DateTimeFormat`
 puede formatear fechas distinto entre el servidor y el navegador para `es-GT`.
+
+La **Fase 4** se adelantó por la misma razón que la Fase 3, y ya está **completa**: Tablero
+(B1), Alumnos (B7), marcaje manual (B8), Bitácora (B9) y exportación a Excel (B10) — ver
+[`docs/fase-4.md`](docs/fase-4.md). Verificada en el navegador contra datos reales: una
+asistencia marcada manualmente en B8 se reflejó correctamente en el Excel descargado desde
+B10, con las cifras exactas de `/participaciones`. Lo único que quedó fuera a propósito es
+bloquear/desbloquear cuentas (ver «Qué NO existe todavía»).
+
+Con las fases 1 a 4 construidas, solo falta el **ensayo en campo** de la Fase 2 y la **Fase
+5** (PWA y endurecimiento) para cerrar todo el alcance de `PLANIFICACION.md`.
 
 ---
 
@@ -153,6 +175,25 @@ usuario, 30 de agosto de 2026.
 
 **Se llevó por delante:** el pendiente de "cómo obtiene su cuenta el catedrático" (§15 de
 `PLANIFICACION.md`) desapareció entero, porque ya no hay cuenta que obtener.
+
+### Bloquear cuentas se dejó pendiente (30 de agosto de 2026)
+
+**Era, según §8 de `PLANIFICACION.md`:** B7 (Alumnos) incluía "bloquear cuentas" como parte de
+la Fase 4, sobre la columna `alumno.estado` (`activo`/`bloqueado`) que ya existía desde la
+Fase 1 sin usarse.
+
+**Es:** B7 se construyó sin esa función. La columna sigue sin usarse.
+
+**Por qué:** al bajar la pantalla a tareas concretas aparecieron preguntas de diseño sin
+resolver — qué pasa con una sesión ya abierta de una cuenta que se bloquea a mitad de evento,
+si el bloqueo debía ser total o solo para marcar asistencia — y no era una necesidad real del
+sistema en este momento. Decisión del usuario: mejor dejarlo pendiente que resolverlo con
+suposiciones.
+
+**Se llevó por delante:** nada del código existente; es una función que nunca se construyó.
+Si se retoma, revisar `requireAlumno`/`obtenerAlumnoActual` en `src/lib/sesion.ts` — es el
+único punto por el que pasan todas las rutas protegidas y el marcaje (A6), así que es ahí
+donde conviene cortar el acceso, no en cada pantalla por separado.
 
 ### El catálogo de clases sale del pensum, no de un listado por ciclo
 

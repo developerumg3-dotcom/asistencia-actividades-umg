@@ -515,6 +515,11 @@ un archivo. Ese archivo se envía por fuera de la app — no hay envío automát
 - Alumnos ordenados por apellido.
 - Totales en negrita, anchos de columna ya ajustados.
 
+**Nota de implementación (Fase 4):** `alumno.nombre` es un solo campo de texto libre — no hay
+un campo de apellido separado (§4). El orden real es alfabético por ese campo completo (o por
+el correo si el alumno no cargó nombre), que es lo más cercano a "por apellido" que da el dato
+disponible. Ver `docs/fase-4.md`.
+
 ---
 
 ## 10. Arquitectura

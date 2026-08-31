@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { clase, docente, inscripcion } from "@/db/esquema";
 
@@ -37,4 +37,13 @@ export async function obtenerIdsInscritoDe(alumnoId: string): Promise<string[]> 
     .from(inscripcion)
     .where(eq(inscripcion.alumnoId, alumnoId));
   return inscripciones.map((i) => i.claseId);
+}
+
+/** Para la alerta del Tablero (B1, Fase 4): esas clases no se pueden exportar (§9). */
+export async function contarClasesSinCatedratico(): Promise<number> {
+  const [fila] = await db
+    .select({ total: count() })
+    .from(clase)
+    .where(and(isNull(clase.docenteId), eq(clase.activa, true)));
+  return fila?.total ?? 0;
 }
