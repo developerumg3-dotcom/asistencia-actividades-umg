@@ -80,26 +80,38 @@ permisos.
 
 ## Plan por etapas
 
-Cada etapa se puede parar sin haber roto nada. **La etapa 0 no es opcional**: sin medir, el
-radio es una adivinanza.
+Cada etapa se puede parar sin haber roto nada. Ninguna exige ir al lugar antes de tiempo.
 
-### Etapa 0 — Medir en Enchulados (sin código)
+### Etapa 0 — El centro, sin ir al lugar
 
-Aprovechando el [ensayo en campo](ensayo-campo.md):
+Ir a medir se descartó: cuesta demasiado organizarlo. No hace falta.
 
-1. Abrir en el navegador de cada teléfono una página que muestre latitud, longitud y
-   precisión. Sirve cualquiera; también la consola con `navigator.geolocation`.
-2. Tomar la lectura **en el centro del área** con dos o tres teléfonos distintos.
-3. Caminar hasta **los cuatro extremos** del área y anotar coordenadas y precisión.
-4. Anotar la **precisión peor** de todas las lecturas.
+Conviene separar las dos cosas que una visita habría dado, porque solo una necesita estar ahí:
 
-**Qué sale de acá:** el centro real, el radio mínimo que cubre todo el predio, y —lo más
-importante— si la precisión que dan los teléfonos permite discriminar algo. Si la peor
-precisión es de 200 m, el radio tendría que ser tan grande que ya no filtra nada, y el plan se
-termina acá con una respuesta honesta al Ing. Fonseca.
+| Qué | Cómo se consigue sin ir |
+|---|---|
+| **El centro del lugar** | Google Maps, en diez segundos |
+| **La precisión real de los teléfonos** | La recoge sola la etapa 1, de los alumnos reales, en el primer evento |
 
-**Regla para el radio:** radio = distancia del centro al extremo más lejano + la peor
-precisión medida + 20 % de margen.
+O sea que la medición no se salta: **se hace sola durante el primer evento**, y con muchos más
+teléfonos de los que llevaríamos a una visita.
+
+**Sacar el centro:** clic derecho sobre «Restaurante Enchulados» en Google Maps. Las
+coordenadas salen arriba del menú y se copian con un clic. Eso da el punto exacto que Google
+tiene registrado para el local.
+
+Como referencia, estimado contando píxeles sobre una captura del mapa:
+**14.308584, -90.786289**. Sirve para tener una idea, pero tiene unos ±30 m de error — usar
+siempre el valor del clic derecho, que es exacto.
+
+**El radio.** Sin haber caminado el predio no sabemos su tamaño, así que se elige generoso a
+propósito: **250 m**. Cubre el local, su estacionamiento y los alrededores inmediatos, más el
+error del GPS. Es amplio, sí, y aun así deja fuera a quien esté en su casa o en la
+universidad, que es el caso que se quiere frenar. **Un radio de más solo pierde un poco de
+filtro; un radio de menos rechaza a alumnos que sí fueron**, y eso es el peor error posible
+del sistema.
+
+Con los datos de la etapa 1 se ajusta después, con números en vez de suposiciones.
 
 ### Etapa 1 — Registrar sin bloquear
 
@@ -143,7 +155,8 @@ estaba presente, la función hace más daño que bien y se vuelve a señal.
 
 ## Lo que hay que decidir antes de empezar
 
-- **El punto exacto y el radio de Enchulados.** Sale de la etapa 0.
+- **El punto exacto de Enchulados.** Clic derecho en Google Maps; no hace falta ir. El radio
+  arranca en 250 m y se ajusta con los datos de la etapa 1.
 - **Qué pasa si el alumno niega el permiso.** Mi recomendación: se marca igual y queda
   anotado. Lo contrario convierte un permiso del navegador en un requisito para tener puntos.
 - **Si el radio se declara por actividad o hay un valor por defecto.** Como los eventos son
@@ -153,7 +166,8 @@ estaba presente, la función hace más daño que bien y se vuelve a señal.
 ## Lo que este plan no propone
 
 - **Reemplazar la ventana de 60 s.** Sigue siendo la defensa principal, y es más fuerte.
-- **Bloquear desde el primer día.** Sin datos de la etapa 1 sería adivinar.
+- **Bloquear desde el primer día.** Sin datos de la etapa 1 sería adivinar, y el riesgo de
+  equivocarse lo paga un alumno que sí fue.
 - **Perseguir al que falsea la ubicación.** Quien quiera saltarla va a poder. El objetivo es
   subir el costo del fraude casual, no cerrar la puerta.
 

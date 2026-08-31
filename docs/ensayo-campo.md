@@ -134,6 +134,14 @@ Tarea 9 de la [Fase 5](fase-5.md), pendiente por no haber simulador de iOS.
 
 ---
 
+## Si van a probar geolocalización
+
+No hace falta medir nada en el ensayo: ver [`plan-geolocalizacion.md`](plan-geolocalizacion.md).
+El centro sale de Google Maps y la precisión de los teléfonos la recoge sola la etapa 1
+durante el primer evento real.
+
+---
+
 ## Después del ensayo
 
 1. **Revisá la bitácora** en `/admin/bitacora`. Tiene que haber una fila por cada intento del
