@@ -4,6 +4,7 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad, alumno, asistencia, bitacora, inscripcion } from "@/db/esquema";
 import { slotDe, validarCodigo } from "@/lib/qr/codigo";
+import { esPuntoValido, evaluarZona } from "@/lib/geo";
 
 /**
  * Registro de asistencia por QR. Junta la derivacion del codigo (`codigo.ts`, logica pura)
@@ -34,6 +35,17 @@ export type Marcaje =
 export type DatosDeBitacora = {
   ip?: string | null;
   dispositivoId?: string | null;
+};
+
+/**
+ * Lectura de ubicacion del telefono. Puede faltar entera: el alumno pudo negar el permiso o
+ * su telefono no dar posicion, y **eso no le impide marcar** (docs/plan-geolocalizacion.md).
+ */
+export type Ubicacion = {
+  lat: number;
+  lon: number;
+  /** Margen de error en metros que informa el navegador. */
+  precisionM: number | null;
 };
 
 /** Los textos exactos de PLANIFICACION.md §7. No improvisar variantes. */
@@ -78,6 +90,7 @@ export async function registrarMarcaje({
   codigo,
   momento = new Date(),
   datos = {},
+  ubicacion = null,
 }: {
   alumno: { id: string; perfilCompleto: boolean };
   codigoCorto: string;
@@ -85,6 +98,8 @@ export async function registrarMarcaje({
   /** La hora en que llega el boton, no la del escaneo. Es lo que vuelve inutil la foto. */
   momento?: Date;
   datos?: DatosDeBitacora;
+  /** Etapa 1: se registra y NO bloquea. Ver docs/plan-geolocalizacion.md. */
+  ubicacion?: Ubicacion | null;
 }): Promise<Marcaje> {
   const [laActividad] = await db
     .select({
@@ -95,6 +110,9 @@ export async function registrarMarcaje({
       ventanaSeg: actividad.ventanaSeg,
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      lat: actividad.lat,
+      lon: actividad.lon,
+      radioM: actividad.radioM,
     })
     .from(actividad)
     .where(eq(actividad.codigoCorto, codigoCorto))
@@ -158,6 +176,19 @@ export async function registrarMarcaje({
     .from(inscripcion)
     .where(eq(inscripcion.alumnoId, alumno.id));
 
+  // Etapa 1 de la geolocalizacion: se calcula la distancia y se guarda, pero NO decide
+  // nada. Un marcaje lejos queda visible en la bitacora para revisarlo a mano.
+  const lectura = ubicacion && esPuntoValido(ubicacion) ? ubicacion : null;
+  const { distanciaM } = evaluarZona({
+    centro:
+      laActividad.lat !== null && laActividad.lon !== null
+        ? { lat: laActividad.lat, lon: laActividad.lon }
+        : null,
+    radioM: laActividad.radioM,
+    lectura,
+    precisionM: ubicacion?.precisionM ?? null,
+  });
+
   try {
     await db.insert(asistencia).values({
       alumnoId: alumno.id,
@@ -167,6 +198,10 @@ export async function registrarMarcaje({
       origen: "qr",
       ip: datos.ip ?? null,
       dispositivoId: datos.dispositivoId ?? null,
+      lat: lectura?.lat ?? null,
+      lon: lectura?.lon ?? null,
+      precisionM: ubicacion?.precisionM ?? null,
+      distanciaM,
       // La asistencia se guarda aunque el arreglo venga vacio: sin clases inscritas
       // tambien cuenta, y los puntos apareceran cuando se inscriba.
       clasesSnapshot: inscripciones.map((i) => i.claseId),

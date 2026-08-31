@@ -37,8 +37,14 @@ Conviene ver cómo se compara con lo que ya tenemos:
 | **Geolocalización** | Una sola persona, y veinte segundos de configuración |
 
 Es decir: **la geolocalización es más fácil de saltar que lo que ya tenemos.** No la
-reemplaza, se le suma. Sirve contra el alumno que manda la foto por WhatsApp sin pensar, no
-contra el que se lo propone.
+reemplaza, se le suma.
+
+**Decisión del 31 de agosto de 2026: se acepta ese límite y se avanza igual.** El razonamiento
+es correcto y conviene dejarlo escrito: el fraude que se quiere frenar es el casual —
+fotografiar el QR y mandarlo por WhatsApp cuesta diez segundos y no requiere saber nada.
+Instalar y configurar una aplicación de ubicación simulada ya es proponérselo, y son contados
+los que lo harían. Nadie promete que sea infalible; la medida vale por lo que encarece el caso
+común, no por el caso extremo. Y la ventana de 60 s sigue siendo la defensa principal.
 
 ### 2. El permiso de ubicación es la fricción que este proyecto evitó a propósito
 
@@ -168,8 +174,8 @@ estaba presente, la función hace más daño que bien y se vuelve a señal.
 - **Reemplazar la ventana de 60 s.** Sigue siendo la defensa principal, y es más fuerte.
 - **Bloquear desde el primer día.** Sin datos de la etapa 1 sería adivinar, y el riesgo de
   equivocarse lo paga un alumno que sí fue.
-- **Perseguir al que falsea la ubicación.** Quien quiera saltarla va a poder. El objetivo es
-  subir el costo del fraude casual, no cerrar la puerta.
+- **Perseguir al que falsea la ubicación.** Quien quiera saltarla va a poder, y está aceptado
+  (ver §1). El objetivo es subir el costo del fraude casual, no cerrar la puerta.
 
 ## Ramas y alcance
 

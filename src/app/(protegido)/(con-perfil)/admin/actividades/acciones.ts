@@ -32,7 +32,36 @@ type CamposActividad = {
   marcajeCierraEn: Date;
   ventanaSeg: number;
   estado: "borrador" | "publicada" | "cerrada";
+  lat: number | null;
+  lon: number | null;
+  radioM: number | null;
 };
+
+/**
+ * Zona del evento. O van los tres o no va ninguno: media zona no sirve para nada. Vacio
+ * significa "esta actividad no usa ubicacion" (docs/plan-geolocalizacion.md).
+ */
+function leerZona(formData: FormData): { lat: number | null; lon: number | null; radioM: number | null } | string {
+  const crudoLat = String(formData.get("lat") ?? "").trim();
+  const crudoLon = String(formData.get("lon") ?? "").trim();
+  const crudoRadio = String(formData.get("radioM") ?? "").trim();
+
+  if (!crudoLat && !crudoLon && !crudoRadio) return { lat: null, lon: null, radioM: null };
+  if (!crudoLat || !crudoLon || !crudoRadio) {
+    return "Para usar ubicación completá latitud, longitud y radio. O dejá los tres vacíos.";
+  }
+
+  const lat = Number(crudoLat);
+  const lon = Number(crudoLon);
+  const radioM = Number(crudoRadio);
+
+  if (!Number.isFinite(lat) || Math.abs(lat) > 90) return "La latitud tiene que ir entre -90 y 90.";
+  if (!Number.isFinite(lon) || Math.abs(lon) > 180) return "La longitud tiene que ir entre -180 y 180.";
+  if (!Number.isInteger(radioM) || radioM < 20 || radioM > 5000) {
+    return "El radio va de 20 a 5000 metros.";
+  }
+  return { lat, lon, radioM };
+}
 
 function leerCampos(formData: FormData): CamposActividad | string {
   const nombre = String(formData.get("nombre") ?? "").trim();
@@ -59,7 +88,11 @@ function leerCampos(formData: FormData): CamposActividad | string {
   if (terminaEn <= iniciaEn) return "La actividad no puede terminar antes de empezar.";
   if (marcajeCierraEn <= marcajeAbreEn) return "El marcaje no puede cerrar antes de abrir.";
 
+  const zona = leerZona(formData);
+  if (typeof zona === "string") return zona;
+
   return {
+    ...zona,
     nombre,
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     lugar: String(formData.get("lugar") ?? "").trim() || null,

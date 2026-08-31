@@ -26,6 +26,9 @@ export type ActividadEditable = {
   terminaEn: string;
   marcajeAbreEn: string;
   marcajeCierraEn: string;
+  lat: string;
+  lon: string;
+  radioM: string;
 };
 
 /** Un bloque del formulario, con su titulo y su explicacion. */
@@ -171,6 +174,39 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           <option value="publicada">Publicada</option>
           <option value="cerrada">Cerrada</option>
         </Campo>
+      </Seccion>
+
+      <Seccion
+        titulo="Dónde (opcional)"
+        ayuda="Si declarás el lugar, se guarda a qué distancia marcó cada alumno. Por ahora solo se registra: nadie deja de marcar por estar lejos. Dejalo vacío para no usarlo."
+      >
+        <Campo
+          id={`lat-${sufijo}`}
+          name="lat"
+          etiqueta="Latitud"
+          defaultValue={valores?.lat ?? ""}
+          placeholder="14.308601"
+          inputMode="decimal"
+        />
+        <Campo
+          id={`lon-${sufijo}`}
+          name="lon"
+          etiqueta="Longitud"
+          defaultValue={valores?.lon ?? ""}
+          placeholder="-90.786206"
+          inputMode="decimal"
+        />
+        <Campo
+          id={`radioM-${sufijo}`}
+          name="radioM"
+          etiqueta="Radio en metros"
+          type="number"
+          min={20}
+          max={5000}
+          defaultValue={valores?.radioM ?? ""}
+          placeholder="250"
+          ayuda="Clic derecho en Google Maps sobre el lugar para copiar las coordenadas."
+        />
       </Seccion>
     </div>
   );

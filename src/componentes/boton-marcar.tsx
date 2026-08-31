@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   estadoInicialMarcaje,
@@ -47,6 +47,39 @@ function Resultado({ estado }: { estado: EstadoMarcaje }) {
   );
 }
 
+/**
+ * Pide la ubicacion **en paralelo**, apenas se abre la pantalla, y nunca hace esperar al
+ * boton. Si llega a tiempo, viaja con el marcaje; si no, el alumno marca igual.
+ *
+ * Esto es deliberado: el alumno tiene 60 segundos y el permiso del navegador es justo la
+ * friccion que la decision 10 evito al descartar el escaner. Que un alumno que si fue pierda
+ * su punto por un dialogo seria el peor error posible del sistema.
+ * Ver docs/plan-geolocalizacion.md.
+ */
+function useUbicacion() {
+  const ubicacion = useRef<{ lat: number; lon: number; precisionM: number | null } | null>(null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (posicion) => {
+        ubicacion.current = {
+          lat: posicion.coords.latitude,
+          lon: posicion.coords.longitude,
+          precisionM: Number.isFinite(posicion.coords.accuracy)
+            ? Math.round(posicion.coords.accuracy)
+            : null,
+        };
+      },
+      // Permiso negado, sin señal, o se acabo el tiempo: se sigue sin ubicacion.
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
+    );
+  }, []);
+
+  return ubicacion;
+}
+
 export function BotonMarcar({
   codigoCorto,
   codigo,
@@ -55,6 +88,7 @@ export function BotonMarcar({
   codigo: string;
 }) {
   const [estado, accion, enviando] = useActionState(marcarAsistencia, estadoInicialMarcaje);
+  const ubicacion = useUbicacion();
 
   // Ya resuelto: no tiene sentido dejar el boton para que lo pulse de nuevo.
   const terminado = estado.resultado === "ok" || estado.resultado === "duplicado";
@@ -63,7 +97,19 @@ export function BotonMarcar({
     <div className="flex flex-col gap-4">
       <Resultado estado={estado} />
       {!terminado && (
-        <form action={accion}>
+        <form
+          action={(datos) => {
+            // Se adjunta lo que haya llegado hasta este instante. Si no llego nada, se
+            // manda sin ubicacion: el boton nunca espera.
+            const u = ubicacion.current;
+            if (u) {
+              datos.set("lat", String(u.lat));
+              datos.set("lon", String(u.lon));
+              if (u.precisionM !== null) datos.set("precisionM", String(u.precisionM));
+            }
+            return accion(datos);
+          }}
+        >
           <input type="hidden" name="codigoCorto" value={codigoCorto} />
           <input type="hidden" name="codigo" value={codigo} />
           {/* Un solo boton, grande: es lo unico que hay que hacer en esta pantalla. */}
