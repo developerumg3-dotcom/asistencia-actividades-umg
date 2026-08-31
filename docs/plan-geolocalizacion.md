@@ -37,8 +37,14 @@ Conviene ver cómo se compara con lo que ya tenemos:
 | **Geolocalización** | Una sola persona, y veinte segundos de configuración |
 
 Es decir: **la geolocalización es más fácil de saltar que lo que ya tenemos.** No la
-reemplaza, se le suma. Sirve contra el alumno que manda la foto por WhatsApp sin pensar, no
-contra el que se lo propone.
+reemplaza, se le suma.
+
+**Decisión del 31 de agosto de 2026: se acepta ese límite y se avanza igual.** El razonamiento
+es correcto y conviene dejarlo escrito: el fraude que se quiere frenar es el casual —
+fotografiar el QR y mandarlo por WhatsApp cuesta diez segundos y no requiere saber nada.
+Instalar y configurar una aplicación de ubicación simulada ya es proponérselo, y son contados
+los que lo harían. Nadie promete que sea infalible; la medida vale por lo que encarece el caso
+común, no por el caso extremo. Y la ventana de 60 s sigue siendo la defensa principal.
 
 ### 2. El permiso de ubicación es la fricción que este proyecto evitó a propósito
 
@@ -168,15 +174,55 @@ estaba presente, la función hace más daño que bien y se vuelve a señal.
 - **Reemplazar la ventana de 60 s.** Sigue siendo la defensa principal, y es más fuerte.
 - **Bloquear desde el primer día.** Sin datos de la etapa 1 sería adivinar, y el riesgo de
   equivocarse lo paga un alumno que sí fue.
-- **Perseguir al que falsea la ubicación.** Quien quiera saltarla va a poder. El objetivo es
-  subir el costo del fraude casual, no cerrar la puerta.
+- **Perseguir al que falsea la ubicación.** Quien quiera saltarla va a poder, y está aceptado
+  (ver §1). El objetivo es subir el costo del fraude casual, no cerrar la puerta.
+
+## Cómo volver atrás si no funciona
+
+Hay tres niveles, del más barato al más caro. **El primero alcanza casi siempre.**
+
+### 1. Apagarlo sin tocar código (segundos)
+
+La función es **inerte por defecto**: solo hace algo si la actividad declara latitud, longitud
+y radio. Para desactivarla, se vacían esos tres campos en `/admin/actividades` y el sistema
+vuelve exactamente al comportamiento anterior. La página de marcaje deja de pedir la
+ubicación, no se calcula ninguna distancia, y nadie se entera.
+
+Esto se puede hacer **en medio de un evento**, desde el teléfono, si algo saliera mal.
+
+### 2. Quitar la interfaz, dejando los datos (un commit)
+
+Si molestara el bloque «Dónde» del formulario o la columna de distancia, se revierte el
+commit de la etapa 1 y se dejan las columnas donde están:
+
+```bash
+git revert fdfa944
+```
+
+Las columnas de la migración `0005` admiten nulo, así que quedarse ahí no rompe nada: son
+columnas vacías que nadie consulta.
+
+### 3. Quitar las columnas (no hace falta)
+
+No se recomienda. Borrar columnas es la única operación de esta función que puede perder
+datos, y no gana nada: unas columnas nulas no cuestan ni rendimiento ni corrección.
+
+### Lo que nunca hay que hacer
+
+Revertir la migración `0005` mientras `main` esté desplegado con el código de la etapa 1.
+Quedaría el código pidiendo columnas que ya no existen. Si alguna vez se quitan las columnas,
+primero se revierte el código y después la base.
+
+---
 
 ## Ramas y alcance
 
 - Rama `feature/geolocalizacion`, desde `main`.
 - Las etapas 0 y 1 no tocan nada de lo que ya funciona: columnas nuevas que admiten nulo y
   código que solo se activa cuando la actividad declara un punto.
-- Se fusiona a `main` cuando la etapa 1 esté probada en un evento real.
+- **Fusionada a `main` el 31 de agosto de 2026**, antes del evento, por decisión del usuario:
+  el sistema todavía está en desarrollo y la función es inerte mientras ninguna actividad
+  declare zona, así que entra sin riesgo y se puede probar desplegada.
 - **Antes de escribir código**, esto se lleva a `PLANIFICACION.md`: la §7 gana una fila en la
   tabla de antifraude, y queda registrado que la ubicación es señal y no criterio, igual que
   la IP.

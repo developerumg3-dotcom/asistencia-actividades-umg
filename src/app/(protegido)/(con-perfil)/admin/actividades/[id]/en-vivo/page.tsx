@@ -23,6 +23,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
       estado: actividad.estado,
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      radioM: actividad.radioM,
     })
     .from(actividad)
     .where(eq(actividad.id, id))
@@ -36,6 +37,8 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
       marcadaEn: asistencia.marcadaEn,
       origen: asistencia.origen,
       notaManual: asistencia.notaManual,
+      distanciaM: asistencia.distanciaM,
+      precisionM: asistencia.precisionM,
       nombre: alumno.nombre,
       carne: alumno.carne,
       email: alumno.email,
@@ -70,6 +73,19 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
         </span>
       </div>
 
+      {laActividad.radioM !== null && marcajes.length > 0 && (
+        <p className="text-sm text-neutral-600">
+          Zona declarada de {laActividad.radioM} m ·{" "}
+          {marcajes.filter((m) => m.distanciaM === null).length} sin ubicación ·{" "}
+          {
+            marcajes.filter(
+              (m) => m.distanciaM !== null && m.distanciaM - (m.precisionM ?? 0) > laActividad.radioM!,
+            ).length
+          }{" "}
+          fuera del radio. <strong className="font-medium">Solo se registra</strong>, no bloquea.
+        </p>
+      )}
+
       {marcajes.length === 0 ? (
         <div className="rounded-md border border-dashed border-neutral-300 px-4 py-12 text-center">
           <p className="text-sm font-medium text-neutral-700">Todavía no marcó nadie.</p>
@@ -85,6 +101,9 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
                 <th className="py-2 pr-4 font-medium">Hora</th>
                 <th className="py-2 pr-4 font-medium">Alumno</th>
                 <th className="py-2 pr-4 font-medium">Carné</th>
+                {laActividad.radioM !== null && (
+                  <th className="py-2 pr-4 font-medium">Distancia</th>
+                )}
                 <th className="py-2 font-medium">Origen</th>
               </tr>
             </thead>
@@ -98,6 +117,29 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
                     {m.nombre ?? m.email}
                   </td>
                   <td className="py-2 pr-4 font-mono text-neutral-600">{m.carne ?? "—"}</td>
+                  {laActividad.radioM !== null && (
+                    <td className="py-2 pr-4 tabular-nums">
+                      {m.distanciaM === null ? (
+                        // Nego el permiso o el telefono no dio posicion. No es sospechoso:
+                        // en la etapa 1 la ubicacion es opcional.
+                        <span className="text-neutral-400">Sin ubicación</span>
+                      ) : m.distanciaM - (m.precisionM ?? 0) > laActividad.radioM ? (
+                        <span
+                          className="font-medium text-accent-800"
+                          title={m.precisionM ? `Precisión ±${m.precisionM} m` : undefined}
+                        >
+                          {m.distanciaM} m · fuera
+                        </span>
+                      ) : (
+                        <span
+                          className="text-neutral-600"
+                          title={m.precisionM ? `Precisión ±${m.precisionM} m` : undefined}
+                        >
+                          {m.distanciaM} m
+                        </span>
+                      )}
+                    </td>
+                  )}
                   <td className="py-2 text-neutral-500">
                     {m.origen === "manual" ? (
                       <span title={m.notaManual ?? undefined}>Manual</span>
