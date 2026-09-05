@@ -1,4 +1,4 @@
-import { NavAlumno } from "@/componentes/nav-alumno";
+import Link from "next/link";
 import { SelectorClases } from "@/componentes/selector-clases";
 import { obtenerClasesDisponibles, obtenerIdsInscritoDe } from "@/lib/clases";
 import { requireAlumno } from "@/lib/sesion";
@@ -13,7 +13,9 @@ export default async function ClasesPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 p-6">
-      <NavAlumno />
+      <Link href="/inicio" className="text-sm text-primary-700 underline hover:text-primary-800">
+        ← Inicio
+      </Link>
       <div>
         <h1 className="text-xl font-semibold">Tus clases</h1>
         <p className="mt-1 text-sm text-neutral-600">

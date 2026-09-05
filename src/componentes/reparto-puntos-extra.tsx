@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deshacer, repartir } from "@/app/(protegido)/(con-perfil)/puntos-extra/acciones";
+import { deshacer, repartir } from "@/lib/puntos/acciones";
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";

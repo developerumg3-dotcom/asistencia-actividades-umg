@@ -13,6 +13,7 @@ const pestanas = [
   // Los cursos propios de quien administra. Es una pestaña mas y no un enlace de salida:
   // mandarlo a /clases lo sacaba del panel y le hacia perder estas opciones.
   { href: "/admin/mis-clases", etiqueta: "Mis clases" },
+  { href: "/admin/mis-puntos", etiqueta: "Mis puntos" },
 ];
 
 export function NavAdmin() {

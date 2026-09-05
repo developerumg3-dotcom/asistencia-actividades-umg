@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AvisoActividadAbierta } from "@/componentes/aviso-actividad-abierta";
 import { RepartoPuntosExtra } from "@/componentes/reparto-puntos-extra";
 import { TablaParticipacionesAlumno } from "@/componentes/tabla-participaciones";
@@ -6,17 +5,16 @@ import { obtenerActividadesDelAlumno } from "@/lib/actividades";
 import { avisoEsUrgente } from "@/lib/puntos/calculo";
 import { enGuatemala } from "@/lib/fechas";
 import { obtenerEstadoPuntosExtra, obtenerParticipaciones } from "@/lib/puntos/consulta";
-import { requireAlumno } from "@/lib/sesion";
+import { requireAdmin } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
 
 /**
- * A5 — Inicio del alumno. Fusiona lo que antes eran tres pantallas (A5 + A9 + A10, ver
- * docs/plan-rediseno-pantalla-alumno.md): lo primero que importa es cuantos puntos llevas en
- * cada clase, no si hay marcaje abierto ahora mismo — eso es un aviso, no el protagonista.
+ * Espejo de /inicio para quien administra (mismo patron que /admin/mis-clases): quien
+ * administra tambien cursa y necesita ver sus propios puntos sin salir del panel.
  */
-export default async function InicioPage() {
-  const alumnoActual = await requireAlumno();
+export default async function MisPuntosAdminPage() {
+  const alumnoActual = await requireAdmin();
   const [actividades, tabla, estadoExtra] = await Promise.all([
     obtenerActividadesDelAlumno(alumnoActual.id),
     obtenerParticipaciones(alumnoActual.id),
@@ -25,11 +23,12 @@ export default async function InicioPage() {
   const urgente = estadoExtra.fechaDeCorte ? avisoEsUrgente(new Date(), estadoExtra.fechaDeCorte) : false;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold">
-          Hola{alumnoActual.nombre ? `, ${alumnoActual.nombre.split(" ")[0]}` : ""}
-        </h1>
+        <h1 className="text-xl font-semibold">Mis puntos</h1>
+        <p className="mt-1 text-sm text-neutral-600">
+          Tus propios puntos, los mismos que ve un alumno en su inicio.
+        </p>
       </div>
 
       <AvisoActividadAbierta actividades={actividades} />
@@ -90,18 +89,6 @@ export default async function InicioPage() {
           repartoAbierto={estadoExtra.repartoAbierto}
         />
       </div>
-
-      <div className="flex flex-col gap-1">
-        <Link href="/clases" className="text-sm text-primary-700 underline hover:text-primary-800">
-          Mis cursos
-        </Link>
-        <Link
-          href="/ayuda/instalar-ios"
-          className="text-sm text-neutral-600 underline hover:text-primary-700"
-        >
-          ¿Cómo instalo esta app en mi iPhone?
-        </Link>
-      </div>
-    </main>
+    </div>
   );
 }
