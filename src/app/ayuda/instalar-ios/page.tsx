@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Instalar en iPhone — Ronda",
+  title: "Instalar en iPhone — Actividades UMG",
 };
 
 const pasos = [
@@ -20,7 +20,7 @@ const pasos = [
   },
   {
     titulo: "Confirmá tocando \"Agregar\"",
-    detalle: "El ícono de Ronda va a aparecer en tu pantalla de inicio, como cualquier otra app.",
+    detalle: "El ícono de Actividades UMG va a aparecer en tu pantalla de inicio, como cualquier otra app.",
   },
 ];
 

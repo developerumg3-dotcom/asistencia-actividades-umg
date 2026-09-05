@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { completarPerfil, type EstadoFormulario } from "@/app/(protegido)/perfil/completar/acciones";
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
+import { CampoCarne } from "@/componentes/ui/campo-carne";
 import { ComboboxMultiple } from "@/componentes/ui/combobox-multiple";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 import type { ClaseDisponible } from "@/lib/clases";
@@ -31,14 +32,7 @@ export function FormularioPerfil({
 
   return (
     <form action={accion} className="flex flex-col gap-4">
-      <Campo
-        id="carne"
-        name="carne"
-        etiqueta="Carné"
-        required
-        defaultValue={carneActual ?? ""}
-        autoComplete="off"
-      />
+      <CampoCarne id="carne" name="carne" etiqueta="Carné" required defaultValue={carneActual} />
       <Campo
         id="nombre"
         name="nombre"

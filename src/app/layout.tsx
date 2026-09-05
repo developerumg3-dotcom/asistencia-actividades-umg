@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth/client";
 import { RegistrarServiceWorker } from "@/componentes/registrar-service-worker";
 
 export const metadata: Metadata = {
-  title: "Ronda — Asistencia UMG",
+  title: "Actividades UMG",
   description: "Registro de participación en actividades de la UMG",
 };
 
