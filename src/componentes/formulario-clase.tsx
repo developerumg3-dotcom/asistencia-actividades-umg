@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   actualizarClase,
   crearClase,
+  duplicarClase,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/clases/acciones";
 import { Boton } from "@/componentes/ui/boton";
@@ -117,6 +118,7 @@ export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
 
 export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Docente[] }) {
   const [estado, accion, enviando] = useActionState(actualizarClase, estadoInicial);
+  const [estadoDuplicar, accionDuplicar, duplicando] = useActionState(duplicarClase, estadoInicial);
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -168,10 +170,25 @@ export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Do
           </div>
         </form>
       ) : (
-        <div className="flex justify-end">
-          <Boton variante="secundario" onClick={() => setAbierto(true)}>
-            Editar
-          </Boton>
+        <div className="flex flex-col items-end gap-2">
+          {estadoDuplicar.error && <MensajeFormulario tipo="error">{estadoDuplicar.error}</MensajeFormulario>}
+          {estadoDuplicar.mensaje && <MensajeFormulario tipo="exito">{estadoDuplicar.mensaje}</MensajeFormulario>}
+          <div className="flex justify-end gap-3">
+            <form action={accionDuplicar}>
+              <input type="hidden" name="id" value={clase.id} />
+              <Boton
+                variante="enlace"
+                type="submit"
+                disabled={duplicando}
+                title="Crea una copia de esta clase como fila nueva, útil para agregar otra sección del mismo curso."
+              >
+                {duplicando ? "Duplicando…" : "Duplicar"}
+              </Boton>
+            </form>
+            <Boton variante="secundario" onClick={() => setAbierto(true)}>
+              Editar
+            </Boton>
+          </div>
         </div>
       )}
     </article>

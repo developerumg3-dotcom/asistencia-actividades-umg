@@ -74,6 +74,36 @@ export async function actualizarClase(
   return estadoOk;
 }
 
+/**
+ * Copia una clase como fila nueva (mismo codigo/nombre/jornada/ciclo/docente/seccion).
+ * El catalogo del pensum siembra una sola fila por curso (codigo+jornada): para una segunda
+ * seccion del mismo curso hace falta otra fila, y retipear todo a mano en "Nueva clase" es
+ * lo que llevaba a editar la misma fila dos veces y perder la primera seccion.
+ */
+export async function duplicarClase(
+  _estadoPrevio: EstadoFormulario,
+  formData: FormData,
+): Promise<EstadoFormulario> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Falta el id de la clase a duplicar." };
+
+  const [original] = await db.select().from(clase).where(eq(clase.id, id)).limit(1);
+  if (!original) return { error: "Esa clase ya no existe." };
+
+  await db.insert(clase).values({
+    codigo: original.codigo,
+    nombre: original.nombre,
+    docenteId: original.docenteId,
+    seccion: original.seccion,
+    jornada: original.jornada,
+    ciclo: original.ciclo,
+    activa: original.activa,
+  });
+  revalidatePath("/admin/clases");
+  return { error: null, mensaje: "Clase duplicada. Cambiá la sección en la copia." };
+}
+
 const CABECERA_ESPERADA = [
   "codigo",
   "nombre",

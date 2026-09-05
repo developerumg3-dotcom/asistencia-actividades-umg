@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:sembrar": "tsx scripts/sembrar-pensum.mts",
     "db:sembrar-usuarios": "tsx scripts/sembrar-usuarios.mts",
+    "db:limpiar": "tsx scripts/limpiar-datos.mts",
     "probar": "tsx --test scripts/probar-*.mts",
     "probar:base": "tsx --conditions=react-server --test scripts/integracion-*.mts",
     "db:sembrar-actividades": "tsx scripts/sembrar-actividades.mts"

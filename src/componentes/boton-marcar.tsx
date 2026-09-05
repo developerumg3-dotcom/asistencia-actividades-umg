@@ -2,12 +2,10 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import {
-  estadoInicialMarcaje,
-  marcarAsistencia,
-  type EstadoMarcaje,
-} from "@/app/a/[codigoCorto]/[codigo]/acciones";
+import { marcarAsistencia, type EstadoMarcaje } from "@/app/a/[codigoCorto]/[codigo]/acciones";
 import { Boton } from "@/componentes/ui/boton";
+
+const estadoInicialMarcaje: EstadoMarcaje = { resultado: null, mensaje: null };
 
 /** A7 — el resultado se muestra en la misma pantalla, sin navegar (PLANIFICACION.md §6.4). */
 function Resultado({ estado }: { estado: EstadoMarcaje }) {
