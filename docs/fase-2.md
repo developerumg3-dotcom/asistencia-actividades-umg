@@ -115,6 +115,8 @@ con la red desconectada un minuto.
 
 ### 7. Ensayo en campo
 
+**Guion detallado: [`ensayo-campo.md`](ensayo-campo.md).**
+
 **Obligatorio. La fase no está terminada sin esto.** Ver §12 de `PLANIFICACION.md`.
 
 - Salón real, computadora real del salón, proyector real.

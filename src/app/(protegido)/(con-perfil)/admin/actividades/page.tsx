@@ -57,6 +57,9 @@ export default async function ActividadesAdminPage() {
       terminaEn: actividad.terminaEn,
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      lat: actividad.lat,
+      lon: actividad.lon,
+      radioM: actividad.radioM,
     })
     .from(actividad)
     .orderBy(asc(actividad.iniciaEn));
@@ -106,6 +109,9 @@ export default async function ActividadesAdminPage() {
               terminaEn: haciaCampoLocal(a.terminaEn),
               marcajeAbreEn: haciaCampoLocal(a.marcajeAbreEn),
               marcajeCierraEn: haciaCampoLocal(a.marcajeCierraEn),
+              lat: a.lat?.toString() ?? "",
+              lon: a.lon?.toString() ?? "",
+              radioM: a.radioM?.toString() ?? "",
             };
 
             return (
@@ -133,7 +139,7 @@ export default async function ActividadesAdminPage() {
                     )}
                   </div>
 
-                  <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
                     <Dato etiqueta="Ocurre">
                       {enGuatemala(a.iniciaEn)}
                       <span className="block text-xs text-neutral-500">
@@ -148,6 +154,18 @@ export default async function ActividadesAdminPage() {
                     </Dato>
                     <Dato etiqueta="Lugar">
                       {a.lugar ?? <span className="text-neutral-400">Sin definir</span>}
+                    </Dato>
+                    <Dato etiqueta="Zona">
+                      {a.radioM ? (
+                        <>
+                          {a.radioM} m
+                          <span className="block text-xs text-neutral-500">
+                            solo se registra
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-neutral-400">Sin declarar</span>
+                      )}
                     </Dato>
                     <Dato etiqueta="Código QR">
                       <span className="font-mono">{a.codigoCorto}</span>

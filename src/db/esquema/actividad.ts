@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { doublePrecision, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { estadoActividadEnum, tipoActividadEnum } from "./enums";
 import { bytea } from "./tipos";
 
@@ -17,4 +17,10 @@ export const actividad = pgTable("actividad", {
   estado: estadoActividadEnum("estado").notNull().default("borrador"),
   secretoQr: bytea("secreto_qr").notNull(),
   ventanaSeg: integer("ventana_seg").notNull().default(60),
+
+  // Zona del evento. Los tres admiten nulo y nulo significa "esta actividad no usa
+  // ubicacion", que es el comportamiento por defecto. Ver docs/plan-geolocalizacion.md.
+  lat: doublePrecision("lat"),
+  lon: doublePrecision("lon"),
+  radioM: integer("radio_m"),
 });

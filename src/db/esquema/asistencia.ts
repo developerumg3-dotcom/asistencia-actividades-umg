@@ -1,4 +1,14 @@
-import { bigint, inet, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  doublePrecision,
+  inet,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { actividad } from "./actividad";
 import { alumno } from "./alumno";
 import { origenAsistenciaEnum } from "./enums";
@@ -22,6 +32,15 @@ export const asistencia = pgTable(
     userAgent: text("user_agent"),
     // Solo auditoría (PLANIFICACION.md §4): no participa en el cálculo de puntos.
     clasesSnapshot: uuid("clases_snapshot").array(),
+
+    // Ubicación reportada por el teléfono al marcar. Nula si el alumno negó el permiso o si
+    // la actividad no declara zona: eso no le impide marcar (docs/plan-geolocalizacion.md).
+    lat: doublePrecision("lat"),
+    lon: doublePrecision("lon"),
+    /** Margen de error en metros que informa el propio navegador. */
+    precisionM: integer("precision_m"),
+    /** Distancia al centro declarado, ya calculada, para no recalcularla al consultar. */
+    distanciaM: integer("distancia_m"),
   },
   (tabla) => [unique().on(tabla.alumnoId, tabla.actividadId)],
 );

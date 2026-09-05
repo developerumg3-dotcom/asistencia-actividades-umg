@@ -26,6 +26,9 @@ export type ActividadEditable = {
   terminaEn: string;
   marcajeAbreEn: string;
   marcajeCierraEn: string;
+  lat: string;
+  lon: string;
+  radioM: string;
 };
 
 /** Un bloque del formulario, con su titulo y su explicacion. */
@@ -171,6 +174,53 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           <option value="publicada">Publicada</option>
           <option value="cerrada">Cerrada</option>
         </Campo>
+      </Seccion>
+
+      <Seccion
+        titulo="Dónde (opcional)"
+        ayuda="Si declarás el lugar, se guarda a qué distancia marcó cada alumno. Por ahora solo se registra: nadie deja de marcar por estar lejos. Dejalo vacío para no usarlo."
+      >
+        <Campo
+          id={`lat-${sufijo}`}
+          name="lat"
+          etiqueta="Latitud"
+          defaultValue={valores?.lat ?? ""}
+          placeholder="14.308601"
+          inputMode="decimal"
+          // Google Maps copia el par junto: si se pega aca, se reparte solo en los dos
+          // campos en vez de obligar a cortarlo a mano.
+          onPaste={(evento) => {
+            const texto = evento.clipboardData.getData("text").trim();
+            const par = texto.match(/^(-?\d+(?:\.\d+)?)\s*[,;]\s*(-?\d+(?:\.\d+)?)$/);
+            // Solo si las dos mitades son coordenadas plausibles: "14,3086" es un decimal
+            // escrito con coma, no un par.
+            if (!par || Math.abs(Number(par[1])) > 90 || Math.abs(Number(par[2])) > 180) return;
+            evento.preventDefault();
+            const campoLat = evento.currentTarget as HTMLInputElement;
+            campoLat.value = par[1];
+            const campoLon = document.getElementById(`lon-${sufijo}`) as HTMLInputElement | null;
+            if (campoLon) campoLon.value = par[2];
+          }}
+        />
+        <Campo
+          id={`lon-${sufijo}`}
+          name="lon"
+          etiqueta="Longitud"
+          defaultValue={valores?.lon ?? ""}
+          placeholder="-90.786206"
+          inputMode="decimal"
+        />
+        <Campo
+          id={`radioM-${sufijo}`}
+          name="radioM"
+          etiqueta="Radio en metros"
+          type="number"
+          min={20}
+          max={5000}
+          defaultValue={valores?.radioM ?? ""}
+          placeholder="250"
+          ayuda="Pegá acá el par que copiás de Google Maps: se reparte solo en los dos campos."
+        />
       </Seccion>
     </div>
   );

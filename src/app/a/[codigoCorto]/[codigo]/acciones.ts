@@ -41,6 +41,16 @@ export async function marcarAsistencia(
   const codigoCorto = String(formData.get("codigoCorto") ?? "");
   const codigo = String(formData.get("codigo") ?? "");
 
+  // Etapa 1 de la geolocalizacion: viaja si el telefono la dio a tiempo, y si no, no. No
+  // condiciona el marcaje (docs/plan-geolocalizacion.md).
+  const lat = Number(formData.get("lat"));
+  const lon = Number(formData.get("lon"));
+  const precision = Number(formData.get("precisionM"));
+  const ubicacion =
+    Number.isFinite(lat) && Number.isFinite(lon) && formData.has("lat")
+      ? { lat, lon, precisionM: Number.isFinite(precision) ? precision : null }
+      : null;
+
   const cabeceras = await headers();
 
   const marcaje = await registrarMarcaje({
@@ -55,6 +65,7 @@ export async function marcarAsistencia(
       ip: ipCliente(cabeceras),
       dispositivoId: null,
     },
+    ubicacion,
   });
 
   revalidatePath("/inicio");
