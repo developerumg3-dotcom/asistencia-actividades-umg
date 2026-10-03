@@ -3,6 +3,11 @@
 Pedido del Ing. Fonseca. Reabre una decisión de alcance: la §2 de
 [`PLANIFICACION.md`](../PLANIFICACION.md) lista «Notificaciones push» en **No entra**.
 
+**Para qué las quiere:** avisar de las actividades con anticipación, para **dejar de ir salón
+por salón** anunciándolas. Ese propósito es el que manda en todo lo que sigue, y conviene
+tenerlo presente porque cambia cuál es la pregunta importante: no es «¿se puede mandar una
+notificación?» —se puede— sino **«¿a cuántos les llega?»**.
+
 **Estado:** plan, sin código. Iría en rama aparte (`feature/notificaciones`).
 
 ---
@@ -74,19 +79,69 @@ La primera alcanza para empezar.
 
 ---
 
-## Para qué sirve de verdad
+## El problema de fondo: ir salón por salón llega al 100 %
 
-Conviene ser honesto sobre cuáles de estos avisos valen la pena:
+Acá está el punto que hay que mirar de frente. Pasar por los salones es incómodo, pero tiene
+una virtud que ninguna notificación iguala: **le llega a todos los que están ahí**, tengan
+cuenta o no, hayan instalado algo o no.
+
+Una notificación push solo le llega a un alumno que cumpla **las tres cosas a la vez**:
+
+1. Tiene cuenta en la app.
+2. Aceptó el permiso de notificaciones.
+3. Si usa iPhone, además **instaló la app** en su pantalla de inicio.
+
+Cada condición descarta gente, y se multiplican. Si el 70 % tiene cuenta, de esos el 60 %
+acepta el permiso, y la mitad de los que tienen iPhone no la instalaron, el aviso termina
+llegándole a una fracción del curso.
+
+Y hay una vuelta de tuerca que conviene ver: **la gente a la que más se le quiere avisar es
+justo la que menos probable es que esté suscrita.** Quien ya se registró, instaló la app y
+aceptó notificaciones es alguien comprometido, que probablemente iba a ir igual. El que nunca
+se registró —el que más necesita enterarse— es inalcanzable por este canal.
+
+**Conclusión honesta: las notificaciones pueden reducir las vueltas por los salones, no
+eliminarlas.** Al menos hasta que la adopción sea alta. Plantearlas como reemplazo desde el
+día uno lleva a que un día nadie llegue a una actividad y nadie entienda por qué.
+
+### Por eso: medir el alcance antes de mandar
+
+El panel debe decir, **antes** de enviar: *«Este aviso le va a llegar a 34 de 120 alumnos»*.
+Con ese número a la vista, ustedes deciden en el momento si además hay que pasar por los
+salones. Sin ese número, se asume que llegó y no hay forma de saber que no.
+
+Es la pieza más importante del diseño y cuesta muy poco.
+
+### El correo es el otro camino, y para esto puede ser mejor
+
+Para un aviso con días de anticipación, conviene comparar:
+
+| | Push | Correo |
+|---|---|---|
+| **Alcance** | Solo suscritos (y en iPhone, solo instalados) | **Todos los que tienen cuenta** — el correo es obligatorio para registrarse |
+| **Permiso** | Hay que pedirlo, y si lo niegan es para siempre | No hace falta |
+| **iPhone** | Exige instalar la PWA | Funciona igual |
+| **Urgencia** | **Llega al instante, con sonido** | Se lee cuando el alumno abre el correo |
+| **Costo de armarlo** | Claves VAPID, tabla, service worker, envíos | Un servicio de correo (Resend o similar) |
+
+Para «hay actividad el sábado» —que se manda con días de anticipación y no es urgente—, **el
+correo le gana claramente en alcance**, que es justo lo que importa para dejar de ir salón por
+salón. La push le gana en urgencia, que acá no hace falta.
+
+No es una recomendación de descartar la push: es que **si el objetivo es dejar de caminar los
+salones, el correo resuelve más del problema y cuesta menos**. Lo ideal sería los dos, con el
+correo primero.
+
+Vale la pena planteárselo al Ing. Fonseca antes de construir, porque es una pregunta de
+objetivo, no de tecnología.
+
+## Qué avisos valen la pena
 
 | Aviso | ¿Vale la pena? |
 |---|---|
-| **«Te quedan N puntos extra sin repartir, se pierden el {fecha}»** | **Sí, es el que justifica todo.** La decisión 14 dice que el saldo sin repartir **se pierde**. Hoy el único aviso vive dentro de la app, así que el alumno tiene que entrar para enterarse. Una notificación acá evita que alguien pierda puntos que ya se ganó. |
-| «Mañana hay actividad» | Sí, moderado. Recordatorio normal. |
-| «Ya podés marcar asistencia» | **Poco.** El alumno está en el evento, con el QR proyectado enfrente. No necesita que le avisen. |
-
-Si solo se hiciera el primero, la función ya se habría pagado sola. Los otros dos son extras.
-
----
+| **«El sábado hay actividad X en Enchulados a las 9»** | **Sí, es el pedido.** Con días de anticipación. Lo que reemplaza —en parte— las vueltas por los salones. |
+| **«Te quedan N puntos extra sin repartir, se pierden el {fecha}»** | **Sí, y es el de mayor valor por alumno.** La decisión 14 dice que el saldo sin repartir **se pierde**. Hoy el aviso solo vive dentro de la app. Este evita que alguien pierda puntos ya ganados. |
+| «Ya podés marcar asistencia» | **No.** El alumno está en el evento con el QR proyectado enfrente. |
 
 ## Plan por etapas
 
@@ -114,7 +169,9 @@ construirlas, no después.
   pantalla que corresponda.
 - Un componente que **pide el permiso explicándolo antes**, ubicado en la pantalla de puntos
   extra, que es donde el aviso tiene sentido. Nunca al entrar.
-- En el panel, un botón para mandar un aviso a los alumnos de una actividad.
+- En el panel, un botón para mandar el aviso de una actividad, que **antes de enviar muestra a
+  cuántos de cuántos les va a llegar**. Ese número es lo que les dice si además hay que pasar
+  por los salones.
 - **Limpieza automática:** si el servicio responde `404` o `410`, esa suscripción murió
   (desinstalaron la app, limpiaron datos) y se borra. Sin esto la tabla se llena de
   direcciones muertas y cada envío tarda más.
@@ -138,11 +195,11 @@ abre, son ruido y se quitan.
 
 ## Lo que hay que decidir antes de empezar
 
-- **¿Se acepta que no les llegue a todos?** Es la pregunta de fondo. Si la respuesta es que
-  las notificaciones tienen que llegarle a todo el curso sí o sí, **la Web Push no sirve** y
-  habría que hablar de correo o WhatsApp, que son otra conversación.
-- **¿Qué avisos se mandan?** Mi recomendación: solo el de puntos extra al principio. Es el
-  único que evita un daño real.
+- **¿El objetivo es dejar de ir salón por salón, o reducir las vueltas?** Si es lo primero,
+  **la push sola no alcanza** y hay que hablar de correo. Es la decisión más importante y es
+  del Ing. Fonseca, no técnica.
+- **¿Se hace correo también, o en vez de?** Mi recomendación: correo primero, por alcance, y
+  push después como refuerzo para lo urgente.
 - **¿Quién decide cuándo se manda?** Manual en la etapa 1.
 
 ## Lo que este plan no propone
