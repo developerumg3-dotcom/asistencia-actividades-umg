@@ -110,14 +110,22 @@ Como referencia, estimado contando píxeles sobre una captura del mapa:
 **14.308584, -90.786289**. Sirve para tener una idea, pero tiene unos ±30 m de error — usar
 siempre el valor del clic derecho, que es exacto.
 
-**El radio.** Sin haber caminado el predio no sabemos su tamaño, así que se elige generoso a
-propósito: **250 m**. Cubre el local, su estacionamiento y los alrededores inmediatos, más el
-error del GPS. Es amplio, sí, y aun así deja fuera a quien esté en su casa o en la
-universidad, que es el caso que se quiere frenar. **Un radio de más solo pierde un poco de
-filtro; un radio de menos rechaza a alumnos que sí fueron**, y eso es el peor error posible
-del sistema.
+**El radio: 200 m** (decidido con el usuario el 4 de octubre de 2026). Cubre el local, su
+estacionamiento y los alrededores inmediatos, más el error del GPS. Es amplio a propósito, y
+aun así deja fuera a quien esté en su casa o en la universidad, que es el caso que se quiere
+frenar. **Un radio de más solo pierde un poco de filtro; un radio de menos rechaza a alumnos
+que sí fueron**, y eso es el peor error posible del sistema.
 
-Con los datos de la etapa 1 se ajusta después, con números en vez de suposiciones.
+Los datos de la etapa 1 respaldan que alcanza: las lecturas reales dieron **19 m y 33 m de
+precisión**, un orden de magnitud por debajo del radio.
+
+200 es el valor **sugerido**, no un límite: el rango aceptado va de 20 a 5000 m.
+
+### Las actividades no son siempre en el mismo lugar
+
+Enchulados es el habitual, pero habrá otras sedes. Por eso la zona **se declara por
+actividad** y no hay un lugar fijo en el código: el administrador pega el punto que saca de
+Google Maps en cada actividad que crea. Enchulados aparece solo como ejemplo en el campo.
 
 ### Etapa 1 — Registrar sin bloquear
 
@@ -161,8 +169,8 @@ estaba presente, la función hace más daño que bien y se vuelve a señal.
 
 ## Lo que hay que decidir antes de empezar
 
-- **El punto exacto de Enchulados.** Clic derecho en Google Maps; no hace falta ir. El radio
-  arranca en 250 m y se ajusta con los datos de la etapa 1.
+- **El punto de cada actividad.** Clic derecho en Google Maps sobre el lugar; no hace falta
+  ir. Se declara por actividad, porque no siempre es en el mismo sitio. Radio sugerido: 200 m.
 - **Qué pasa si el alumno niega el permiso.** Mi recomendación: se marca igual y queda
   anotado. Lo contrario convierte un permiso del navegador en un requisito para tener puntos.
 - **Si el radio se declara por actividad o hay un valor por defecto.** Como los eventos son
