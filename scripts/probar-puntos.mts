@@ -45,6 +45,9 @@ function tablaDeMaria() {
     clasesInscritas: [PROGRAMACION_II, BASES_DE_DATOS, REDES],
     actividadesGlobales: ACTIVIDADES_GLOBALES,
     actividadIdsConAsistencia: new Set(["act-1", "act-2", "act-3"]),
+    // `calcularParticipaciones` reparte los extras entre clases concretas, asi que aca el
+    // `claseId` si hace falta. No confundir con `calcularSaldoExtra`, que solo suma por
+    // actividad y no lo necesita.
     asignacionesExtra: [
       { actividadId: FERIA, claseId: REDES.id, puntos: 1 },
       { actividadId: FERIA, claseId: BASES_DE_DATOS.id, puntos: 1 },
@@ -119,8 +122,8 @@ test("el saldo es lo ganado menos lo repartido", () => {
   const saldoRepartido = calcularSaldoExtra({
     asistenciasExtra: [{ actividadId: FERIA, puntos: 2 }],
     asignacionesExtra: [
-      { actividadId: FERIA, claseId: REDES.id, puntos: 1 },
-      { actividadId: FERIA, claseId: BASES_DE_DATOS.id, puntos: 1 },
+      { actividadId: FERIA, puntos: 1 },
+      { actividadId: FERIA, puntos: 1 },
     ],
   });
   assert.equal(saldoRepartido, 0);
@@ -132,7 +135,7 @@ test("el saldo se desglosa por actividad de origen, mas antigua primero", () => 
       { actividadId: "act-extra-1", puntos: 2 },
       { actividadId: "act-extra-2", puntos: 2 },
     ],
-    asignacionesExtra: [{ actividadId: "act-extra-1", claseId: REDES.id, puntos: 1 }],
+    asignacionesExtra: [{ actividadId: "act-extra-1", puntos: 1 }],
   });
   assert.deepEqual(desglose, [
     { actividadId: "act-extra-1", disponible: 1 },
