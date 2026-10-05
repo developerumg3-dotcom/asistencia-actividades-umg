@@ -29,6 +29,7 @@ export type ActividadEditable = {
   lat: string;
   lon: string;
   radioM: string;
+  exigeUbicacion: boolean;
 };
 
 /** Un bloque del formulario, con su titulo y su explicacion. */
@@ -178,7 +179,7 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
 
       <Seccion
         titulo="Dónde (opcional)"
-        ayuda="Si declarás el lugar, se guarda a qué distancia marcó cada alumno. Por ahora solo se registra: nadie deja de marcar por estar lejos. Dejalo vacío para no usarlo."
+        ayuda="Si declarás el lugar, se guarda a qué distancia marcó cada alumno. Se declara por actividad: pegá el punto de Google Maps del lugar de esta. Dejalo vacío para no usarlo."
       >
         <Campo
           id={`lat-${sufijo}`}
@@ -218,9 +219,26 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           min={20}
           max={5000}
           defaultValue={valores?.radioM ?? ""}
-          placeholder="250"
+          placeholder="200"
           ayuda="Pegá acá el par que copiás de Google Maps: se reparte solo en los dos campos."
         />
+        {/* Checkbox a mano: `Campo` no cubre casillas, por norma de docs/diseno-visual.md. */}
+        <div className="sm:col-span-2">
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              name="exigeUbicacion"
+              defaultChecked={valores?.exigeUbicacion ?? false}
+              className="mt-0.5 h-4 w-4 accent-primary-600"
+            />
+            Rechazar a quien marque fuera de la zona
+          </label>
+          <p className="mt-1 text-xs text-neutral-500">
+            Solo aplica si declarás latitud, longitud y radio. A quien niegue el permiso de
+            ubicación, o cuyo teléfono dé una lectura más imprecisa que el radio, no se le
+            bloquea: marca igual y queda anotado.
+          </p>
+        </div>
       </Seccion>
     </div>
   );

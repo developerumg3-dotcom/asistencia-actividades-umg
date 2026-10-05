@@ -57,7 +57,8 @@ test("un punto sin lectura no se confunde con uno real", () => {
   assert.equal(esPuntoValido(ENCHULADOS), true);
 });
 
-const ZONA = { centro: ENCHULADOS, radioM: 250 };
+/** Radio sugerido: 200 m. El rango que acepta el formulario es mas amplio (20 a 5000). */
+const ZONA = { centro: ENCHULADOS, radioM: 200 };
 
 test("dentro del radio da dentro", () => {
   const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 120), precisionM: 10 });
@@ -71,8 +72,8 @@ test("lejos del radio da fuera", () => {
 });
 
 test("el margen de error juega a favor del alumno", () => {
-  // A 260 m con ±30 m de error: su circulo toca la zona, se cuenta dentro.
-  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 260), precisionM: 30 });
+  // A 210 m con ±30 m de error: su circulo toca la zona, se cuenta dentro.
+  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 210), precisionM: 30 });
   assert.equal(r.veredicto, "dentro");
 });
 
@@ -100,8 +101,26 @@ test("una actividad sin zona declarada nunca evalua nada", () => {
 });
 
 test("justo en el borde del radio se cuenta dentro", () => {
-  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 250), precisionM: 0 });
+  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 200), precisionM: 0 });
   assert.equal(r.veredicto, "dentro");
+});
+
+/*
+ * Los dos casos de abajo son los que deciden si la etapa 2 rechaza o no: `registrarMarcaje`
+ * bloquea con "fuera" y con nada mas, asi que la frontera entre "fuera" e "impreciso" es
+ * literalmente la frontera entre quitarle el punto a alguien y no quitarselo.
+ */
+
+test("una precision igual al radio todavia sirve para decidir", () => {
+  // `impreciso` pide precision ESTRICTAMENTE mayor que el radio. Con 200 y 200 se decide, y
+  // a 500 m el margen no le alcanza para tocar la zona.
+  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 500), precisionM: 200 });
+  assert.equal(r.veredicto, "fuera");
+});
+
+test("un metro mas de imprecision ya impide decidir", () => {
+  const r = evaluarZona({ ...ZONA, lectura: alNorte(ENCHULADOS, 500), precisionM: 201 });
+  assert.equal(r.veredicto, "impreciso", "y por lo tanto no se rechaza el marcaje");
 });
 
 test("la universidad queda fuera de la zona de Enchulados", () => {

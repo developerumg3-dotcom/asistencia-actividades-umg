@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { marcarAsistencia, type EstadoMarcaje } from "@/app/a/[codigoCorto]/[codigo]/acciones";
 import { Boton } from "@/componentes/ui/boton";
@@ -31,6 +31,12 @@ function Resultado({ estado }: { estado: EstadoMarcaje }) {
           Volvé a apuntar la cámara al QR de la pantalla. El código cambia cada minuto.
         </p>
       )}
+      {estado.resultado === "fuera_de_zona" && (
+        <p className="mt-2 text-sm">
+          Esta actividad solo acredita en el lugar del evento. Si ya estás ahí, acercate un
+          poco más y volvé a pulsar el botón.
+        </p>
+      )}
       {estado.resultado === "sin_perfil" && (
         <Link href="/perfil/completar" className="mt-2 inline-block text-sm font-medium underline">
           Completar mi perfil
@@ -57,7 +63,12 @@ function Resultado({ estado }: { estado: EstadoMarcaje }) {
 function useUbicacion() {
   const ubicacion = useRef<{ lat: number; lon: number; precisionM: number | null } | null>(null);
 
-  useEffect(() => {
+  /**
+   * `maximaEdadMs` es cuanta antiguedad se acepta de una lectura ya cacheada por el
+   * navegador. Al abrir la pantalla conviene aceptarla: el alumno tiene 60 segundos y una
+   * lectura inmediata vale mas que una exacta. Al reintentar NO, ver abajo.
+   */
+  const pedir = useCallback((maximaEdadMs = 30_000) => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (posicion) => {
@@ -71,11 +82,15 @@ function useUbicacion() {
       },
       // Permiso negado, sin señal, o se acabo el tiempo: se sigue sin ubicacion.
       () => {},
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: maximaEdadMs },
     );
   }, []);
 
-  return ubicacion;
+  useEffect(() => {
+    pedir();
+  }, [pedir]);
+
+  return { ubicacion, pedir };
 }
 
 export function BotonMarcar({
@@ -86,7 +101,14 @@ export function BotonMarcar({
   codigo: string;
 }) {
   const [estado, accion, enviando] = useActionState(marcarAsistencia, estadoInicialMarcaje);
-  const ubicacion = useUbicacion();
+  const { ubicacion, pedir } = useUbicacion();
+
+  // Lo rechazaron por zona: se pide una lectura nueva y sin cache. Si no, el reintento
+  // mandaria la misma posicion de antes de caminar y lo rechazaria otra vez, y el mensaje
+  // "acercate y proba otra vez" seria imposible de cumplir.
+  useEffect(() => {
+    if (estado.resultado === "fuera_de_zona") pedir(0);
+  }, [estado, pedir]);
 
   // Ya resuelto: no tiene sentido dejar el boton para que lo pulse de nuevo.
   const terminado = estado.resultado === "ok" || estado.resultado === "duplicado";

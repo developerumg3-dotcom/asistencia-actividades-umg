@@ -24,6 +24,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
       radioM: actividad.radioM,
+      exigeUbicacion: actividad.exigeUbicacion,
     })
     .from(actividad)
     .where(eq(actividad.id, id))
@@ -82,7 +83,19 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
               (m) => m.distanciaM !== null && m.distanciaM - (m.precisionM ?? 0) > laActividad.radioM!,
             ).length
           }{" "}
-          fuera del radio. <strong className="font-medium">Solo se registra</strong>, no bloquea.
+          fuera del radio.{" "}
+          {/* El dato importa: con el bloqueo encendido, "fuera del radio" son marcajes que
+              no llegaron a existir, no asistencias dudosas. */}
+          {laActividad.exigeUbicacion ? (
+            <>
+              <strong className="font-medium">Se rechaza</strong> a quien quede fuera con una
+              lectura buena.
+            </>
+          ) : (
+            <>
+              <strong className="font-medium">Solo se registra</strong>, no bloquea.
+            </>
+          )}
         </p>
       )}
 

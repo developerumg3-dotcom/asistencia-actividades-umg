@@ -41,8 +41,9 @@ export async function marcarAsistencia(
   const codigoCorto = String(formData.get("codigoCorto") ?? "");
   const codigo = String(formData.get("codigo") ?? "");
 
-  // Etapa 1 de la geolocalizacion: viaja si el telefono la dio a tiempo, y si no, no. No
-  // condiciona el marcaje (docs/plan-geolocalizacion.md).
+  // Viaja si el telefono la dio a tiempo, y si no, no: el boton nunca espera. Que falte
+  // jamas rechaza el marcaje — quien decide es `registrarMarcaje`
+  // (docs/plan-geolocalizacion.md).
   const lat = Number(formData.get("lat"));
   const lon = Number(formData.get("lon"));
   const precision = Number(formData.get("precisionM"));
