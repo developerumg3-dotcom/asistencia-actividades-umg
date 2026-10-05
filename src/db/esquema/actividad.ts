@@ -1,4 +1,12 @@
-import { doublePrecision, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { estadoActividadEnum, tipoActividadEnum } from "./enums";
 import { bytea } from "./tipos";
 
@@ -23,4 +31,10 @@ export const actividad = pgTable("actividad", {
   lat: doublePrecision("lat"),
   lon: doublePrecision("lon"),
   radioM: integer("radio_m"),
+  /**
+   * Etapa 2: si ademas de registrar hay que RECHAZAR a quien marque lejos. Falso por
+   * defecto, asi que declarar una zona sigue siendo inofensivo mientras no se encienda
+   * esto a proposito. Ver docs/plan-geolocalizacion.md.
+   */
+  exigeUbicacion: boolean("exige_ubicacion").notNull().default(false),
 });

@@ -8,3 +8,4 @@ export * from "./asistencia";
 export * from "./asignacion-extra";
 export * from "./pantalla";
 export * from "./bitacora";
+export * from "./suscripcion-push";
