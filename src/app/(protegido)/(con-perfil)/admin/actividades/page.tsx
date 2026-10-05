@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad, pantalla } from "@/db/esquema";
 import { asegurarPantalla } from "@/app/(protegido)/(con-perfil)/admin/actividades/acciones";
+import { BotonAvisarActividad } from "@/componentes/boton-avisar-actividad";
 import { Boton } from "@/componentes/ui/boton";
 import {
   FormularioEditarActividad,
@@ -176,6 +177,7 @@ export default async function ActividadesAdminPage() {
                   </dl>
 
                   <div className="flex flex-wrap items-center justify-end gap-3">
+                    <BotonAvisarActividad actividadId={a.id} />
                     <Link
                       href={`/admin/actividades/${a.id}/en-vivo`}
                       className="text-sm text-primary-700 underline hover:text-primary-800"

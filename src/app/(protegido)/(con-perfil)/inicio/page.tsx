@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { ActivarAvisos } from "@/componentes/activar-avisos";
 import { AvisoActividadAbierta } from "@/componentes/aviso-actividad-abierta";
 import { RepartoPuntosExtra } from "@/componentes/reparto-puntos-extra";
 import { TablaParticipacionesAlumno } from "@/componentes/tabla-participaciones";
 import { obtenerActividadesDelAlumno } from "@/lib/actividades";
 import { avisoEsUrgente } from "@/lib/puntos/calculo";
 import { enGuatemala } from "@/lib/fechas";
+import { clavePublicaVapid } from "@/lib/push/vapid";
 import { obtenerEstadoPuntosExtra, obtenerParticipaciones } from "@/lib/puntos/consulta";
 import { requireAlumno } from "@/lib/sesion";
 
@@ -89,6 +91,15 @@ export default async function InicioPage() {
           clasesParaRepartir={estadoExtra.clasesParaRepartir}
           repartoAbierto={estadoExtra.repartoAbierto}
         />
+      </div>
+
+      {/*
+        Discreto y al final, nunca arriba y nunca automatico: el navegador pregunta el permiso
+        una sola vez en la vida y un "Bloquear" deja al alumno inalcanzable para siempre.
+        Ver docs/plan-notificaciones-push.md.
+      */}
+      <div className="border-t border-neutral-200 pt-4">
+        <ActivarAvisos clavePublica={clavePublicaVapid()} />
       </div>
 
       <div className="flex flex-col gap-1">

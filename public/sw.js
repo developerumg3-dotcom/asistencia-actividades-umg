@@ -53,3 +53,72 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheFirst(request));
   }
 });
+
+// ---------------------------------------------------------------------------
+// Notificaciones push. Ver docs/plan-notificaciones-push.md, etapa 1.
+// ---------------------------------------------------------------------------
+
+const ICONO_POR_DEFECTO = "/iconos/icon-192.png";
+const RUTA_POR_DEFECTO = "/inicio";
+
+function leerAviso(event) {
+  // El navegador puede despertar al service worker con un push sin datos (algunos lo usan
+  // para verificar la suscripcion). Mostrar algo generico es mejor que no mostrar nada:
+  // Chrome y Firefox penalizan al sitio que recibe un push y no notifica.
+  if (!event.data) return { titulo: "Ronda", cuerpo: "Abrí la app para ver qué hay nuevo." };
+  try {
+    const datos = event.data.json();
+    return {
+      titulo: datos.titulo || "Ronda",
+      cuerpo: datos.cuerpo || "",
+      icono: datos.icono,
+      url: datos.url,
+    };
+  } catch {
+    // Payload que no es JSON: se trata como el cuerpo del aviso en vez de perderlo.
+    return { titulo: "Ronda", cuerpo: event.data.text() };
+  }
+}
+
+self.addEventListener("push", (event) => {
+  const aviso = leerAviso(event);
+
+  event.waitUntil(
+    self.registration.showNotification(aviso.titulo, {
+      body: aviso.cuerpo,
+      icon: aviso.icono || ICONO_POR_DEFECTO,
+      badge: aviso.icono || ICONO_POR_DEFECTO,
+      // La URL viaja en `data` porque es lo unico que sobrevive hasta el clic.
+      data: { url: aviso.url || RUTA_POR_DEFECTO },
+      // Avisos del mismo tipo se reemplazan en vez de apilarse: tres recordatorios de la
+      // misma actividad en la bandeja son ruido, no tres avisos.
+      tag: aviso.url || RUTA_POR_DEFECTO,
+      renotify: false,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const destino = new URL(event.notification.data?.url || RUTA_POR_DEFECTO, self.location.origin);
+
+  event.waitUntil(
+    (async () => {
+      const ventanas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+
+      // Reusar una ventana ya abierta en vez de abrir otra: en iPhone la app instalada es una
+      // sola ventana, y abrir una nueva sacaria al alumno de donde estaba.
+      for (const ventana of ventanas) {
+        if (new URL(ventana.url).origin !== destino.origin) continue;
+        await ventana.focus();
+        if (new URL(ventana.url).pathname !== destino.pathname && "navigate" in ventana) {
+          await ventana.navigate(destino.href);
+        }
+        return;
+      }
+
+      await self.clients.openWindow(destino.href);
+    })(),
+  );
+});
