@@ -25,7 +25,8 @@ export type ResultadoMarcaje =
   | "duplicado"
   | "invalido"
   | "fuera_de_horario"
-  | "sin_perfil";
+  | "sin_perfil"
+  | "fuera_de_zona";
 
 export type Marcaje =
   | { resultado: "ok"; marcadaEn: Date; actividadNombre: string }
@@ -63,6 +64,8 @@ export function mensajeDe(marcaje: Marcaje, horaLegible?: string): string {
       return "Ese código no corresponde a esta actividad.";
     case "fuera_de_horario":
       return "La actividad todavía no abre o ya cerró.";
+    case "fuera_de_zona":
+      return "Parece que no estás en el lugar de la actividad. Acercate y probá otra vez.";
   }
 }
 
@@ -98,7 +101,11 @@ export async function registrarMarcaje({
   /** La hora en que llega el boton, no la del escaneo. Es lo que vuelve inutil la foto. */
   momento?: Date;
   datos?: DatosDeBitacora;
-  /** Etapa 1: se registra y NO bloquea. Ver docs/plan-geolocalizacion.md. */
+  /**
+   * Siempre se registra. Solo bloquea si la actividad declara zona **y** tiene
+   * `exigeUbicacion`, y solo con una lectura buena que caiga fuera del radio. Ver
+   * docs/plan-geolocalizacion.md.
+   */
   ubicacion?: Ubicacion | null;
 }): Promise<Marcaje> {
   const [laActividad] = await db
@@ -113,6 +120,7 @@ export async function registrarMarcaje({
       lat: actividad.lat,
       lon: actividad.lon,
       radioM: actividad.radioM,
+      exigeUbicacion: actividad.exigeUbicacion,
     })
     .from(actividad)
     .where(eq(actividad.codigoCorto, codigoCorto))
@@ -169,17 +177,10 @@ export async function registrarMarcaje({
     return { resultado: veredicto, actividadNombre: nombre };
   }
 
-  // Foto de las clases del alumno en este instante. Solo auditoria: los puntos se calculan
-  // contra las inscripciones vigentes, no contra esto (PLANIFICACION.md §4).
-  const inscripciones = await db
-    .select({ claseId: inscripcion.claseId })
-    .from(inscripcion)
-    .where(eq(inscripcion.alumnoId, alumno.id));
-
-  // Etapa 1 de la geolocalizacion: se calcula la distancia y se guarda, pero NO decide
-  // nada. Un marcaje lejos queda visible en la bitacora para revisarlo a mano.
+  // La distancia se calcula siempre que la actividad declare zona, exija o no: es el dato
+  // que la bitacora necesita para revisar un marcaje a mano.
   const lectura = ubicacion && esPuntoValido(ubicacion) ? ubicacion : null;
-  const { distanciaM } = evaluarZona({
+  const { veredicto: zona, distanciaM } = evaluarZona({
     centro:
       laActividad.lat !== null && laActividad.lon !== null
         ? { lat: laActividad.lat, lon: laActividad.lon }
@@ -188,6 +189,24 @@ export async function registrarMarcaje({
     lectura,
     precisionM: ubicacion?.precisionM ?? null,
   });
+
+  // Etapa 2: se rechaza **solo** con "fuera", que es el unico veredicto que afirma algo.
+  // `sin_lectura` (nego el permiso, o el telefono no dio posicion) e `impreciso` (su margen
+  // de error es mayor que el radio) dejan marcar: rechazar ahi seria quitarle el punto a un
+  // alumno que si fue por culpa de su telefono, y eso es el peor error posible del sistema.
+  // Una actividad sin zona declarada nunca puede dar "fuera", asi que no hace falta
+  // chequearla aparte. Ver docs/plan-geolocalizacion.md.
+  if (laActividad.exigeUbicacion && zona === "fuera") {
+    await anotar(alumno.id, laActividad.id, "fuera_de_zona", datos);
+    return { resultado: "fuera_de_zona", actividadNombre: nombre };
+  }
+
+  // Foto de las clases del alumno en este instante. Solo auditoria: los puntos se calculan
+  // contra las inscripciones vigentes, no contra esto (PLANIFICACION.md §4).
+  const inscripciones = await db
+    .select({ claseId: inscripcion.claseId })
+    .from(inscripcion)
+    .where(eq(inscripcion.alumnoId, alumno.id));
 
   try {
     await db.insert(asistencia).values({

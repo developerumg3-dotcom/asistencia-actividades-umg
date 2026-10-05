@@ -60,6 +60,7 @@ export default async function ActividadesAdminPage() {
       lat: actividad.lat,
       lon: actividad.lon,
       radioM: actividad.radioM,
+      exigeUbicacion: actividad.exigeUbicacion,
     })
     .from(actividad)
     .orderBy(asc(actividad.iniciaEn));
@@ -112,6 +113,7 @@ export default async function ActividadesAdminPage() {
               lat: a.lat?.toString() ?? "",
               lon: a.lon?.toString() ?? "",
               radioM: a.radioM?.toString() ?? "",
+              exigeUbicacion: a.exigeUbicacion,
             };
 
             return (
@@ -160,7 +162,7 @@ export default async function ActividadesAdminPage() {
                         <>
                           {a.radioM} m
                           <span className="block text-xs text-neutral-500">
-                            solo se registra
+                            {a.exigeUbicacion ? "rechaza fuera del radio" : "solo se registra"}
                           </span>
                         </>
                       ) : (

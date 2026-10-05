@@ -35,6 +35,7 @@ type CamposActividad = {
   lat: number | null;
   lon: number | null;
   radioM: number | null;
+  exigeUbicacion: boolean;
 };
 
 /**
@@ -53,11 +54,21 @@ function separarPar(texto: string): { lat: string; lon: string } | null {
   return { lat: m[1], lon: m[2] };
 }
 
+type Zona = {
+  lat: number | null;
+  lon: number | null;
+  radioM: number | null;
+  exigeUbicacion: boolean;
+};
+
 /**
  * Zona del evento. O van los tres o no va ninguno: media zona no sirve para nada. Vacio
  * significa "esta actividad no usa ubicacion" (docs/plan-geolocalizacion.md).
+ *
+ * Se declara por actividad a proposito: el lugar habitual es uno, pero hay eventos en otros
+ * lados, y el punto se pega de Google Maps en cada una.
  */
-function leerZona(formData: FormData): { lat: number | null; lon: number | null; radioM: number | null } | string {
+function leerZona(formData: FormData): Zona | string {
   let crudoLat = String(formData.get("lat") ?? "").trim();
   let crudoLon = String(formData.get("lon") ?? "").trim();
   const crudoRadio = String(formData.get("radioM") ?? "").trim();
@@ -71,7 +82,15 @@ function leerZona(formData: FormData): { lat: number | null; lon: number | null;
     if (!crudoLon) crudoLon = par.lon;
   }
 
-  if (!crudoLat && !crudoLon && !crudoRadio) return { lat: null, lon: null, radioM: null };
+  // Sin zona no hay nada que exigir. Se apaga en silencio en vez de devolver un error:
+  // vaciar los tres campos es justamente la forma de desactivar la funcion en medio de un
+  // evento, y un error ahi dejaria el bloqueo encendido justo cuando hay que apagarlo
+  // (docs/plan-geolocalizacion.md, "Como volver atras").
+  const exigeUbicacion = formData.get("exigeUbicacion") !== null;
+
+  if (!crudoLat && !crudoLon && !crudoRadio) {
+    return { lat: null, lon: null, radioM: null, exigeUbicacion: false };
+  }
   if (!crudoLat || !crudoLon || !crudoRadio) {
     return "Para usar ubicación completá latitud, longitud y radio. O dejá los tres vacíos.";
   }
@@ -89,7 +108,7 @@ function leerZona(formData: FormData): { lat: number | null; lon: number | null;
   if (!Number.isInteger(radioM) || radioM < 20 || radioM > 5000) {
     return "El radio va de 20 a 5000 metros.";
   }
-  return { lat, lon, radioM };
+  return { lat, lon, radioM, exigeUbicacion };
 }
 
 function leerCampos(formData: FormData): CamposActividad | string {
