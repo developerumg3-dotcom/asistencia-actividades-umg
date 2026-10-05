@@ -66,7 +66,12 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 - Subida de fotos o evidencias.
 - Aprobación o rechazo manual de puntos. Solo corrección administrativa puntual.
 - Escáner de QR dentro de la app (ver §6.4 — se usa la cámara nativa del teléfono).
-- Notificaciones push, chat, calendario sincronizado, pagos.
+- ~~Notificaciones push~~. **Revisado el 4/10/2026:** entran, a pedido del Ing. Fonseca, para
+  avisar de las actividades con anticipación y dejar de ir salón por salón. Ver
+  [`docs/plan-notificaciones-push.md`](docs/plan-notificaciones-push.md). **Con un límite que
+  no se puede prometer de otra forma:** en iPhone solo llegan si el alumno agregó la app a su
+  pantalla de inicio, así que el canal principal sigue siendo el aviso dentro de la app.
+- Chat, calendario sincronizado, pagos.
 - Integración con el sistema académico de la universidad.
 - Verificación de identidad de los alumnos. Los carnés inventados **se ignoran en el Excel**,
   no se bloquean en la app.
@@ -189,6 +194,10 @@ Restricción: `UNIQUE (alumno_id, clase_id)`
 | `estado` | enum `borrador` \| `publicada` \| `cerrada` | |
 | `secreto_qr` | bytea | 32 bytes. **Nunca sale del servidor** |
 | `ventana_seg` | int | Duración del código. Por defecto 60 |
+| `lat` | doble, nullable | Centro de la zona del evento. Nulo = esta actividad no usa ubicación |
+| `lon` | doble, nullable | |
+| `radio_m` | int, nullable | Radio en metros. Sugerido 200; rango 20 a 5000 |
+| `exige_ubicacion` | bool | **Falso por defecto.** Si además de registrar hay que rechazar a quien marque lejos (§7) |
 
 ### `asistencia`
 
@@ -247,7 +256,7 @@ auditar después.
 | `alumno_id` | → `alumno` |
 | `actividad_id` | → `actividad`, nullable |
 | `evento` | enum |
-| `resultado` | enum `ok` \| `expirado` \| `duplicado` \| `invalido` \| `fuera_de_horario` \| `sin_perfil` |
+| `resultado` | enum `ok` \| `expirado` \| `duplicado` \| `invalido` \| `fuera_de_horario` \| `sin_perfil` \| `fuera_de_zona` |
 | `ocurrio_en` | timestamptz |
 | `ip` | inet |
 | `dispositivo_id` | texto |
@@ -432,8 +441,34 @@ ignora en el Excel los carnés que no reconoce. Dentro de la app, las capas son 
 | Unicidad alumno + actividad | Marcar dos veces la misma actividad | Base |
 | Ventana de marcaje de la actividad | Marcar fuera del horario del evento | Base |
 | Huella de dispositivo | Un mismo teléfono marcando por varias cuentas | Señal, no bloqueo |
+| Ubicación del alumno | Marcar desde lejos del lugar del evento | **Opcional por actividad.** Señal siempre; bloqueo solo si se enciende `exige_ubicacion` |
 | Bitácora completa | Nada por sí sola; permite investigar después | Señal |
 | Filtro final del catedrático | Carnés inventados | Fuera de la app |
+
+### La ubicación: señal siempre, bloqueo solo si se pide
+
+Cada actividad puede declarar un punto y un radio (sugerido: 200 m). Las actividades no son
+siempre en el mismo lugar, así que la zona se declara **por actividad** y la carga el
+administrador desde Google Maps.
+
+Con la zona declarada, se registra a qué distancia marcó cada alumno. Con
+`actividad.exige_ubicacion` encendido —**falso por defecto**— además se rechaza a quien marque
+lejos. Tres reglas que no se negocian:
+
+- **Si el alumno negó el permiso, no se rechaza.** Convertir un permiso del navegador en
+  requisito para tener puntos es peor que el fraude que evita.
+- **Si la precisión del teléfono es peor que el radio, no se rechaza.** Esa lectura no alcanza
+  para afirmar nada, y rechazar sería castigar al alumno por su aparato.
+- **El margen de error juega a favor del alumno**: si su círculo de incertidumbre toca la
+  zona, cuenta como dentro.
+
+Que sea opcional y apagable por actividad es deliberado: si en el lugar real resulta que no
+funciona bien, se apaga vaciando un campo, sin tocar código y hasta en medio de un evento.
+
+**No reemplaza la ventana de 60 s, que sigue siendo la defensa principal.** De hecho es más
+fácil de saltar: falsear el GPS lo hace una persona sola, mientras que el minuto exige dos
+personas coordinadas. Se acepta ese límite a conciencia: sirve contra el fraude casual, que es
+el real. Ver [`docs/plan-geolocalizacion.md`](docs/plan-geolocalizacion.md).
 
 ### No bloquear por dirección IP
 
@@ -450,6 +485,7 @@ automático**.
 | `sin_perfil` | Completá tu carné y nombre para registrar tu asistencia. |
 | `invalido` | Ese código no corresponde a esta actividad. |
 | `fuera_de_horario` | La actividad todavía no abre / ya cerró. |
+| `fuera_de_zona` | Parece que no estás en el lugar de la actividad. Acercate y probá otra vez. |
 
 **Si el alumno no está inscrito a ninguna clase, la asistencia se guarda de todas formas.**
 Los puntos aparecen solos cuando se inscriba. Perder una asistencia real por un trámite
