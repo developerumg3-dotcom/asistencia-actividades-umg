@@ -5,7 +5,8 @@ import { alumno } from "./alumno";
  * Suscripcion de un dispositivo a las notificaciones push. Ver docs/plan-notificaciones-push.md.
  *
  * Un alumno puede tener varias: el telefono y la computadora son suscripciones distintas, y
- * reinstalar la app genera una nueva. Por eso la clave natural es el `endpoint`, no el alumno.
+ * en iPhone la app instalada en la pantalla de inicio es otra mas. Por eso la clave natural
+ * es el `endpoint` y no el alumno.
  *
  * Nada de esto sirve si el alumno no acepto el permiso, y en iPhone ademas tiene que haber
  * instalado la app en su pantalla de inicio. Es la limitacion central de la funcion.
@@ -32,11 +33,15 @@ export const suscripcionPush = pgTable(
     creadaEn: timestamp("creada_en", { withTimezone: true }).notNull().defaultNow(),
 
     /**
-     * Cuando fallo el ultimo envio. Una suscripcion que responde 404 o 410 esta muerta y se
-     * borra; esto es para los fallos pasajeros, que no justifican borrarla.
+     * Distingue "nunca fallo" de "fallo y la dejamos viva": un rechazo por cuota o por un
+     * error del servicio no justifica borrar la suscripcion, pero si conviene poder ver
+     * cuales vienen fallando. Las que el servicio declara muertas (404 o 410) no se marcan:
+     * se borran. Ver `src/lib/push/aviso.ts`.
      */
     ultimoErrorEn: timestamp("ultimo_error_en", { withTimezone: true }),
   },
-  // Se consulta siempre por alumno al calcular a cuantos les va a llegar un aviso.
+  // Se consulta siempre por alumno al calcular a cuantos les va a llegar un aviso. El indice
+  // existe en la base desde la migracion 0006: no quitarlo sin generar la migracion que lo
+  // quite, o el esquema queda desincronizado.
   (tabla) => [index("suscripcion_push_alumno_idx").on(tabla.alumnoId)],
 );
