@@ -2,8 +2,9 @@
 
 Documento de definición del sistema de registro de participación en actividades para la UMG.
 
-- **Versión:** 3 · 29 de agosto de 2026
-- **Estado:** decisiones cerradas, sin código escrito
+- **Versión:** 4 · actualización de alcance y pruebas del 4 de octubre de 2026
+- **Estado:** aplicación desplegada; geolocalización con dos casos reales verificados;
+  push etapa 1 implementada, recepción y ampliaciones pendientes. Ver [ESTADO.md](ESTADO.md).
 - **Nombre de trabajo:** Ronda
 
 Este archivo es la **fuente de verdad** del proyecto. Cualquier agente o chat que trabaje
@@ -59,6 +60,14 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 - Saldo de puntos extra que el propio alumno distribuye entre sus clases.
 - Exportación a Excel: un libro por catedrático, una hoja por clase.
 - Instalable como PWA en Android e iOS.
+- Geolocalización opcional por actividad: señal siempre que haya lectura y zona; rechazo
+  solo si se activa y la lectura es precisa y fuera del radio (§7).
+- Notificaciones push para actividades, recordatorios e información general. En iPhone
+  requieren la PWA instalada; no reemplazan la información dentro de la app. Etapa 1 tiene
+  código, recepción pendiente. Ampliaciones acordadas el 4/10/2026: invitación general tras
+  el primer login con «Activar notificaciones» / «Ahora no», módulo admin de mensajes y
+  recordatorio un día antes (propuesta de 24 h, pendiente de ratificar la hora).
+  Ver [plan push](docs/plan-notificaciones-push.md), ASI2-21, ASI2-26 y ASI2-27.
 
 ### No entra
 
@@ -66,11 +75,6 @@ Se descartó a favor del QR rotativo. Como consecuencia:
 - Subida de fotos o evidencias.
 - Aprobación o rechazo manual de puntos. Solo corrección administrativa puntual.
 - Escáner de QR dentro de la app (ver §6.4 — se usa la cámara nativa del teléfono).
-- ~~Notificaciones push~~. **Revisado el 4/10/2026:** entran, a pedido del Ing. Fonseca, para
-  avisar de las actividades con anticipación y dejar de ir salón por salón. Ver
-  [`docs/plan-notificaciones-push.md`](docs/plan-notificaciones-push.md). **Con un límite que
-  no se puede prometer de otra forma:** en iPhone solo llegan si el alumno agregó la app a su
-  pantalla de inicio, así que el canal principal sigue siendo el aviso dentro de la app.
 - Chat, calendario sincronizado, pagos.
 - Integración con el sistema académico de la universidad.
 - Verificación de identidad de los alumnos. Los carnés inventados **se ignoran en el Excel**,
@@ -93,7 +97,9 @@ el piloto.
 
 ## 4. Modelo de datos
 
-Nueve tablas. Los puntos **no se almacenan**: se calculan a partir de las asistencias y las
+Nueve tablas del modelo inicial, más `suscripcion_push` incorporada en `0006`. El esquema
+implementado está en `src/db/esquema/`; avisos y entregas programadas son diseño pendiente,
+todavía sin tablas nuevas aprobadas. Los puntos **no se almacenan**: se calculan a partir de las asistencias y las
 asignaciones. Un número almacenado se desincroniza; un número derivado, no.
 
 ### `alumno`

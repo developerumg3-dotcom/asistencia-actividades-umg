@@ -2,8 +2,61 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
-- **Última actualización:** 30 de agosto de 2026
-- **Fase actual:** Fase 2 construida entera y ya desplegada en Netlify
+- **Última actualización:** 4 de octubre de 2026 (hora de Guatemala).
+- **Estado actual:** geolocalización etapas 1 y 2 integrada, con rechazo fuera y aceptación
+  dentro verificados en producción. Push etapa 1 tiene código y botón de envío desplegado,
+  pero la recepción real sigue pendiente. La invitación posterior al login, el módulo de
+  notificaciones generales y el recordatorio previo están definidos, todavía sin implementar.
+- **Para retomar con Claude:** leer [el registro de esta sesión](docs/registro-2026-10-04.md)
+  y el [kanban Asistencia Actividades UMG](https://kanban-3nt0.onrender.com/projects/4tzo77UYtC9aHs).
+  ASI2-1 permanece En pruebas; ASI2-21 bloquea la prueba push; ASI2-26 y ASI2-27 están Por hacer.
+- **Restricciones vigentes:** no ejecutar migraciones ni scripts que escriban en la base
+  compartida de producción; no instalar dependencias ni crear ramas. Commits/push requieren
+  autorización explícita: Julio autorizó el commit de esta documentación, sin solicitar push.
+  Usar siempre `corepack pnpm`. Este registro autoriza cambios de documentación únicamente.
+
+## Verificado y pendiente al 4/10/2026
+
+- **Geolocalización:** opcional por actividad, apagada por defecto. Con zona y rechazo
+  activado, solo bloquea una lectura buena fuera del radio. Sin lectura o con precisión peor
+  que el radio deja marcar; la IP no decide. Pruebas reales del alumno
+  `juliocesarticaspalencia@gmail.com`: a las 23:17, Enchulados, radio 200 m, resultado
+  `fuera_de_zona` y 0 asistencias; a las 23:26, zona de prueba, radio 200 m, resultado `ok`,
+  1 asistencia QR, distancia 12 m y precisión ±9 m. Falta probar permisos denegados, lectura
+  imprecisa, reuso/expiración y ensayo con varios teléfonos. No equivale a cerrar el ensayo en campo.
+- **Push etapa 1:** `src/lib/push/`, `ActivarAvisos`, `BotonAvisarActividad` y manejadores de
+  push/clic en `public/sw.js` existen. En Chrome se vio el botón del panel, alcance 0 de 7
+  alumnos y ausencia del control de suscripción en `/inicio`. Es compatible con VAPID
+  incompleto; no se verificaron las variables de producción ni una recepción real. ASI2-21.
+- **Decisión push:** entra al alcance. Tras el primer login, proponer invitación general
+  «Activar notificaciones» / «Ahora no» para alumno y admin. El permiso nativo se solicita al
+  pulsar Activar, sin bloquear la app ni repetir la invitación en cada login. ASI2-27.
+- **Nuevos avisos:** sección del panel para información general, prueba a la propia cuenta,
+  historial y resultados (ASI2-27); recordatorio de actividad un día antes (ASI2-26), con
+  propuesta de 24 h antes y despachador programado en Netlify. Falta ratificar 24 h frente a
+  una hora fija del día anterior. Registro de envíos y concurrencia en ASI2-22; ensayos en ASI2-6.
+- **Esquema:** el archivo `0006_acoustic_mercury.sql` incorpora `fuera_de_zona`,
+  `exige_ubicacion` y `suscripcion_push`. El kanban previo lo reporta aplicado y la interfaz
+  usa esos campos. Esta sesión no ejecutó ni verificó el historial de migraciones.
+- **TypeScript:** `tsconfig.json` incluye `**/*.mts`. No se ejecutó typecheck para estos
+  cambios documentales. Las 66 pruebas puras pasaron durante la auditoría previa de esta sesión;
+  no es validación del código que haya cambiado después.
+- **Seguridad:** auditoría en ASI2-12 y hallazgos ASI2-13 a ASI2-20; siguen pendientes, con
+  certeza y escenarios en cada tarea. No se aplicaron arreglos.
+- **Cuenta admin:** por pedido explícito, `jticasp@miumg.edu.gt` quedó con rol admin y ciclo
+  10 (antes alumno/7), verificado tras actualización acotada. Motivo: `ADMIN_EMAILS` solo se
+  evalúa al crear el perfil, no promueve perfiles existentes. ASI2-25; no resuelve ASI2-13.
+- **Datos de prueba:** dos actividades publicadas creadas mediante la interfaz, una sin
+  asistencia y otra con 1 asistencia y valor de 1 punto extra. Ambas cierran marcaje el
+  5/10/2026 a las 00:30 GT. No se borraron ni anularon. El máximo cierre publicado/cerrado
+  influye en el corte general del reparto; revisar el efecto antes de usar datos reales.
+
+## Estado histórico al 30 de agosto de 2026
+
+La descripción siguiente conserva el contexto de fases anteriores; para geolocalización,
+push y pruebas recientes prevalecen las notas de arriba y el registro enlazado.
+
+- **Fase en esa fecha:** Fase 2 construida entera y ya desplegada en Netlify
   (`https://app-asist-actividades-umg.netlify.app`). Solo falta el ensayo en campo (tarea 7),
   presencial, estimado para dentro de una semana. Ver [`docs/fase-2.md`](docs/fase-2.md). En
   paralelo, **Fase 3 adelantada**: el motor de cálculo y las pantallas A9/A10 (tareas 1 a 4) ya

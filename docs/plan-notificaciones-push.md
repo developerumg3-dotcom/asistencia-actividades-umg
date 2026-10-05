@@ -1,14 +1,59 @@
 # Plan — Notificaciones push
 
-Pedido del Ing. Fonseca. Reabre una decisión de alcance: la §2 de
-[`PLANIFICACION.md`](../PLANIFICACION.md) lista «Notificaciones push» en **No entra**.
+Pedido inicial del Ing. Fonseca. Las push estaban fuera del alcance original; la §2 de
+[`PLANIFICACION.md`](../PLANIFICACION.md) ya las incluye. Julio amplió el alcance el 4/10/2026.
 
 **Para qué las quiere:** avisar de las actividades con anticipación, para **dejar de ir salón
 por salón** anunciándolas. Ese propósito es el que manda en todo lo que sigue, y conviene
 tenerlo presente porque cambia cuál es la pregunta importante: no es «¿se puede mandar una
 notificación?» —se puede— sino **«¿a cuántos les llega?»**.
 
-**Estado:** plan, sin código. Iría en rama aparte (`feature/notificaciones`).
+**Estado al 4/10/2026:** etapa 1 implementada: suscripciones, transporte `web-push`,
+manejadores en `public/sw.js` y envío manual de actividad. Botón desplegado y observado en
+Chrome. Recepción real pendiente (ASI2-21); no se verificó configuración VAPID en Netlify.
+
+## Decisiones vigentes del 4/10/2026
+
+Julio decidió continuar con push (ASI2-3). El correo no se agregó al alcance. Este cambio
+amplía el pedido inicial: avisos de actividades, recordatorios y mensajes informativos del
+ingeniero. La descripción histórica de abajo no debe reintroducir decisiones sustituidas.
+
+- **Después del primer login:** invitación general a alumno y admin: «Activá las
+  notificaciones de Ronda para recibir avisos importantes, información y recordatorios de
+  actividades», botones «Activar notificaciones» y «Ahora no». El permiso nativo se pide al
+  pulsar Activar, no durante la carga. Sin bloqueo del perfil, navegación o marcaje; recordar
+  posposición por dispositivo/cuenta y no repetir en cada login. Acceso persistente para
+  activar/desactivar. Si está denegado, explicar ajustes; si no hay VAPID o soporte, mostrar
+  estado acorde. En iPhone sin instalar, ofrecer guía. Reemplaza el control exclusivo de
+  actividades al pie de `/inicio`. **Definido, sin implementar**, ASI2-27.
+- **Panel Notificaciones:** sección `/admin/notificaciones` para título, mensaje, destino
+  interno, vista previa, alcance, prueba solo a dispositivos del administrador y confirmación
+  de envío. Autor, historial y resultados persistentes. `requireAdmin` en cada acción;
+  no inventar rol docente. Mensajes en texto plano y sin datos académicos privados en la
+  pantalla bloqueada. Alcance inicial propuesto: alumnos activos suscritos; filtros por
+  clase/ciclo requieren acordar alcance. ASI2-27, Por hacer.
+- **Un día antes:** «Falta un día para [actividad]», fecha/hora GT y lugar. Propuesta: 24 h
+  antes del inicio, no de la apertura del marcaje; falta ratificar si se prefiere una hora
+  fija el día anterior. Persistir programación y procesar con Netlify Scheduled Functions
+  (cron UTC, instantes UTC, presentación America/Guatemala); revalidar publicación y fecha,
+  cancelar/recalcular pendientes y no mandar recordatorios vencidos. Enlace a detalles
+  autenticados de actividad futura, nunca al QR. ASI2-26, Por hacer.
+- **Duplicados:** un registro único por aviso y suscripción, reserva atómica de trabajos,
+  resultados/reintentos acotados y reenvío explícito auditado. Una única fecha en `actividad`
+  ya no distingue los tipos de aviso. No prometer exactamente una entrega entre DB y proveedor.
+  Usar ID de aviso como tag: hoy todos usan `/inicio` y mensajes distintos se reemplazan.
+  ASI2-22. Programación general reutilizaría el mismo despachador en una etapa posterior.
+- **Pruebas:** suscripción por dispositivo, cambio de cuenta/cierre de sesión, invitación
+  pospuesta, permiso bloqueado, app/pestaña abierta y cerrada, navegador completamente cerrado,
+  No molestar, falta de conexión; Windows Chrome, Android e iPhone instalado. La app no
+  necesita estar abierta, pero no prometer recepción con navegador sin segundo plano o equipo
+  apagado. ASI2-6. Aceptado por proveedor no significa leído (ASI2-23).
+
+Observación real: alcance 0 de 7 alumnos y ningún control de activación visible en `/inicio`.
+El componente devuelve `null` con claves faltantes; esto sugiere configuración incompleta,
+no demuestra cuáles variables faltan en producción. Se requieren `VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`; no exponer la privada ni poner valores en los MD/kanban.
+No se envió ninguna push durante esta sesión. Ver [registro](registro-2026-10-04.md).
 
 ---
 
@@ -16,8 +61,8 @@ notificación?» —se puede— sino **«¿a cuántos les llega?»**.
 
 **Sí es posible, y la parte difícil ya está hecha.** La Web Push API necesita un service
 worker registrado, y la app ya lo tiene desde la Fase 5 (`public/sw.js`, activo y verificado
-en producción). Lo que falta es un manejador de `push`, un par de claves VAPID, una tabla de
-suscripciones y algo que dispare los envíos.
+en producción). El manejador de `push`, la tabla de suscripciones y el envío manual ya
+existen; falta completar/verificar VAPID y la recepción, y construir las ampliaciones de arriba.
 
 **Pero hay un límite que conviene decir antes que nada, porque cambia lo que se le puede
 prometer al director.**
@@ -62,8 +107,9 @@ Es el mismo tema que salió con la geolocalización, pero con una diferencia a f
 hay un reloj de 60 segundos corriendo**. El permiso se puede pedir en un momento tranquilo,
 explicando antes para qué sirve. Eso cambia mucho las probabilidades de que digan que sí.
 
-Regla, entonces: **nunca pedirlo al entrar**. Se pide cuando el alumno está mirando algo que
-le da sentido, y después de explicarle qué va a recibir.
+Regla vigente: **mostrar la invitación después del primer login**, explicando qué va a
+recibir; pedir el permiso nativo solo cuando pulse «Activar notificaciones». Sustituye la
+recomendación anterior de nunca mostrar la invitación al entrar.
 
 ### No hay servidor encendido que mande las notificaciones
 
@@ -167,8 +213,8 @@ construirlas, no después.
   distintas.
 - Manejadores `push` y `notificationclick` en `public/sw.js`. El segundo abre la app en la
   pantalla que corresponda.
-- Un componente que **pide el permiso explicándolo antes**, ubicado en la pantalla de puntos
-  extra, que es donde el aviso tiene sentido. Nunca al entrar.
+- Un componente que **pide el permiso explicándolo antes**. Hoy existe al pie de `/inicio`;
+  migrarlo a la invitación general posterior al primer login, conforme a ASI2-27.
 - En el panel, un botón para mandar el aviso de una actividad, que **antes de enviar muestra a
   cuántos de cuántos les va a llegar**. Ese número es lo que les dice si además hay que pasar
   por los salones.
@@ -212,8 +258,6 @@ abre, son ruido y se quitan.
 
 ## Antes de escribir código
 
-Esto reabre la §2, que lista las notificaciones push en «No entra». Igual que con la
-geolocalización y con la cuenta del catedrático: **primero se actualiza
-[`PLANIFICACION.md`](../PLANIFICACION.md), después el código.** Hay que dejar anotado el
-límite del iPhone, porque es la clase de cosa que se olvida y después aparece como sorpresa
-en medio de un evento.
+La §2 de [`PLANIFICACION.md`](../PLANIFICACION.md) ya incluye push. **Actualizar la
+planificación antes de implementar** las ampliaciones; conservar el límite del iPhone y
+la distinción entre alcance estimado, aceptación del proveedor y recepción real.

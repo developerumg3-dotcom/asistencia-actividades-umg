@@ -3,7 +3,33 @@
 Propuesta del Ing. Fonseca al presentar el sistema al director: declarar un punto y un radio,
 y que el QR solo acredite dentro de esa distancia.
 
-**Estado:** plan, sin código. Va en rama aparte (`feature/geolocalizacion`), no en `main`.
+**Estado al 4/10/2026:** etapas 1 y 2 implementadas y verificadas en el despliegue de
+producción. Bloqueo opcional por actividad, apagado por defecto. ASI2-1 sigue En pruebas.
+La propuesta inicial que sigue se conserva como contexto; no describe trabajo sin empezar.
+
+## Pruebas reales del 4 de octubre de 2026
+
+Se crearon dos actividades desde el panel, con QR rotativo de 60 s, radio 200 m y rechazo
+fuera activado. El alumno usó `juliocesarticaspalencia@gmail.com`, diferente de la cuenta admin.
+
+| Caso | Evidencia independiente en el panel | Resultado |
+|---|---|---|
+| Fuera de zona de Enchulados, 23:17 GT | Bitácora `fuera_de_zona`; pantalla en vivo con 0 asistencias | Rechazado, sin puntos de esa actividad |
+| Dentro de zona de prueba, 23:26 GT | Bitácora `ok`; 1 asistencia QR, distancia 12 m, precisión ±9 m | Aceptado con una lectura precisa dentro del radio |
+
+No se simularon coordenadas ni se ejecutaron migraciones. El segundo caso se preparó para
+teléfono con datos móviles; la interfaz no demuestra por sí sola el tipo de red. No guardar
+coordenadas domiciliarias en documentación o kanban. Los IDs, límites y pendientes están en
+[el registro de traspaso](registro-2026-10-04.md).
+
+Faltan pruebas de permiso denegado, ubicación imprecisa, reuso/expiración del QR y ensayo de
+varios teléfonos en el evento. El éxito de estos dos casos no verifica esos otros caminos.
+La red/IP no decide el rechazo. Sin lectura o con precisión mayor que el radio se permite
+marcar; una lectura fuera y precisa produce `fuera_de_zona` y no crea asistencia.
+
+Para dejar solo la señal, desactivar «Rechazar a quien marque fuera de la zona» conservando
+centro y radio. Vaciar la zona elimina además el cálculo de distancia. No borrar las
+actividades de prueba ni su evidencia sin autorización.
 
 ---
 
