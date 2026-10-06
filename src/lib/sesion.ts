@@ -3,17 +3,10 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/db/cliente";
 import { alumno, type alumno as AlumnoTabla } from "@/db/esquema";
+import { correoEsAdmin } from "@/lib/admin-correo";
 import { auth } from "@/lib/auth/server";
 
 type Alumno = typeof AlumnoTabla.$inferSelect;
-
-function correoEsAdmin(email: string): boolean {
-  const lista = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((correo) => correo.trim().toLowerCase())
-    .filter(Boolean);
-  return lista.includes(email.toLowerCase());
-}
 
 /**
  * `auth.getSession()` a veces necesita refrescar la cookie de cache de sesión (vence cada
@@ -46,15 +39,36 @@ export const obtenerAlumnoActual = cache(async (): Promise<Alumno | null> => {
   const sesion = await obtenerSesion();
   if (!sesion?.user) return null;
 
+  // ADMIN_EMAILS solo cuenta con el correo verificado (ASI2-13). Ver `correoEsAdmin`.
+  const esAdmin = correoEsAdmin(
+    sesion.user.email,
+    sesion.user.emailVerified,
+    process.env.ADMIN_EMAILS,
+  );
+
   const [existente] = await db.select().from(alumno).where(eq(alumno.id, sesion.user.id)).limit(1);
-  if (existente) return existente;
+  if (existente) {
+    // Perfil creado antes de verificar el correo: quedó como alumno. En cuanto la sesion
+    // trae el correo verificado y esta en la lista, se promueve; si no, el administrador
+    // legitimo quedaria atrapado como alumno para siempre (el rol solo se decidia al crear).
+    // Nunca se degrada aqui: solo se sube de alumno a admin.
+    if (esAdmin && existente.rol !== "admin") {
+      const [promovido] = await db
+        .update(alumno)
+        .set({ rol: "admin" })
+        .where(eq(alumno.id, existente.id))
+        .returning();
+      return promovido ?? existente;
+    }
+    return existente;
+  }
 
   const [nuevo] = await db
     .insert(alumno)
     .values({
       id: sesion.user.id,
       email: sesion.user.email,
-      rol: correoEsAdmin(sesion.user.email) ? "admin" : "alumno",
+      rol: esAdmin ? "admin" : "alumno",
     })
     .onConflictDoNothing({ target: alumno.id })
     .returning();
