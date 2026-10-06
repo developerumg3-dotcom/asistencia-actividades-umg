@@ -24,7 +24,7 @@ export function FormularioIngreso({ destino }: { destino?: string }) {
         autoComplete="current-password"
       />
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
-      <Boton type="submit" disabled={enviando}>
+      <Boton type="submit" disabled={enviando} className="w-full">
         {enviando ? "Ingresando…" : "Ingresar"}
       </Boton>
     </form>

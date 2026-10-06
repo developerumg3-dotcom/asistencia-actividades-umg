@@ -25,7 +25,7 @@ export function FormularioRegistro() {
         ayuda="Al menos 8 caracteres."
       />
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
-      <Boton type="submit" disabled={enviando}>
+      <Boton type="submit" disabled={enviando} className="w-full">
         {enviando ? "Creando cuenta…" : "Crear cuenta"}
       </Boton>
     </form>

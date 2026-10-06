@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SubBarra } from "@/componentes/ui/titular";
 
 export const metadata = {
   title: "Instalar en iPhone — Actividades UMG",
@@ -26,38 +26,31 @@ const pasos = [
 
 export default function InstalarIOSPage() {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-semibold text-neutral-900">Instalar en tu iPhone</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          iOS no ofrece instalar la app solo — hay que agregarla a mano desde Safari. Son cuatro
-          pasos.
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 pb-10 pt-5">
+      <SubBarra titulo="Instalar en tu iPhone" volverA="/cuenta" />
+      <p className="text-sm text-neutral-500">
+        iOS no ofrece instalar la app solo: hay que agregarla a mano desde Safari. Son cuatro pasos.
+      </p>
 
-      <ol className="flex flex-col gap-4">
+      <ol className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-tarjeta">
         {pasos.map((paso, indice) => (
-          <li key={paso.titulo} className="flex gap-4 rounded-md border border-neutral-200 p-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
+          <li key={paso.titulo} className="flex items-start gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-600 text-sm font-bold text-white">
               {indice + 1}
             </span>
             <div>
-              <p className="text-sm font-medium text-neutral-900">{paso.titulo}</p>
-              <p className="mt-1 text-sm text-neutral-600">{paso.detalle}</p>
+              <p className="font-bold leading-snug">{paso.titulo}</p>
+              <p className="mt-0.5 text-[13px] text-neutral-500">{paso.detalle}</p>
             </div>
           </li>
         ))}
       </ol>
 
-      <p className="text-sm text-neutral-600">
-        Una vez instalada, abrí siempre la app desde su ícono — así se abre sin la barra de
-        Safari. Recordá que marcar asistencia siempre necesita conexión a internet, instalada o
-        no.
+      <p className="text-[13px] text-neutral-500">
+        Una vez instalada, abrí siempre la app desde su ícono: así se abre sin la barra de Safari. En
+        Android, Chrome te ofrece instalarla solo. Marcar asistencia siempre necesita conexión a internet,
+        instalada o no.
       </p>
-
-      <Link href="/inicio" className="text-sm text-primary-700 underline hover:text-primary-800">
-        Volver a inicio
-      </Link>
     </main>
   );
 }
