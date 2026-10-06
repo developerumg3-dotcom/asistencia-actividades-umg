@@ -119,3 +119,35 @@ export function inicioDeHoyEnGuatemala(momento: Date = new Date()): Date {
   // fechaYmd siempre matchea el patron que espera desdeCampoLocal: no puede dar null.
   return inicio as Date;
 }
+
+const FORMATO_DIA_MES = new Intl.DateTimeFormat("es-GT", { timeZone: ZONA, day: "numeric", month: "short" });
+
+/**
+ * Dia y mes por separado, para el bloque de fecha de una actividad: { dia: "6", mes: "oct" }.
+ * El mes sale sin punto y recortado a tres letras ("sept." → "sep"): segun el ICU viene con
+ * o sin punto, y asi queda igual en todos lados.
+ */
+export function diaYMesEnGuatemala(fecha: Date): { dia: string; mes: string } {
+  const partes = FORMATO_DIA_MES.formatToParts(fecha);
+  const dia = partes.find((p) => p.type === "day")?.value ?? "";
+  const mes = (partes.find((p) => p.type === "month")?.value ?? "").replace(/\./g, "").slice(0, 3);
+  return { dia, mes };
+}
+
+/** "6 oct" */
+export function fechaCortaEnGuatemala(fecha: Date): string {
+  const { dia, mes } = diaYMesEnGuatemala(fecha);
+  return `${dia} ${mes}`;
+}
+
+/** "hoy", "mañana", "en 6 días", "ayer", "hace 3 días": contra el dia calendario de Guatemala. */
+export function relativoEnGuatemala(fecha: Date, ahora: Date = new Date()): string {
+  const UN_DIA = 24 * 60 * 60 * 1000;
+  const dias = Math.round(
+    (inicioDeHoyEnGuatemala(fecha).getTime() - inicioDeHoyEnGuatemala(ahora).getTime()) / UN_DIA,
+  );
+  if (dias === 0) return "hoy";
+  if (dias === 1) return "mañana";
+  if (dias === -1) return "ayer";
+  return dias > 0 ? `en ${dias} días` : `hace ${-dias} días`;
+}

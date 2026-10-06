@@ -42,9 +42,9 @@ export function CampoCarne({
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {etiqueta && (
-        <label htmlFor={id} className="text-sm font-medium text-neutral-900">
+        <label htmlFor={id} className="text-[13px] font-semibold text-tinta">
           {etiqueta}
         </label>
       )}
@@ -56,7 +56,7 @@ export function CampoCarne({
           maxLength={4}
           inputMode="numeric"
           autoComplete="off"
-          className={`${clasesCampo} w-20 text-center`}
+          className={`${clasesCampo} w-[76px] px-1 text-center`}
           onChange={(e) => {
             const v = e.target.value.replace(/\D/g, "").slice(0, 4);
             actualizar(0, v);
@@ -70,7 +70,7 @@ export function CampoCarne({
           maxLength={2}
           inputMode="numeric"
           autoComplete="off"
-          className={`${clasesCampo} w-14 text-center`}
+          className={`${clasesCampo} w-14 px-1 text-center`}
           onChange={(e) => {
             const v = e.target.value.replace(/\D/g, "").slice(0, 2);
             actualizar(1, v);
@@ -86,7 +86,7 @@ export function CampoCarne({
           value={valores[2]}
           maxLength={5}
           autoComplete="off"
-          className={`${clasesCampo} w-24 text-center`}
+          className={`${clasesCampo} min-w-0 flex-1 px-1 text-center`}
           onChange={(e) => actualizar(2, e.target.value.slice(0, 5))}
           onKeyDown={(e) => {
             if (e.key === "Backspace" && valores[2] === "") refAnio.current?.focus();

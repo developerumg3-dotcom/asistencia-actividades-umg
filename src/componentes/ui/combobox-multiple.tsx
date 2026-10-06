@@ -71,7 +71,7 @@ export function ComboboxMultiple({
   return (
     <div className="flex flex-col gap-1">
       {etiqueta && (
-        <label htmlFor={id} className="text-sm font-medium text-neutral-900">
+        <label htmlFor={id} className="text-sm font-bold text-tinta">
           {etiqueta}
         </label>
       )}
@@ -89,10 +89,10 @@ export function ComboboxMultiple({
             setConsulta(evento.target.value);
             setAbierto(true);
           }}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:border-primary-500"
+          className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-base text-tinta placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:border-primary-500"
         />
         {abierto && (
-          <ul className="absolute z-10 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-lg">
+          <ul className="absolute z-10 mt-1 max-h-64 w-full overflow-y-auto rounded-2xl bg-white shadow-tarjeta py-1 shadow-lg">
             {opcionesFiltradas.length === 0 ? (
               <li className="px-3 py-2 text-sm text-neutral-500">No encontramos cursos con ese nombre.</li>
             ) : (
@@ -104,7 +104,7 @@ export function ComboboxMultiple({
                       type="button"
                       onClick={() => alternar(o.id)}
                       className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50 ${
-                        marcada ? "bg-primary-50 text-primary-900" : "text-neutral-900"
+                        marcada ? "bg-primary-50 text-primary-900" : "text-tinta"
                       }`}
                     >
                       <span className="flex min-w-0 flex-col">

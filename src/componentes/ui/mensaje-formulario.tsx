@@ -16,5 +16,9 @@ export function MensajeFormulario({
   children: ReactNode;
   className?: string;
 }) {
-  return <p className={`text-sm ${clasesPorTipo[tipo]} ${className ?? ""}`}>{children}</p>;
+  return (
+    <p role={tipo === "error" ? "alert" : "status"} className={`text-[13.5px] font-medium ${clasesPorTipo[tipo]} ${className ?? ""}`}>
+      {children}
+    </p>
+  );
 }

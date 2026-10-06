@@ -53,6 +53,13 @@
   --color-danger-700: #a92d2c;
   --color-danger-800: #872726;
   --color-danger-900: #652020;
+
+  /* Superficies y texto del sistema claro. Ver docs/diseno-visual.md. */
+  --color-fondo: #f2f5f8;
+  --color-tinta: #13212d;
+  --color-linea: #e2e8ee;
+  --shadow-tarjeta: 0 1px 2px rgb(19 33 45 / 0.05), 0 4px 14px rgb(19 33 45 / 0.05);
+  --font-sans: var(--fuente), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 :root {
@@ -64,11 +71,50 @@
   --neon-ring: var(--color-primary-600);
   --neon-destructive: var(--color-danger-600);
   --neon-destructive-foreground: #ffffff;
-  --neon-radius: 0.375rem;
+  --neon-radius: 0.75rem;
 }
 
 body {
   min-height: 100dvh;
+}
+
+/* Filas de filtros que se desplazan de lado sin mostrar la barra. */
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes subir {
+  from {
+    transform: translateY(40px);
+    opacity: 0.6;
+  }
+}
+@keyframes sello {
+  from {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+}
+@keyframes pulso {
+  70% {
+    box-shadow: 0 0 0 10px rgb(126 226 184 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(126 226 184 / 0);
+  }
+}
+@keyframes recien-llegado {
+  from {
+    background-color: #e8f6f0;
+  }
 }
 
 /*

@@ -1,29 +1,38 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 import Link from "next/link";
 
-export type Variante = "primario" | "secundario" | "enlace";
+export type Variante = "primario" | "secundario" | "suave" | "enlace";
+export type Tamano = "normal" | "chico";
 
 const clasesBase =
-  "font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-bold transition active:scale-[.97] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2";
+
+const clasesPorTamano: Record<Tamano, string> = {
+  normal: "h-12 rounded-xl px-5 text-[15px]",
+  chico: "h-9 rounded-[11px] px-3.5 text-[13px]",
+};
 
 const clasesPorVariante: Record<Variante, string> = {
-  primario: "rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700",
-  secundario:
-    "rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50",
-  enlace: "text-sm text-neutral-600 underline hover:text-primary-700",
+  primario: "bg-primary-600 text-white hover:bg-primary-700",
+  secundario: "bg-white text-tinta shadow-[inset_0_0_0_1.5px_var(--color-linea)] hover:bg-neutral-50",
+  suave: "bg-primary-50 text-primary-700 hover:bg-primary-100",
+  enlace: "text-sm font-semibold text-primary-700 hover:text-primary-800",
 };
 
 /** Las clases de una variante, para reusarlas en algo que no es un <button>. */
-export function clasesDeBoton(variante: Variante = "primario", extra?: string) {
-  return `${clasesBase} ${clasesPorVariante[variante]} ${extra ?? ""}`;
+export function clasesDeBoton(variante: Variante = "primario", extra?: string, tamano: Tamano = "normal") {
+  // El enlace es texto: no lleva alto ni relleno de boton.
+  const medida = variante === "enlace" ? "" : clasesPorTamano[tamano];
+  return `${clasesBase} ${medida} ${clasesPorVariante[variante]} ${extra ?? ""}`;
 }
 
 export function Boton({
   variante = "primario",
+  tamano = "normal",
   className,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante }) {
-  return <button className={clasesDeBoton(variante, className)} {...props} />;
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante; tamano?: Tamano }) {
+  return <button className={clasesDeBoton(variante, className, tamano)} {...props} />;
 }
 
 /**
@@ -33,11 +42,10 @@ export function Boton({
  */
 export function EnlaceBoton({
   variante = "primario",
+  tamano = "normal",
   className,
   href,
   ...props
-}: AnchorHTMLAttributes<HTMLAnchorElement> & { variante?: Variante; href: string }) {
-  return (
-    <Link href={href} className={`inline-block ${clasesDeBoton(variante, className)}`} {...props} />
-  );
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { variante?: Variante; tamano?: Tamano; href: string }) {
+  return <Link href={href} className={clasesDeBoton(variante, className, tamano)} {...props} />;
 }
