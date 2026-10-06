@@ -110,12 +110,16 @@ export function decidirSobreError(codigo: number | undefined): DecisionSuscripci
  * iPhone— instalo la app. Ver docs/plan-notificaciones-push.md, "El problema del iPhone".
  */
 export function frasePorcentajeAlcance(suscritos: number, total: number): string {
-  if (total === 0) return "Todavía no hay alumnos registrados.";
+  if (total === 0) return "Todavía no hay cuentas registradas.";
   if (suscritos === 0) {
-    return `No le va a llegar a nadie: ninguno de los ${total} alumnos activó los avisos.`;
+    return `No le va a llegar a nadie: ninguna de las ${total} cuentas activó los avisos.`;
   }
-  // El plural concuerda con el total, no con los suscritos: "1 de 120 alumnos", no
-  // "1 de 120 alumno".
-  const alumnos = total === 1 ? "alumno" : "alumnos";
-  return `Le va a llegar a ${suscritos} de ${total} ${alumnos}.`;
+  // Dice "cuentas" y no "alumnos" porque el envio va a TODAS las suscripciones sin mirar el
+  // rol: las de administracion tambien reciben. Llamarlas alumnos haria que el numero no
+  // cuadre con quienes de verdad lo reciben.
+  //
+  // El plural concuerda con el total, no con los suscritos: "1 de 120 cuentas", no
+  // "1 de 120 cuenta".
+  const cuentas = total === 1 ? "cuenta" : "cuentas";
+  return `Le va a llegar a ${suscritos} de ${total} ${cuentas}.`;
 }

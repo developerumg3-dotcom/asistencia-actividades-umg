@@ -82,12 +82,12 @@ test("401 y 403 no borran: el problema son nuestras claves", () => {
 });
 
 test("la frase de alcance dice a cuantos de cuantos", () => {
-  assert.equal(frasePorcentajeAlcance(34, 120), "Le va a llegar a 34 de 120 alumnos.");
+  assert.equal(frasePorcentajeAlcance(34, 120), "Le va a llegar a 34 de 120 cuentas.");
 });
 
 test("el plural concuerda con el total, no con los suscritos", () => {
-  assert.equal(frasePorcentajeAlcance(1, 120), "Le va a llegar a 1 de 120 alumnos.");
-  assert.equal(frasePorcentajeAlcance(1, 1), "Le va a llegar a 1 de 1 alumno.");
+  assert.equal(frasePorcentajeAlcance(1, 120), "Le va a llegar a 1 de 120 cuentas.");
+  assert.equal(frasePorcentajeAlcance(1, 1), "Le va a llegar a 1 de 1 cuenta.");
 });
 
 test("cero suscritos lo dice sin rodeos", () => {
@@ -97,5 +97,5 @@ test("cero suscritos lo dice sin rodeos", () => {
 });
 
 test("sin alumnos registrados no se inventa una division por cero", () => {
-  assert.equal(frasePorcentajeAlcance(0, 0), "Todavía no hay alumnos registrados.");
+  assert.equal(frasePorcentajeAlcance(0, 0), "Todavía no hay cuentas registradas.");
 });
