@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda — Prototipos de interfaz</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f2f5f8;color:#13212d;line-height:1.5;padding:32px 16px 48px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;gap:16px;align-items:center}
+header img{width:64px;height:64px}
+h1{font-size:28px;letter-spacing:-.02em;line-height:1.15}
+p.sub{color:#5a6a79}
+.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+a.op{display:flex;flex-direction:column;gap:12px;border-radius:22px;padding:22px;text-decoration:none;color:inherit;transition:transform .15s}
+a.op:hover{transform:translateY(-3px)}
+a.a{background:#fff;box-shadow:0 4px 18px rgba(19,33,45,.08)}
+a.b{background:radial-gradient(120% 80% at 50% -10%,#16405c,#0a1622 65%);color:#eef4f9}
+.letra{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1c72a5}
+a.b .letra{color:#e6bd72}
+a.op h2{font-size:24px;letter-spacing:-.02em}
+a.op ul{padding-left:18px;font-size:14.500px;display:flex;flex-direction:column;gap:5px}
+a.a ul{color:#42525f}a.b ul{color:#b7c6d3}
+.ir{margin-top:auto;font-weight:700;display:inline-flex;height:46px;align-items:center;justify-content:center;border-radius:23px;background:#1c72a5;color:#fff}
+a.b .ir{background:#4aa8dc;color:#06202f}
+section{background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 10px rgba(19,33,45,.05)}
+section h3{font-size:16px;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:14.500px}
+td,th{text-align:left;padding:8px 6px;border-bottom:1px solid #e2e8ee}
+tr:last-child td{border-bottom:0}
+code{background:#edf4f8;padding:2px 6px;border-radius:6px;font-size:13px}
+section ul{padding-left:18px;font-size:14.500px;color:#42525f;display:flex;flex-direction:column;gap:6px}
+</style>
+</head>
+<body>
+<main>
+  <header><img src="escudo-umg.webp" alt=""><div><h1>Ronda · prototipos de interfaz</h1><p class="sub">Prototipos navegables con datos simulados. Nada de esto toca la app real ni la base de datos.</p></div></header>
+  <a class="op a" href="final/index.html" style="border:2px solid #1c72a5">
+    <span class="letra">Versión final</span><h2>La A, con cuatro piezas de la B</h2>
+    <ul>
+      <li>Base: propuesta A completa (tema claro, barra inferior de cinco pestañas).</li>
+      <li>Actividades del alumno en secciones «Ahora», «Próximas» y «Ya pasaron» (línea de tiempo).</li>
+      <li>Resultado del marcaje a pantalla completa, verde o rojo.</li>
+      <li>Puntos extra con «+1» por clase.</li>
+      <li>Catedráticos con sus clases en pastillas.</li>
+    </ul>
+    <span class="ir">Abrir la versión final</span>
+  </a>
+  <p class="sub" style="margin-bottom:-12px">Las dos propuestas originales, como referencia:</p>
+  <div class="dos">
+    <a class="op a" href="propuesta-a/index.html">
+      <span class="letra">Propuesta A</span><h2>Claro</h2>
+      <ul>
+        <li>Clara y sobria, fiel a los colores del escudo.</li>
+        <li>Barra inferior de cinco pestañas con íconos.</li>
+        <li>Puntos por clase en una lista: nombre, catedrático y el total grande a la derecha.</li>
+        <li>Reparto de puntos extra en tres pasos: clase, cantidad, confirmar.</li>
+        <li>Administración con tablero, filtros en pastillas y botón flotante «Nueva».</li>
+      </ul>
+      <span class="ir">Abrir la propuesta A</span>
+    </a>
+    <a class="op b" href="propuesta-b/index.html">
+      <span class="letra">Propuesta B</span><h2>Marcador</h2>
+      <ul>
+        <li>Oscura y con más carácter: azul profundo y números dorados.</li>
+        <li>Barra flotante con un botón central: marcar (alumno) o acciones rápidas (admin).</li>
+        <li>Puntos por clase en losetas de dos columnas: todas las clases de un vistazo.</li>
+        <li>Reparto de puntos extra de un toque: «+1» en la clase.</li>
+        <li>Actividades y bitácora como línea de tiempo.</li>
+      </ul>
+      <span class="ir">Abrir la propuesta B</span>
+    </a>
+  </div>
+  <a href="comparar.html" style="display:flex;align-items:center;justify-content:center;height:50px;border-radius:25px;background:#13212d;color:#fff;font-weight:700;text-decoration:none">Comparar las dos, pantalla por pantalla</a>
+  <section>
+    <h3>Cuentas de demostración</h3>
+    <table>
+      <tr><th>Rol</th><th>Correo</th><th>Contraseña</th><th>Qué muestra</th></tr>
+      <tr><td>Alumna</td><td><code>alumno@ronda.test</code></td><td><code>alumno123</code></td><td>Puntos, actividad abierta, 1 punto extra por repartir</td></tr>
+      <tr><td>Administrador</td><td><code>admin@ronda.test</code></td><td><code>admin123</code></td><td>Panel completo y su propia vista de alumno</td></tr>
+      <tr><td>Cuenta nueva</td><td><code>nuevo@ronda.test</code></td><td><code>nuevo123</code></td><td>Completar perfil y elegir cursos desde cero</td></tr>
+    </table>
+    <p class="sub" style="font-size:13.500px;margin-top:10px">En la pantalla de ingreso de cada propuesta hay botones para entrar con un toque.</p>
+  </section>
+  <section>
+    <h3>Qué conviene probar</h3>
+    <ul>
+      <li><b>Alumna:</b> tocar una clase para ver el detalle, simular el escaneo del QR y marcar asistencia, activar «código vencido» para ver el error, repartir el punto extra y deshacerlo.</li>
+      <li><b>Administrador:</b> abrir «En vivo» de la actividad abierta y esperar unos segundos (van llegando alumnos), abrir el kiosco, hacer un marcaje manual, crear una actividad, asignar un catedrático, redactar un aviso.</li>
+      <li><b>En el teléfono:</b> ambas están pensadas para móvil. En una computadora se ven dentro de un marco de teléfono; el kiosco ocupa la pantalla completa.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

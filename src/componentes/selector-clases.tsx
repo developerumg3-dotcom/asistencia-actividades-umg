@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { desinscribirse, inscribirse } from "@/app/(protegido)/(con-perfil)/clases/acciones";
-import { Campo } from "@/componentes/ui/campo";
-import { Chip } from "@/componentes/ui/chip";
+import { desinscribirse, inscribirse } from "@/app/(protegido)/(con-perfil)/(alumno)/clases/acciones";
+import { Chip, FilaDeChips } from "@/componentes/ui/chip";
+import { Icono } from "@/componentes/ui/icono";
+import { TituloSeccion, Vacio } from "@/componentes/ui/titular";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 import type { ClaseDisponible } from "@/lib/clases";
 import { enTitulo } from "@/lib/texto";
@@ -22,15 +23,11 @@ function Marca({ marcada }: { marcada: boolean }) {
   return (
     <span
       aria-hidden
-      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+      className={`grid size-[26px] shrink-0 place-items-center rounded-[9px] border-2 text-white transition-colors ${
         marcada ? "border-primary-600 bg-primary-600" : "border-neutral-300 bg-white"
       }`}
     >
-      {marcada && (
-        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-white" fill="none" strokeWidth="2.5">
-          <path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
+      {marcada && <Icono nombre="ok" grosor={3} className="size-4" />}
     </span>
   );
 }
@@ -127,112 +124,87 @@ export function SelectorClases({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Lo primero que el alumno quiere saber es cuantos cursos lleva elegidos. */}
-      <div className="flex items-center justify-between gap-4 rounded-md border border-primary-200 bg-primary-50 px-4 py-3">
-        <div>
-          <p className="text-2xl font-semibold tabular-nums text-primary-800">{inscritos.size}</p>
-          <p className="text-sm text-primary-800">
-            {inscritos.size === 1 ? "curso seleccionado" : "cursos seleccionados"}
-          </p>
-        </div>
-        {pendiente && <span className="text-xs text-primary-700">Guardando…</span>}
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <Campo
+    <div className="flex flex-col gap-4">
+      <div className="relative">
+        <Icono nombre="buscar" className="pointer-events-none absolute left-3.5 top-[13px] text-neutral-400" />
+        <input
           id="busqueda-clases"
           type="search"
-          placeholder="Buscar por nombre o código…"
+          aria-label="Buscar curso"
+          placeholder="Buscar por nombre o código"
           value={busqueda}
           onChange={(evento) => setBusqueda(evento.target.value)}
+          className="h-12 w-full rounded-[14px] bg-white pl-11 pr-3.5 text-base shadow-tarjeta outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
         />
+      </div>
 
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          {cicloAlumno && (
-            <Chip activo={ciclo === cicloAlumno} onClick={() => setCiclo(cicloAlumno)}>
-              Mi ciclo ({cicloAlumno})
-            </Chip>
-          )}
-          <Chip activo={ciclo === TODOS} onClick={() => setCiclo(TODOS)}>
-            Todos
+      <FilaDeChips>
+        <Chip activo={soloInscritas} onClick={() => setSoloInscritas(!soloInscritas)}>
+          Solo los míos · {inscritos.size}
+        </Chip>
+        {cicloAlumno && (
+          <Chip activo={ciclo === cicloAlumno} onClick={() => setCiclo(cicloAlumno)}>
+            Mi ciclo ({cicloAlumno})
           </Chip>
-          {ciclos
-            .filter((c) => c !== cicloAlumno)
-            .map((c) => (
-              <Chip key={c} activo={ciclo === c} onClick={() => setCiclo(c)}>
-                Ciclo {c}
-              </Chip>
-            ))}
-        </div>
+        )}
+        <Chip activo={ciclo === TODOS} onClick={() => setCiclo(TODOS)}>
+          Todos
+        </Chip>
+        {ciclos
+          .filter((c) => c !== cicloAlumno)
+          .map((c) => (
+            <Chip key={c} activo={ciclo === c} onClick={() => setCiclo(c)}>
+              Ciclo {c}
+            </Chip>
+          ))}
+      </FilaDeChips>
 
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              checked={soloInscritas}
-              onChange={(evento) => setSoloInscritas(evento.target.checked)}
-              className="h-4 w-4 accent-primary-600"
-            />
-            Solo las mías
-          </label>
-          <p className="text-xs tabular-nums text-neutral-500">
-            {clasesFiltradas.length} de {clasesDisponibles.length} cursos
-          </p>
-        </div>
-
+      <div className="flex items-center justify-between gap-3 text-xs text-neutral-500">
         {/* El catalogo completo existe justamente porque hay atrasados y adelantados: si
             arrancamos filtrados en su ciclo, hay que decirle como salir de ahi. */}
-        {cicloAlumno && ciclo === cicloAlumno && (
-          <p className="text-xs text-neutral-500">
+        {cicloAlumno && ciclo === cicloAlumno ? (
+          <p>
             ¿Llevás cursos de otro ciclo?{" "}
-            <button
-              type="button"
-              onClick={() => setCiclo(TODOS)}
-              className="text-primary-700 underline hover:text-primary-800"
-            >
-              Ver los cincuenta
+            <button type="button" onClick={() => setCiclo(TODOS)} className="font-semibold text-primary-700">
+              Ver todos
             </button>
           </p>
+        ) : (
+          <span />
         )}
+        <p className="shrink-0 tabular-nums">
+          {pendiente ? "Guardando…" : `${clasesFiltradas.length} de ${clasesDisponibles.length} cursos`}
+        </p>
       </div>
 
       {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
 
       {grupos.length === 0 ? (
-        <div className="rounded-md border border-dashed border-neutral-300 px-4 py-10 text-center">
-          <p className="text-sm text-neutral-600">
+        <Vacio>
+          <p>
             {soloInscritas && inscritos.size === 0
               ? "Todavía no elegiste ningún curso."
               : "No encontramos cursos con ese criterio."}
           </p>
           {hayFiltro && (
-            <button
-              type="button"
-              onClick={limpiarFiltros}
-              className="mt-2 text-sm text-primary-700 underline hover:text-primary-800"
-            >
+            <button type="button" onClick={limpiarFiltros} className="mt-2 font-semibold text-primary-700">
               Quitar los filtros
             </button>
           )}
-        </div>
+        </Vacio>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {grupos.map(([numeroCiclo, cursos]) => (
             <section key={numeroCiclo} className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Ciclo {numeroCiclo}
-              </h2>
-              <ul className="grid gap-2 sm:grid-cols-2">
+              <TituloSeccion>Ciclo {numeroCiclo}</TituloSeccion>
+              <ul className="flex flex-col gap-2.5">
                 {cursos.map((c) => {
                   const marcada = inscritos.has(c.id);
                   return (
                     <li key={c.id}>
                       <label
-                        className={`flex h-full cursor-pointer items-start gap-3 rounded-md border px-3 py-3 transition-colors ${
-                          marcada
-                            ? "border-primary-600 bg-primary-50"
-                            : "border-neutral-200 bg-white hover:border-primary-300 hover:bg-neutral-50"
+                        className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-3.5 transition-shadow ${
+                          marcada ? "shadow-[inset_0_0_0_2px_var(--color-primary-600)]" : "shadow-tarjeta"
                         }`}
                       >
                         <input
@@ -243,20 +215,13 @@ export function SelectorClases({
                           className="sr-only"
                         />
                         <Marca marcada={marcada} />
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span
-                            className={`text-sm font-medium ${marcada ? "text-primary-900" : "text-neutral-900"}`}
-                          >
-                            {enTitulo(c.nombre)}
+                        <span className="flex min-w-0 flex-col">
+                          <span className="text-[14.5px] font-bold leading-snug">{enTitulo(c.nombre)}</span>
+                          <span className="text-xs text-neutral-400">
+                            {c.codigo}
+                            {c.seccion && ` · Sección ${c.seccion}`} · {c.jornada}
                           </span>
-                          <span className="flex flex-wrap items-center gap-x-2 text-xs text-neutral-500">
-                            <span className="font-mono">{c.codigo}</span>
-                            {c.seccion && <span>· Sección {c.seccion}</span>}
-                            <span>· {c.jornada}</span>
-                          </span>
-                          {c.docenteNombre && (
-                            <span className="text-xs text-neutral-600">{c.docenteNombre}</span>
-                          )}
+                          {c.docenteNombre && <span className="text-[13px] text-neutral-500">{c.docenteNombre}</span>}
                         </span>
                       </label>
                     </li>

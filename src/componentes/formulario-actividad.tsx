@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   actualizarActividad,
   crearActividad,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/actividades/acciones";
 import { Boton } from "@/componentes/ui/boton";
+import { BotonAccion } from "@/componentes/ui/boton-accion";
 import { Campo } from "@/componentes/ui/campo";
+import { Hoja } from "@/componentes/ui/hoja";
+import { Icono } from "@/componentes/ui/icono";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 const estadoInicial: EstadoFormulario = { error: null };
@@ -43,10 +46,10 @@ function Seccion({
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="flex flex-col gap-3 border-t border-neutral-200 pt-4 first:border-t-0 first:pt-0">
+    <fieldset className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-tarjeta">
       <legend className="sr-only">{titulo}</legend>
       <div>
-        <h3 className="text-sm font-semibold text-neutral-900">{titulo}</h3>
+        <h3 className="text-sm font-bold text-tinta">{titulo}</h3>
         {ayuda && <p className="text-xs text-neutral-500">{ayuda}</p>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">{children}</div>
@@ -60,7 +63,7 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
   const [tipo, setTipo] = useState(valores?.tipo ?? "global");
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
       <Seccion titulo="Qué es">
         <Campo
           id={`nombre-${sufijo}`}
@@ -255,37 +258,35 @@ function Avisos({ estado }: { estado: EstadoFormulario }) {
 
 export function FormularioNuevaActividad() {
   const [estado, accion, enviando] = useActionState(crearActividad, estadoInicial);
-  // El formulario arranca cerrado: lo primero que tiene que verse es la lista de
-  // actividades, no once campos vacios.
+  // El formulario vive en una hoja: lo primero que tiene que verse es la lista de
+  // actividades, no quince campos vacios.
   const [abierto, setAbierto] = useState(false);
 
-  if (!abierto) {
-    return (
-      <div className="flex justify-end">
-        <Boton onClick={() => setAbierto(true)}>Nueva actividad</Boton>
-      </div>
-    );
-  }
+  // Creada: se cierra sola. La actividad nueva ya aparece en la lista de atras.
+  useEffect(() => {
+    if (estado.mensaje && !estado.error) setAbierto(false);
+  }, [estado]);
 
   return (
-    <form
-      action={accion}
-      className="flex w-full flex-col gap-5 rounded-md border border-neutral-200 bg-white p-4"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-medium text-neutral-900">Nueva actividad</h2>
-        <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
-          Cancelar
-        </Boton>
-      </div>
-      <CamposActividad />
-      <Avisos estado={estado} />
-      <div>
-        <Boton type="submit" disabled={enviando}>
-          {enviando ? "Creando…" : "Crear actividad"}
-        </Boton>
-      </div>
-    </form>
+    <>
+      <button
+        type="button"
+        onClick={() => setAbierto(true)}
+        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-[max(1rem,calc(50%-17rem))] z-30 flex h-[54px] items-center gap-2 rounded-full bg-primary-600 pl-4 pr-5 font-bold text-white shadow-[0_10px_24px_rgb(28_114_165_/_0.4)] transition active:scale-95"
+      >
+        <Icono nombre="sumar" />
+        Nueva
+      </button>
+      <Hoja abierta={abierto} alCerrar={() => setAbierto(false)} titulo="Nueva actividad">
+        <form action={accion} className="flex flex-col gap-5">
+          <CamposActividad />
+          <Avisos estado={estado} />
+          <Boton type="submit" disabled={enviando} className="w-full">
+            {enviando ? "Creando…" : "Crear actividad"}
+          </Boton>
+        </form>
+      </Hoja>
+    </>
   );
 }
 
@@ -293,27 +294,21 @@ export function FormularioEditarActividad({ actividad }: { actividad: ActividadE
   const [estado, accion, enviando] = useActionState(actualizarActividad, estadoInicial);
   const [abierto, setAbierto] = useState(false);
 
-  if (!abierto) {
-    return (
-      <Boton variante="secundario" onClick={() => setAbierto(true)}>
-        Editar
-      </Boton>
-    );
-  }
-
   return (
-    <form action={accion} className="flex w-full flex-col gap-5 border-t border-neutral-200 pt-4">
-      <input type="hidden" name="id" value={actividad.id} />
-      <CamposActividad valores={actividad} />
-      <Avisos estado={estado} />
-      <div className="flex items-center gap-3">
-        <Boton type="submit" disabled={enviando}>
-          {enviando ? "Guardando…" : "Guardar cambios"}
-        </Boton>
-        <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
-          Cerrar
-        </Boton>
-      </div>
-    </form>
+    <>
+      <BotonAccion icono="lista" onClick={() => setAbierto(true)}>
+        Editar datos
+      </BotonAccion>
+      <Hoja abierta={abierto} alCerrar={() => setAbierto(false)} titulo="Editar actividad">
+        <form action={accion} className="flex flex-col gap-5">
+          <input type="hidden" name="id" value={actividad.id} />
+          <CamposActividad valores={actividad} />
+          <Avisos estado={estado} />
+          <Boton type="submit" disabled={enviando} className="w-full">
+            {enviando ? "Guardando…" : "Guardar cambios"}
+          </Boton>
+        </form>
+      </Hoja>
+    </>
   );
 }

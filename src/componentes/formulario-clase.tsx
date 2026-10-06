@@ -9,6 +9,7 @@ import {
 } from "@/app/(protegido)/(con-perfil)/admin/clases/acciones";
 import { Boton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
+import { Etiqueta } from "@/componentes/ui/etiqueta";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 import { enTitulo } from "@/lib/texto";
 
@@ -88,19 +89,19 @@ export function FormularioNuevaClase({ docentes }: { docentes: Docente[] }) {
 
   if (!abierto) {
     return (
-      <div className="flex justify-end">
-        <Boton onClick={() => setAbierto(true)}>Nueva clase</Boton>
-      </div>
+      <Boton tamano="chico" onClick={() => setAbierto(true)}>
+        Nueva clase
+      </Boton>
     );
   }
 
   return (
     <form
       action={accion}
-      className="flex w-full flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4"
+      className="flex w-full flex-col gap-4 rounded-2xl bg-white shadow-tarjeta p-4"
     >
       <div className="flex items-center justify-between gap-4">
-        <h2 className="font-medium text-neutral-900">Nueva clase</h2>
+        <h2 className="font-bold text-tinta">Nueva clase</h2>
         <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
           Cancelar
         </Boton>
@@ -122,32 +123,27 @@ export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Do
   const [abierto, setAbierto] = useState(false);
 
   return (
-    <article className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4">
+    <article className="flex flex-col gap-3 rounded-2xl bg-white shadow-tarjeta p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-medium text-neutral-900">
-            {enTitulo(clase.nombre)}{" "}
-            <span className="font-mono text-sm font-normal text-neutral-500">{clase.codigo}</span>
-          </h2>
-          <p className="text-sm text-neutral-500">
-            Ciclo {clase.ciclo} · {clase.jornada}
+          <h2 className="font-bold leading-snug">{enTitulo(clase.nombre)}</h2>
+          <p className="text-xs text-neutral-400">
+            <span className="font-mono">{clase.codigo}</span> · Ciclo {clase.ciclo} · {clase.jornada}
             {clase.seccion && <> · Sección {clase.seccion}</>}
             {!clase.activa && <> · inactiva</>}
           </p>
         </div>
         {clase.docenteNombre ? (
-          <span className="shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs font-medium text-neutral-600">
-            {clase.docenteNombre}
-          </span>
+          <Etiqueta tono="celeste" className="max-w-full">
+            <span className="truncate">{clase.docenteNombre}</span>
+          </Etiqueta>
         ) : (
-          <span className="shrink-0 rounded-full border border-accent-300 bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-800">
-            Sin catedrático
-          </span>
+          <Etiqueta tono="oro">Sin catedrático</Etiqueta>
         )}
       </div>
 
       {abierto ? (
-        <form action={accion} className="flex flex-col gap-4 border-t border-neutral-200 pt-4">
+        <form action={accion} className="flex flex-col gap-4 border-t border-linea pt-4">
           <input type="hidden" name="id" value={clase.id} />
           <CamposClase valores={clase} docentes={docentes} />
           <label className="flex items-center gap-2 text-sm text-neutral-700">
@@ -173,7 +169,7 @@ export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Do
         <div className="flex flex-col items-end gap-2">
           {estadoDuplicar.error && <MensajeFormulario tipo="error">{estadoDuplicar.error}</MensajeFormulario>}
           {estadoDuplicar.mensaje && <MensajeFormulario tipo="exito">{estadoDuplicar.mensaje}</MensajeFormulario>}
-          <div className="flex justify-end gap-3">
+          <div className="flex items-center justify-end gap-4">
             <form action={accionDuplicar}>
               <input type="hidden" name="id" value={clase.id} />
               <Boton
@@ -185,7 +181,7 @@ export function FilaClase({ clase, docentes }: { clase: ClaseAdmin; docentes: Do
                 {duplicando ? "Duplicando…" : "Duplicar"}
               </Boton>
             </form>
-            <Boton variante="secundario" onClick={() => setAbierto(true)}>
+            <Boton variante="secundario" tamano="chico" onClick={() => setAbierto(true)}>
               Editar
             </Boton>
           </div>

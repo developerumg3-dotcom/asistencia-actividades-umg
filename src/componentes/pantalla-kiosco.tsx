@@ -125,37 +125,41 @@ export function PantallaKiosco({ clave }: { clave: string }) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-white p-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-semibold text-neutral-900 sm:text-4xl">
+    <div className="flex h-dvh flex-col items-center justify-center gap-[1.6vh] bg-white p-[2.4vh] text-center">
+      <div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- pantalla suelta, sin layout: un <img> alcanza */}
+        <img src="/escudo-umg.webp" alt="" className="mx-auto h-[7vh] w-auto" />
+        <h1 className="text-[clamp(26px,4.4vh,54px)] font-extrabold leading-tight tracking-tight text-tinta">
           {datos.actividad.nombre}
         </h1>
         {datos.actividad.lugar && (
-          <p className="mt-1 text-lg text-neutral-500">{datos.actividad.lugar}</p>
+          <p className="text-[clamp(15px,2.2vh,24px)] text-neutral-500">{datos.actividad.lugar}</p>
         )}
       </div>
 
       {/* El QR ocupa el maximo posible: tiene que leerse desde el fondo del salon. */}
       <canvas
         ref={lienzoRef}
-        className="h-[min(60vh,60vw)] w-[min(60vh,60vw)] max-w-full"
+        className="h-[min(54vh,84vw)] w-[min(54vh,84vw)] rounded-2xl shadow-[0_0_0_1px_var(--color-linea)]"
         aria-label="Código QR para marcar asistencia"
       />
 
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-xl text-neutral-600">Escaneá con la cámara de tu teléfono</p>
-        <div className="flex items-baseline gap-2">
-          <span className="text-5xl font-bold tabular-nums text-primary-700">{restante}</span>
-          <span className="text-xl text-neutral-500">s</span>
-        </div>
-        <div className="h-2 w-64 overflow-hidden rounded-full bg-neutral-200">
-          <div
-            className="h-full bg-primary-600 transition-[width] duration-200"
-            style={{ width: `${(restante / (ventanaMs / 1000)) * 100}%` }}
-          />
-        </div>
-        {error && <p className="text-sm text-accent-700">Reintentando conexión…</p>}
+      <p className="text-[clamp(17px,2.8vh,30px)] font-semibold text-tinta">
+        Escaneá con la cámara de tu teléfono
+      </p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-[clamp(44px,8vh,96px)] font-extrabold leading-none tabular-nums text-primary-700">
+          {restante}
+        </span>
+        <span className="text-[3vh] text-neutral-500">s</span>
       </div>
+      <div className="h-2.5 w-[min(54vh,84vw)] overflow-hidden rounded-full bg-primary-100">
+        <div
+          className="h-full bg-primary-600 transition-[width] duration-200"
+          style={{ width: `${(restante / (ventanaMs / 1000)) * 100}%` }}
+        />
+      </div>
+      {error && <p className="text-sm font-semibold text-accent-700">Reintentando conexión…</p>}
     </div>
   );
 }
@@ -163,8 +167,8 @@ export function PantallaKiosco({ clave }: { clave: string }) {
 function Aviso({ titulo, detalle }: { titulo: string; detalle: string }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-white p-6 text-center">
-      <h1 className="text-4xl font-semibold text-neutral-900">{titulo}</h1>
-      <p className="text-xl text-neutral-600">{detalle}</p>
+      <h1 className="text-4xl font-extrabold tracking-tight text-tinta">{titulo}</h1>
+      <p className="text-xl text-neutral-500">{detalle}</p>
     </div>
   );
 }

@@ -73,7 +73,7 @@ export function FormularioPerfil({
         defaultSeleccionados={idsInscritoInicial}
       />
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
-      <Boton type="submit" disabled={enviando}>
+      <Boton type="submit" disabled={enviando} className="w-full">
         {enviando ? "Guardando…" : "Guardar y continuar"}
       </Boton>
     </form>

@@ -1,12 +1,17 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   actualizarDocente,
   crearDocente,
   type EstadoFormulario,
 } from "@/app/(protegido)/(con-perfil)/admin/catedraticos/acciones";
-import { Boton, EnlaceBoton } from "@/componentes/ui/boton";
+import { Avatar } from "@/componentes/ui/avatar";
+import { Boton, clasesDeBoton, EnlaceBoton } from "@/componentes/ui/boton";
+import { Etiqueta } from "@/componentes/ui/etiqueta";
+import { Hoja } from "@/componentes/ui/hoja";
+import { Icono } from "@/componentes/ui/icono";
 import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
@@ -15,43 +20,44 @@ const estadoInicial: EstadoFormulario = { error: null };
 export function FormularioNuevoCatedratico() {
   const [estado, accion, enviando] = useActionState(crearDocente, estadoInicial);
   const [abierto, setAbierto] = useState(false);
-
-  if (!abierto) {
-    return (
-      <div className="flex justify-end">
-        <Boton onClick={() => setAbierto(true)}>Nuevo catedrático</Boton>
-      </div>
-    );
-  }
+  // `crearDocente` devuelve siempre un objeto nuevo: si llego sin error, se guardo.
+  const [vistoAlAbrir, setVistoAlAbrir] = useState(estado);
+  useEffect(() => {
+    if (abierto && estado !== vistoAlAbrir && !estado.error) setAbierto(false);
+  }, [abierto, estado, vistoAlAbrir]);
 
   return (
-    <form
-      action={accion}
-      className="flex w-full flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-medium text-neutral-900">Nuevo catedrático</h2>
-        <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
-          Cancelar
-        </Boton>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required />
-        <Campo
-          id="email-nuevo"
-          name="email"
-          type="email"
-          etiqueta="Correo (opcional)"
-          ayuda="No hace falta para asignar cursos ni para descargar el Excel."
-        />
-      </div>
-      {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
-      <div>
-        <Boton type="submit" disabled={enviando}>
-          {enviando ? "Agregando…" : "Agregar catedrático"}
-        </Boton>
-      </div>
-    </form>
+    <>
+      <Boton
+        tamano="chico"
+        onClick={() => {
+          setVistoAlAbrir(estado);
+          setAbierto(true);
+        }}
+      >
+        <Icono nombre="sumar" className="size-[17px]" />
+        Nuevo
+      </Boton>
+      <Hoja abierta={abierto} alCerrar={() => setAbierto(false)} titulo="Nuevo catedrático">
+        <p className="text-[13px] text-neutral-500">
+          No tiene cuenta: es solo el nombre que agrupa sus clases en el Excel.
+        </p>
+        <form action={accion} className="flex flex-col gap-3">
+          <Campo id="nombre-nuevo" name="nombre" etiqueta="Nombre" required />
+          <Campo
+            id="email-nuevo"
+            name="email"
+            type="email"
+            etiqueta="Correo (opcional)"
+            ayuda="No hace falta para asignar cursos ni para descargar el Excel."
+          />
+          {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
+          <Boton type="submit" disabled={enviando} className="w-full">
+            {enviando ? "Agregando…" : "Agregar catedrático"}
+          </Boton>
+        </form>
+      </Hoja>
+    </>
   );
 }
 
@@ -60,65 +66,70 @@ export function FilaCatedratico({
   nombre,
   email,
   clases,
+  nombresDeClases,
 }: {
   id: string;
   nombre: string;
   email: string | null;
   clases: number;
+  nombresDeClases: string[];
 }) {
   const [estado, accion, enviando] = useActionState(actualizarDocente, estadoInicial);
   const [abierto, setAbierto] = useState(false);
 
   return (
-    <article className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="font-medium text-neutral-900">{nombre}</h2>
-          {email && <p className="truncate text-sm text-neutral-600">{email}</p>}
-        </div>
+    <article className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-tarjeta">
+      <div className="flex items-center gap-3">
+        <Avatar nombre={nombre.replace(/^(Ing|Inga|Lic|Licda|Dr|Dra|Msc|M\.A)\.?\s+/i, "")} />
+        <Link href={`/admin/catedraticos/${id}`} className="min-w-0 flex-1">
+          <h2 className="font-bold leading-snug">{nombre}</h2>
+          <p className="truncate text-xs text-neutral-400">
+            {clases === 0 ? "Sin clases asignadas" : `${clases} ${clases === 1 ? "clase" : "clases"}`}
+            {email && ` · ${email}`}
+          </p>
+        </Link>
         {/* Un catedratico sin clases no recibe Excel: es un dato huerfano y conviene verlo. */}
-        <span
-          className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
-            clases === 0
-              ? "border-accent-300 bg-accent-50 text-accent-800"
-              : "border-neutral-200 bg-neutral-50 text-neutral-600"
-          }`}
-        >
-          {clases === 0 ? "Sin clases asignadas" : `${clases} ${clases === 1 ? "clase" : "clases"}`}
-        </span>
+        {clases === 0 && <Etiqueta tono="oro">Sin clases</Etiqueta>}
       </div>
 
-      {abierto && (
-        <form action={accion} className="flex flex-col gap-4 border-t border-neutral-200 pt-4">
+      {nombresDeClases.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {nombresDeClases.map((c, indice) => (
+            <Etiqueta key={`${c}-${indice}`} tono="celeste" className="h-auto min-h-[23px] whitespace-normal py-0.5">
+              {c}
+            </Etiqueta>
+          ))}
+        </div>
+      )}
+
+      {abierto ? (
+        <form action={accion} className="flex flex-col gap-3 border-t border-linea pt-3">
           <input type="hidden" name="id" value={id} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Campo id={`nombre-${id}`} name="nombre" etiqueta="Nombre" defaultValue={nombre} required />
-            <Campo
-              id={`email-${id}`}
-              name="email"
-              type="email"
-              etiqueta="Correo (opcional)"
-              defaultValue={email ?? ""}
-            />
-          </div>
+          <Campo id={`nombre-${id}`} name="nombre" etiqueta="Nombre" defaultValue={nombre} required />
+          <Campo id={`email-${id}`} name="email" type="email" etiqueta="Correo (opcional)" defaultValue={email ?? ""} />
           {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
-          <div className="flex items-center gap-3">
-            <Boton type="submit" disabled={enviando}>
-              {enviando ? "Guardando…" : "Guardar cambios"}
-            </Boton>
-            <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
+          <div className="grid grid-cols-2 gap-2.5">
+            <Boton variante="secundario" type="button" onClick={() => setAbierto(false)}>
               Cerrar
+            </Boton>
+            <Boton type="submit" disabled={enviando}>
+              {enviando ? "Guardando…" : "Guardar"}
             </Boton>
           </div>
         </form>
-      )}
-
-      {!abierto && (
-        <div className="flex justify-end gap-3">
-          <EnlaceBoton href={`/admin/catedraticos/${id}`} variante="secundario">
-            Ver clases y descargar reporte
-          </EnlaceBoton>
-          <Boton variante="secundario" onClick={() => setAbierto(true)}>
+      ) : (
+        <div className="flex gap-2.5">
+          {clases > 0 ? (
+            <a href={`/api/reportes/catedratico/${id}`} className={clasesDeBoton("secundario", "flex-1", "chico")}>
+              <Icono nombre="bajar" className="size-[17px]" />
+              Descargar su Excel
+            </a>
+          ) : (
+            <EnlaceBoton href="/admin/clases" variante="secundario" tamano="chico" className="flex-1">
+              Asignarle clases
+            </EnlaceBoton>
+          )}
+          <Boton variante="secundario" tamano="chico" onClick={() => setAbierto(true)}>
             Editar
           </Boton>
         </div>

@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Registro de participación en actividades de la UMG",
     start_url: "/inicio",
     display: "standalone",
-    background_color: "#FFFFFF",
+    background_color: "#F2F5F8",
     theme_color: "#1C72A5",
     icons: [
       { src: "/iconos/icon-192.png", sizes: "192x192", type: "image/png" },

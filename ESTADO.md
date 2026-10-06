@@ -2,6 +2,52 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
+## Rediseño de la interfaz — 6/10/2026 (Daniel)
+
+**Toda la interfaz se rehízo** sobre un sistema visual nuevo, decidido con prototipos
+navegables (`prototipos/`). La norma está en [`docs/diseno-visual.md`](docs/diseno-visual.md);
+leela antes de tocar una pantalla. No cambió ninguna regla de negocio, ninguna tabla ni
+ninguna acción de servidor: es la capa de presentación.
+
+Lo que cambia para quien retome:
+
+- **Navegación inferior con íconos**, por rol (`src/componentes/barras.tsx`). Ya no existen
+  `nav-admin.tsx`, `cambio-de-vista.tsx` ni el encabezado con el correo.
+- **Rutas del alumno**, ahora en el grupo `(con-perfil)/(alumno)/`: `/inicio` (puntos por
+  clase), `/actividades` (nueva), `/puntos-extra` (nueva: el reparto salió de `/inicio`),
+  `/clases` y `/cuenta` (nueva). `/admin/mas` es nueva. `/admin/mis-puntos` y
+  `/admin/mis-clases` redirigen a `/inicio` y `/clases`.
+- **La tabla clase × actividad ya no se muestra en el teléfono**: `puntos-por-clase.tsx` la
+  reemplaza con una tarjeta por clase y el detalle al tocar. El cálculo es el mismo
+  (`obtenerParticipaciones`).
+- **El resultado del marcaje es a pantalla completa**, verde o rojo (`boton-marcar.tsx`), con
+  los textos de la §7.
+- **Puntos extra se reparte de a uno** («+1» por clase). Usa la misma acción `repartir`.
+- **El detalle de una actividad** (`/admin/actividades/{id}/en-vivo`) concentra las acciones:
+  kiosco, marcaje manual, avisar y editar. Se actualiza solo mientras el marcaje está abierto.
+  La lista de actividades quedó liviana, con filtros por estado en la URL.
+- **Primitivos nuevos** en `src/componentes/ui/`: `icono`, `etiqueta`, `avatar`, `titular`,
+  `fechita`, `hoja`, `barra-inferior`, `boton-accion`, `pantalla`, `marca`.
+- `obtenerActividadesDelAlumno` acepta `{ incluirCerradas }` y devuelve `estado`.
+- Tipografía Plus Jakarta Sans vía `next/font`.
+
+Verificación al cierre: TypeScript limpio, 133 pruebas unitarias, `pnpm build` compila. En el
+navegador, a tamaño de teléfono, se recorrieron todas las pantallas con datos reales de
+desarrollo: las de entrada, las cinco del alumno con el detalle de una clase, las del panel
+(tablero, actividades, detalle, alumnos y ficha, avisos, Más, catedráticos, clases y bitácora),
+el kiosco y el resultado rojo del marcaje con un código inválido. Sin desplazamiento
+horizontal ni errores de hidratación.
+
+**No se ejercitaron las escrituras** desde la interfaz nueva (crear o editar una actividad,
+«+1» de puntos extra, marcaje manual, enviar un aviso, un marcaje exitoso con QR real): usan
+las mismas acciones de servidor de antes, pero conviene probarlas en el ensayo. No se corrió
+`probar:base`.
+
+**Trampa nueva, ya corregida:** en desarrollo el service worker cacheaba `/_next/static/`, que
+en `localhost` no lleva hash en el nombre, y el navegador se quedaba con JavaScript viejo
+(síntoma: `Failed to find Server Action` al enviar un formulario). `public/sw.js` ya no cachea
+estáticos en `localhost`; en producción se comporta igual que antes.
+
 ## Sesión del 6/10/2026 — seguridad integrada y push funcionando
 
 **Lo más importante: las notificaciones push funcionan de punta a punta.** Se envió un aviso

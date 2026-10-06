@@ -15,8 +15,15 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// En desarrollo los archivos de /_next/static/ NO llevan hash en el nombre: el mismo
+// `page.js` cambia de contenido con cada edicion. Cachearlos "primero la cache" dejaba el
+// navegador con JavaScript viejo para siempre, y el sintoma era un formulario que fallaba con
+// `Failed to find Server Action` (el id de la accion ya no existia en el servidor). En
+// produccion el nombre cambia con el contenido, asi que ahi la cache es segura.
+const ES_LOCAL = ["localhost", "127.0.0.1", "[::1]"].includes(self.location.hostname);
+
 function esEstaticoDeNext(url) {
-  return url.origin === self.location.origin && url.pathname.startsWith("/_next/static/");
+  return !ES_LOCAL && url.origin === self.location.origin && url.pathname.startsWith("/_next/static/");
 }
 
 function esIcono(url) {

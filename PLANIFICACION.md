@@ -515,6 +515,12 @@ pendiente sería el peor error posible del sistema.
 | A8 | Mis clases | Agregar o quitar clases, y total de puntos de cada una. |
 | A9 | Participaciones | La tabla de actividades por clase. Todas las actividades visibles, con 1 o 0. |
 | A10 | Puntos extra | Saldo disponible y reparto entre clases, con deshacer hasta la fecha de corte. |
+| A11 | Actividades | Todas las actividades publicadas: la abierta ahora, las próximas y las que ya pasaron, con si asistió o no. |
+| A12 | Mi cuenta | Datos del perfil, avisos en el dispositivo, instalar la app y cerrar sesión. |
+
+Desde el rediseño de octubre de 2026 (ver [`docs/diseno-visual.md`](docs/diseno-visual.md)) el
+alumno navega con una barra inferior: Puntos (A5 + A9), Actividades (A11), Extra (A10), Cursos
+(A4 + A8) y Yo (A12).
 
 ### Administrador
 
@@ -530,6 +536,10 @@ pendiente sería el peor error posible del sistema.
 | B8 | Marcaje manual | Registrar una asistencia con justificación obligatoria. Queda en bitácora. |
 | B9 | Bitácora | Intentos de marcaje y señales raras, para revisión humana. Nunca acción automática. |
 | B10 | Exportar | Un libro por catedrático, o consolidado. |
+| B11 | Avisos | Notificación general a los dispositivos suscritos. |
+| B12 | Más | Menú del panel: Catedráticos, Clases, Bitácora, los puntos propios y cerrar sesión. |
+
+El panel también navega con barra inferior: Tablero, Actividades, Alumnos, Avisos y Más.
 
 ---
 

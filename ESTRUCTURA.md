@@ -60,8 +60,10 @@ La correspondencia entre rutas y las pantallas de la §8 del documento de planif
 | `/clases` | A4, A8 | Elegir y administrar clases |
 | `/` | A5 | Inicio del alumno |
 | `/a/{actividad}/{codigo}` | A6, A7 | **Destino del QR.** Ingreso en línea y resultado |
-| `/participaciones` | A9 | |
+| `/inicio` | A5, A9 | Puntos por clase. Es la pantalla de entrada del alumno |
+| `/actividades` | A11 | |
 | `/puntos-extra` | A10 | |
+| `/cuenta` | A12 | |
 | `/admin` | B1 | |
 | `/admin/catedraticos` | B2 | Incluye la descarga del libro por docente |
 | `/admin/clases` | B3 | |
@@ -70,6 +72,8 @@ La correspondencia entre rutas y las pantallas de la §8 del documento de planif
 | `/admin/actividades/{id}/vivo` | B6 | |
 | `/admin/alumnos` | B7, B8 | |
 | `/admin/bitacora` | B9 | |
+| `/admin/notificaciones` | B11 | |
+| `/admin/mas` | B12 | Menú del panel |
 | `/admin/exportar` | B10 | |
 
 La ruta del QR se mantiene deliberadamente corta: cada carácter que se le agrega hace el

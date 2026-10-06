@@ -1,8 +1,10 @@
-import Link from "next/link";
 import { SelectorClases } from "@/componentes/selector-clases";
+import { Pantalla } from "@/componentes/ui/pantalla";
+import { Titular } from "@/componentes/ui/titular";
 import { obtenerClasesDisponibles, obtenerIdsInscritoDe } from "@/lib/clases";
 import { requireAlumno } from "@/lib/sesion";
 
+/** A4 + A8 — Mis cursos: elegir y cambiar los cursos que lleva el alumno. Se guarda solo. */
 export default async function ClasesPage() {
   const alumnoActual = await requireAlumno();
 
@@ -12,21 +14,13 @@ export default async function ClasesPage() {
   ]);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 p-6">
-      <Link href="/inicio" className="text-sm text-primary-700 underline hover:text-primary-800">
-        ← Inicio
-      </Link>
-      <div>
-        <h1 className="text-xl font-semibold">Tus clases</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Elegí los cursos que estás llevando este ciclo. Podés agregar o quitar cuando quieras.
-        </p>
-      </div>
+    <Pantalla>
+      <Titular titulo="Mis cursos" bajada="Marcá los que llevás este ciclo. Se guarda solo." />
       <SelectorClases
         clasesDisponibles={clasesDisponibles}
         idsInscritoInicial={idsInscritoInicial}
         cicloAlumno={alumnoActual.ciclo}
       />
-    </main>
+    </Pantalla>
   );
 }

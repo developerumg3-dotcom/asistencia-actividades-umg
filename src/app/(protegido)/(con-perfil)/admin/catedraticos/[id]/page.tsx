@@ -3,6 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db/cliente";
 import { clase, docente } from "@/db/esquema";
+import { clasesDeBoton } from "@/componentes/ui/boton";
+import { Icono } from "@/componentes/ui/icono";
+import { Tarjeta } from "@/componentes/ui/tarjeta";
+import { SubBarra, TituloSeccion, Vacio } from "@/componentes/ui/titular";
+import { enTitulo } from "@/lib/texto";
 
 /**
  * B2 (vista por docente, §8) + B10 (Fase 4): sus clases y el botón para descargar su Excel.
@@ -21,53 +26,50 @@ export default async function DetalleCatedraticoPage({ params }: { params: Promi
     .orderBy(asc(clase.codigo));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/admin/catedraticos" className="text-sm text-primary-700 underline">
-          ← Catedráticos
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold">{unDocente.nombre}</h1>
-        {unDocente.email && <p className="mt-1 text-sm text-neutral-600">{unDocente.email}</p>}
-      </div>
+    <>
+      <SubBarra titulo={unDocente.nombre} volverA="/admin/catedraticos" />
+      {unDocente.email && <p className="text-[13px] text-neutral-500">{unDocente.email}</p>}
 
-      <div className="rounded-md border border-neutral-200 bg-white p-4">
-        <h2 className="font-medium text-neutral-900">Reporte</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          Un libro con una hoja por cada una de sus {clases.length === 1 ? "clase" : "clases"}, con los
-          puntos de cada alumno.
-        </p>
+      <Tarjeta className="flex flex-col gap-3">
+        <div>
+          <h2 className="font-bold leading-snug">Reporte</h2>
+          <p className="text-[13px] text-neutral-500">
+            Un libro con una hoja por cada una de sus {clases.length === 1 ? "clase" : "clases"}, con los
+            puntos de cada alumno.
+          </p>
+        </div>
         {clases.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-500">Todavía no tiene clases asignadas.</p>
+          <p className="text-[13px] text-neutral-500">Todavía no tiene clases asignadas.</p>
         ) : (
-          <a
-            href={`/api/reportes/catedratico/${id}`}
-            className="mt-3 inline-block rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-          >
+          <a href={`/api/reportes/catedratico/${id}`} className={clasesDeBoton("primario")}>
+            <Icono nombre="bajar" />
             Descargar reporte
           </a>
         )}
-      </div>
+      </Tarjeta>
 
-      <div>
-        <h2 className="font-medium text-neutral-900">Clases</h2>
-        {clases.length === 0 ? (
-          <p className="mt-2 text-sm text-neutral-500">
-            Asignale cursos desde <Link href="/admin/clases" className="text-primary-700 underline">Clases</Link>.
-          </p>
-        ) : (
-          <ul className="mt-2 flex flex-col gap-2">
-            {clases.map((c) => (
-              <li key={c.id} className="rounded-md border border-neutral-200 bg-white px-4 py-3">
-                <p className="font-medium text-neutral-900">{c.nombre}</p>
-                <p className="text-xs text-neutral-500">
-                  {c.codigo}
-                  {c.seccion && ` · Sección ${c.seccion}`} · {c.jornada} · Ciclo {c.ciclo}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+      <TituloSeccion lado={clases.length || undefined}>Clases</TituloSeccion>
+      {clases.length === 0 ? (
+        <Vacio>
+          Asignale cursos desde{" "}
+          <Link href="/admin/clases" className="font-semibold text-primary-700">
+            Clases
+          </Link>
+          .
+        </Vacio>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl bg-white shadow-tarjeta">
+          {clases.map((c) => (
+            <li key={c.id} className="border-b border-linea px-3.5 py-3 last:border-b-0">
+              <p className="text-[14.5px] font-bold leading-snug">{enTitulo(c.nombre)}</p>
+              <p className="text-xs text-neutral-400">
+                {c.codigo}
+                {c.seccion && ` · Sección ${c.seccion}`} · {c.jornada} · Ciclo {c.ciclo}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

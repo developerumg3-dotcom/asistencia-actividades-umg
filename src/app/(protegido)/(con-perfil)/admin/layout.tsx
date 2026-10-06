@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
-import { NavAdmin } from "@/componentes/nav-admin";
+import { BarraAdmin } from "@/componentes/barras";
 import { requireAdmin } from "@/lib/sesion";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   await requireAdmin();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-6 p-6">
-      <NavAdmin />
-      {children}
-    </div>
+    <>
+      {/* El panel se usa sobre todo desde el telefono: una columna, igual que el alumno. */}
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 pb-28 pt-5">{children}</div>
+      <BarraAdmin />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { activarAvisos, apagarAvisos } from "@/lib/push/acciones";
 import { Boton } from "@/componentes/ui/boton";
+import { Icono } from "@/componentes/ui/icono";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 /**
@@ -186,65 +187,89 @@ export function ActivarAvisos({ clavePublica }: { clavePublica: string | null })
 
   if (situacion === "ios_sin_instalar") {
     return (
-      <p className="text-sm text-neutral-600">
-        Para recibir avisos de las actividades en tu iPhone tenés que agregar la app a la
-        pantalla de inicio.{" "}
-        <Link
-          href="/ayuda/instalar-ios"
-          className="text-primary-700 underline hover:text-primary-800"
-        >
-          Te explicamos cómo
-        </Link>
-        .
-      </p>
+      <Marco>
+        <p className="text-[13px] text-neutral-500">
+          Para recibir avisos en tu iPhone tenés que agregar la app a la pantalla de inicio.{" "}
+          <Link href="/ayuda/instalar-ios" className="font-semibold text-primary-700">
+            Te explicamos cómo
+          </Link>
+          .
+        </p>
+      </Marco>
     );
   }
 
   if (situacion === "sin_soporte") {
     return (
-      <p className="text-sm text-neutral-600">
-        Este navegador no puede mostrar avisos de actividades. Las actividades abiertas igual
-        te aparecen acá cuando entrás.
-      </p>
+      <Marco>
+        <p className="text-[13px] text-neutral-500">
+          Este navegador no puede mostrar avisos. Las actividades abiertas igual te aparecen acá
+          cuando entrás.
+        </p>
+      </Marco>
     );
   }
 
   if (situacion === "bloqueado") {
     return (
-      <p className="text-sm text-neutral-600">
-        Los avisos están bloqueados en este navegador. Para recibirlos, habilitá las
-        notificaciones para este sitio desde la configuración del navegador (el candado o el
-        ícono al lado de la dirección) y volvé a entrar.
-      </p>
+      <Marco>
+        <p className="text-[13px] text-neutral-500">
+          Los avisos están bloqueados en este navegador. Para recibirlos, habilitá las
+          notificaciones para este sitio desde la configuración del navegador (el candado o el
+          ícono al lado de la dirección) y volvé a entrar.
+        </p>
+      </Marco>
     );
   }
 
-  if (situacion === "activado") {
-    return (
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-neutral-600">
-          Te vamos a avisar cuando haya una actividad nueva.
-        </p>
-        <div>
-          <Boton variante="enlace" onClick={apagar} disabled={trabajando}>
-            {trabajando ? "Apagando…" : "Ya no quiero avisos"}
-          </Boton>
-        </div>
-        {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
-      </div>
-    );
-  }
+  const activado = situacion === "activado";
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      <p className="text-sm text-neutral-600">
-        Podemos avisarte en este dispositivo cuando haya una actividad nueva o cuando estés a
-        punto de perder puntos extra sin repartir. Nada más.
+    <Marco
+      interruptor={
+        <button
+          type="button"
+          role="switch"
+          aria-checked={activado}
+          aria-label="Avisarme de las actividades"
+          onClick={activado ? apagar : activar}
+          disabled={trabajando}
+          className={`relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors disabled:opacity-60 ${
+            activado ? "bg-primary-600" : "bg-neutral-300"
+          }`}
+        >
+          <span
+            className={`absolute top-[3px] size-6 rounded-full bg-white shadow transition-[left] ${
+              activado ? "left-[23px]" : "left-[3px]"
+            }`}
+          />
+        </button>
+      }
+    >
+      <p className="text-[13px] text-neutral-500">
+        {trabajando
+          ? activado
+            ? "Apagando…"
+            : "Activando…"
+          : activado
+            ? "Activados en este dispositivo. Te avisamos cuando haya una actividad nueva."
+            : "Una notificación cuando haya una actividad nueva o estés por perder puntos extra. Nada más."}
       </p>
-      <Boton variante="secundario" onClick={activar} disabled={trabajando}>
-        {trabajando ? "Activando…" : "Avisarme de las actividades"}
-      </Boton>
       {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
+    </Marco>
+  );
+}
+
+/** La tarjeta de avisos: icono, titulo y, cuando se puede activar, el interruptor. */
+function Marco({ children, interruptor }: { children: React.ReactNode; interruptor?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-tarjeta">
+      <Icono nombre="campana" className="self-start" />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="font-bold leading-snug">Avisarme de las actividades</p>
+        {children}
+      </div>
+      {interruptor}
     </div>
   );
 }
