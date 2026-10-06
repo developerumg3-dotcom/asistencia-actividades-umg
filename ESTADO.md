@@ -7,7 +7,12 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 - ASI2-19: consulta publica de marcaje oculta borradores y conserva contexto de publicadas
   y cerradas. Rama `codex/asi2-19`, entrega En pruebas. TypeScript y 81 unitarias correctos;
   prueba de navegador pendiente del proximo despliegue agrupado de Julio. Sin migracion.
-- Workflow vigente: una tarjeta Codex por rama y commit; empujar solo esas ramas, nunca main.
+- ASI2-17: /clases valida UUID y clase activa en la escritura, mantiene idempotencia y
+  muestra error controlado. Rama `codex/asi2-17`, sin migracion; pendientes de SQL concurrente
+  y navegador descritos en docs/asi2-17.md. No toca las acciones admin/perfil en paralelo.
+- Workflow vigente corregido por Julio: una tarjeta Codex por rama y commit; merge local a
+  main al terminar, sin push de ninguna rama ni main. ASI2-19 se habia empujado solo a su rama
+  antes de la correccion; esta integrada localmente. Los despliegues los decide Julio.
   No disparar deploys desde Netlify. Migraciones 0007 en adelante se generan de una en una,
   pero solo Julio las aplica tras revisar. No ejecutar probar:base contra produccion.
   Usar corepack pnpm; VAPID ya configurado en Netlify segun Julio, no regenerarlo.
