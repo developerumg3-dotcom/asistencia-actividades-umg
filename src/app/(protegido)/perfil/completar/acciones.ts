@@ -5,12 +5,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
 import { alumno, clase, inscripcion } from "@/db/esquema";
+import { errorDeDatosPerfil } from "@/lib/perfil";
 import { requireAlumno } from "@/lib/sesion";
 
 export type EstadoFormulario = { error: string | null };
-
-/** Los diez ciclos del pensum. El <select> ya limita, pero el servidor no confia en el. */
-const CICLOS_VALIDOS = new Set(Array.from({ length: 10 }, (_, i) => String(i + 1)));
 
 // El driver de @neondatabase/serverless envuelve el error real de Postgres dentro de
 // `.cause` (drizzle solo expone un "Failed query" genérico en el nivel superior).
@@ -32,15 +30,8 @@ export async function completarPerfil(
   const ciclo = String(formData.get("ciclo") ?? "").trim();
   const cursosElegidos = [...new Set(formData.getAll("cursos").map((v) => String(v)))];
 
-  if (!carne || !nombre || !ciclo) {
-    return { error: "Completá tu carné, tu nombre completo y tu ciclo." };
-  }
-  if (!CICLOS_VALIDOS.has(ciclo)) {
-    return { error: "Elegí un ciclo de la lista." };
-  }
-  if (cursosElegidos.length === 0) {
-    return { error: "Elegí al menos un curso en donde estás." };
-  }
+  const errorDatos = errorDeDatosPerfil({ carne, nombre, ciclo, cantidadCursos: cursosElegidos.length });
+  if (errorDatos) return { error: errorDatos };
 
   // No se confía en los ids que manda el cliente: se valida que existan y esten activos.
   const clasesValidas = await db

@@ -50,7 +50,10 @@ export async function liberarCarne(_estadoPrevio: EstadoFormulario, formData: Fo
   const [afectado] = await db.select({ carne: alumno.carne }).from(alumno).where(eq(alumno.id, alumnoId)).limit(1);
   if (!afectado?.carne) return { error: "Ese alumno no tiene carné cargado." };
 
-  await db.update(alumno).set({ carne: null }).where(eq(alumno.id, alumnoId));
+  // `perfilCompleto` se invalida en la misma sentencia: el marcaje (QR y manual) y el layout
+  // confian en ese booleano, no en que el carne exista. Sin esto la cuenta seguia marcando sin
+  // carne. No se tocan `asistencia` ni `inscripcion`: el alumno completa el perfil y sigue.
+  await db.update(alumno).set({ carne: null, perfilCompleto: false }).where(eq(alumno.id, alumnoId));
   await db.insert(bitacora).values({
     alumnoId,
     evento: "carne_liberado",
@@ -58,5 +61,5 @@ export async function liberarCarne(_estadoPrevio: EstadoFormulario, formData: Fo
   });
 
   revalidatePath(`/admin/alumnos/${alumnoId}`);
-  return { error: null, mensaje: "Carné liberado. Ya lo puede usar otra cuenta." };
+  return { error: null, mensaje: "Carné liberado. Ya lo puede usar otra cuenta, y el alumno tendrá que completar su perfil de nuevo." };
 }
