@@ -16,23 +16,27 @@ export type EstadoFormulario = { error: string | null; mensaje?: string | null }
  */
 export async function agregarInscripcionAdmin(alumnoId: string, claseId: string): Promise<void> {
   const quienAdministra = await requireAdmin();
-  await db.insert(inscripcion).values({ alumnoId, claseId }).onConflictDoNothing();
-  await db.insert(bitacora).values({
-    alumnoId,
-    evento: "inscripcion_creada",
-    detalle: `admin:${quienAdministra.email}`,
-  });
+  await db.batch([
+    db.insert(inscripcion).values({ alumnoId, claseId }).onConflictDoNothing(),
+    db.insert(bitacora).values({
+      alumnoId,
+      evento: "inscripcion_creada",
+      detalle: `admin:${quienAdministra.email}`,
+    }),
+  ]);
   revalidatePath(`/admin/alumnos/${alumnoId}`);
 }
 
 export async function quitarInscripcionAdmin(alumnoId: string, claseId: string): Promise<void> {
   const quienAdministra = await requireAdmin();
-  await db.delete(inscripcion).where(and(eq(inscripcion.alumnoId, alumnoId), eq(inscripcion.claseId, claseId)));
-  await db.insert(bitacora).values({
-    alumnoId,
-    evento: "inscripcion_eliminada",
-    detalle: `admin:${quienAdministra.email}`,
-  });
+  await db.batch([
+    db.delete(inscripcion).where(and(eq(inscripcion.alumnoId, alumnoId), eq(inscripcion.claseId, claseId))),
+    db.insert(bitacora).values({
+      alumnoId,
+      evento: "inscripcion_eliminada",
+      detalle: `admin:${quienAdministra.email}`,
+    }),
+  ]);
   revalidatePath(`/admin/alumnos/${alumnoId}`);
 }
 
@@ -50,15 +54,21 @@ export async function liberarCarne(_estadoPrevio: EstadoFormulario, formData: Fo
   const [afectado] = await db.select({ carne: alumno.carne }).from(alumno).where(eq(alumno.id, alumnoId)).limit(1);
   if (!afectado?.carne) return { error: "Ese alumno no tiene carné cargado." };
 
-  // `perfilCompleto` se invalida en la misma sentencia: el marcaje (QR y manual) y el layout
+  // `perfilCompleto` se invalida junto con el carne: el marcaje (QR y manual) y el layout
   // confian en ese booleano, no en que el carne exista. Sin esto la cuenta seguia marcando sin
   // carne. No se tocan `asistencia` ni `inscripcion`: el alumno completa el perfil y sigue.
-  await db.update(alumno).set({ carne: null, perfilCompleto: false }).where(eq(alumno.id, alumnoId));
-  await db.insert(bitacora).values({
-    alumnoId,
-    evento: "carne_liberado",
-    detalle: `${afectado.carne} (admin:${quienAdministra.email})`,
-  });
+  //
+  // Las dos sentencias van en un `db.batch` (ver AGENTS.md): si la bitacora fallara por
+  // separado, el carne quedaria liberado sin ningun registro de quien lo hizo — y este es
+  // justamente el caso que se anota para poder investigar un conflicto de carne despues.
+  await db.batch([
+    db.update(alumno).set({ carne: null, perfilCompleto: false }).where(eq(alumno.id, alumnoId)),
+    db.insert(bitacora).values({
+      alumnoId,
+      evento: "carne_liberado",
+      detalle: `${afectado.carne} (admin:${quienAdministra.email})`,
+    }),
+  ]);
 
   revalidatePath(`/admin/alumnos/${alumnoId}`);
   return { error: null, mensaje: "Carné liberado. Ya lo puede usar otra cuenta, y el alumno tendrá que completar su perfil de nuevo." };
