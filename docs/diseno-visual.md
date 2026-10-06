@@ -22,22 +22,44 @@ Los tres colores salen del escudo de la UMG (muestreados por píxel de
 Decisión del usuario (2026-08-29): liderar con azul, no con rojo — un color de acción rojo se
 sentiría como alerta permanente.
 
+## Sistema visual vigente (rediseño de octubre de 2026)
+
+El rediseño se decidió sobre prototipos navegables (`prototipos/`, ver «Prototipos» al final):
+se compararon dos propuestas pantalla por pantalla y Daniel eligió la **A (tema claro)** con
+cuatro piezas de la B. Lo que sigue es la norma que salió de ahí.
+
+Tres ideas mandan sobre todo lo demás:
+
+1. **Lo que más le importa al alumno son sus puntos por clase.** Es lo primero que ve al
+   entrar (`/inicio`) y el total de cada clase es el número más grande de la pantalla.
+2. **Móvil primero, de verdad.** Ninguna pantalla del alumno ni del panel puede necesitar
+   desplazamiento horizontal. Una tabla ancha se convierte en tarjetas o en renglones.
+3. **La navegación va abajo, con íconos**, como en cualquier app de teléfono. No hay cinta de
+   pestañas arriba ni encabezado con el correo.
+
 ## Tokens Tailwind (`src/app/globals.css`)
 
-Declarados en un bloque `@theme`, generan las utilidades `bg-primary-600`, `text-accent-700`,
-`border-danger-600`, etc. Cada color tiene escala 50→900 (tinte hacia blanco en los pasos
-claros, hacia negro suave en los oscuros):
+Declarados en un bloque `@theme`:
 
-- `primary-*` — azul, base visual en `600`.
-- `accent-*` — dorado, base visual en `500`.
-- `danger-*` — rojo, base visual en `600`.
-- `neutral-*` y `emerald-*` — las escalas de Tailwind sin modificar, para texto/bordes neutros
-  y estados de éxito respectivamente. No crear una escala de marca para "éxito": el verde no
-  sale del escudo, así que se usa el neutro de la librería.
+- `primary-*` (azul), `accent-*` (dorado), `danger-*` (rojo): las escalas del escudo, sin
+  cambios.
+- `fondo` (`#f2f5f8`): fondo de toda la app. Las tarjetas son blancas y se separan del fondo
+  por contraste y una sombra suave, **no por borde**.
+- `tinta` (`#13212d`): texto principal y pastilla de filtro activa.
+- `shadow-tarjeta`: la única sombra de tarjeta. No inventar otras.
+- `neutral-*` y `emerald-*`: las de Tailwind, para texto secundario y éxito.
 
-**Radio estándar:** `rounded-md` (6px) en inputs, botones y tarjetas.
-**Tipografía:** la fuente del sistema (`font-sans` de Tailwind). No se cargó ninguna fuente
-custom — ver «Pendientes».
+**Radios:** `rounded-2xl` (16 px) en tarjetas, `rounded-xl` (12 px) en botones y campos,
+`rounded-full` en pastillas y avatares. `rounded-md` ya no se usa.
+
+**Tipografía:** Plus Jakarta Sans, cargada con `next/font/google` en `layout.tsx` (se sirve
+desde el propio sitio, subconjunto latino, `display: swap`). Títulos de pantalla en
+`text-2xl font-extrabold tracking-tight`; números protagonistas en `font-extrabold
+tabular-nums`.
+
+**Iconografía:** `src/componentes/ui/icono.tsx`, un juego propio de íconos de trazo en SVG.
+No se instaló ninguna librería de íconos: son una veintena y no justifican la dependencia. Un
+ícono nuevo se agrega ahí, no suelto en un componente.
 
 ### Theming de `@neondatabase/auth-ui`
 
@@ -67,40 +89,73 @@ la app (ver el commit/diff de `globals.css` si hace falta el detalle completo de
 
 ## Componentes base (`src/componentes/ui/`)
 
-No crear clases sueltas repetidas (`rounded-md border border-neutral-300 px-3 py-2`, etc.) en
-un componente nuevo: usar estos primitivos. Si hace falta una variante que no existe, se
-agrega acá, no se improvisa en el componente que la necesita.
+No crear clases sueltas repetidas en un componente nuevo: usar estos primitivos. Si hace
+falta una variante que no existe, se agrega acá.
 
 | Componente | Cuándo usarlo |
 |---|---|
-| `Boton` (`boton.tsx`) | `variante="primario"` para el submit principal de un formulario. `variante="secundario"` para acciones secundarias tipo "Guardar" en una fila de edición o "Importar". `variante="enlace"` para una acción con apariencia de texto subrayado (ej. cerrar sesión). |
-| `EnlaceBoton` (`boton.tsx`) | Un enlace con apariencia de botón. Para **navegar**, no para ejecutar una acción: un `<button>` con `onClick` que navega rompe abrir en pestaña nueva y el clic con el medio. Mismas variantes que `Boton`. |
-| `Campo` (`campo.tsx`) | Cualquier input de texto/email/password/search, o un `<select>` con `as="select"`. Incluye label y texto de ayuda opcional (`ayuda`). No cubre checkboxes ni `<input type="file">` — esos se estilizan en el propio componente con `accent-primary-600` para el check y clases de texto consistentes. |
-| `Tarjeta` (`tarjeta.tsx`) | Envolver un formulario o sección para darle borde y separación del fondo (pantallas de entrada, bloques de importación). |
-| `Chip` (`chip.tsx`) | Filtro en forma de pastilla, en fila horizontal desplazable. Se usa cuando las opciones son pocas y conviene verlas todas de un vistazo en vez de esconderlas en un `<select>` — por ejemplo el filtro de ciclo en A4. Estado activo con `aria-pressed`. |
-| `MensajeFormulario` (`mensaje-formulario.tsx`) | Texto de estado de un formulario: `tipo="error"` (rojo) o `tipo="exito"` (verde). Reemplaza `text-sm text-red-600` / `text-sm text-green-700` sueltos. |
+| `Boton` / `EnlaceBoton` (`boton.tsx`) | `primario` para la acción principal; `secundario` (blanco con contorno) para acciones de apoyo; `suave` (azul muy claro) para una acción secundaria dentro de una tarjeta; `enlace` para texto azul sin fondo. `tamano="chico"` dentro de filas. `EnlaceBoton` cuando se **navega**. |
+| `Campo` (`campo.tsx`) | Inputs, `<select>` (`as="select"`) y `<textarea>` (`as="textarea"`), con etiqueta y ayuda. |
+| `Tarjeta` (`tarjeta.tsx`) | Superficie blanca con sombra. `<Tarjeta as="li">` etc. no existe: es un `div`. |
+| `Chip` (`chip.tsx`) | Filtro en pastilla, en fila horizontal desplazable. `EnlaceChip` cuando el filtro vive en la URL. |
+| `Etiqueta` (`etiqueta.tsx`) | Pastilla de estado, no interactiva: `azul` (abierta ahora), `celeste`, `verde` (asististe), `gris`, `oro` (puntos), `rojo` (solo errores). |
+| `Icono` (`icono.tsx`) | Todos los íconos. |
+| `Avatar` (`avatar.tsx`) | Iniciales en círculo. |
+| `Titular` (`titular.tsx`) | Encabezado de pantalla: título grande, bajada y un hueco a la derecha. `SubBarra` para pantallas hijas, con el botón de volver. |
+| `Fechita` (`fechita.tsx`) | Bloque de día y mes al lado de una actividad. |
+| `Hoja` (`hoja.tsx`) | Panel que sube desde abajo para un detalle o un formulario corto. Cliente. |
+| `BarraInferior` (`barra-inferior.tsx`) | La navegación. Solo la montan los layouts. |
+| `MensajeFormulario` (`mensaje-formulario.tsx`) | Texto de error o éxito de un formulario. |
+
+## Navegación
+
+- **Alumno** (`BarraAlumno`): Puntos (`/inicio`), Actividades (`/actividades`), Extra
+  (`/puntos-extra`, con el saldo como globo dorado), Cursos (`/clases`), Yo (`/cuenta`).
+- **Administración** (`BarraAdmin`): Tablero (`/admin`), Actividades, Alumnos, Avisos
+  (`/admin/notificaciones`), Más (`/admin/mas`: Catedráticos, Clases, Bitácora, Mis puntos,
+  cerrar sesión).
+- Quien administra también cursa. «Mis puntos» lo lleva a `/inicio` con la barra del alumno y
+  una cinta arriba para volver al panel. Por eso `/admin/mis-puntos` y `/admin/mis-clases`
+  ahora solo redirigen.
+- Las pantallas hijas (ficha de alumno, detalle de actividad, catedráticos, clases,
+  bitácora) llevan `SubBarra` con volver; la barra inferior sigue visible.
+
+## Decisiones de pantalla que no hay que deshacer
+
+- **Puntos por clase:** una tarjeta por clase con el total grande a la derecha y una bolita
+  por actividad (azul asistió, hueca no, dorada punto extra). Al tocarla se abre el detalle
+  actividad por actividad. Nunca una tabla clase × actividad en el teléfono.
+- **Actividades del alumno:** secciones «Ahora», «Próximas» y «Ya pasaron». Las dos primeras
+  son tarjetas; las pasadas van compactas, como línea de tiempo con nodos.
+- **Resultado del marcaje:** a pantalla completa, verde o rojo. Es deliberadamente lo menos
+  sutil de la app: tiene que ser imposible dudar de si el punto quedó o no. Los textos son los
+  de la §7 de la planificación.
+- **Puntos extra:** saldo en un aro dorado y un botón «+1» por clase. Un toque, un punto.
+- **Bitácora:** tarjetas, con una franja roja a la izquierda en las que son señal.
+- **En vivo:** se actualiza sola (`refresco-automatico.tsx`); no se le pide al admin recargar.
 
 ## Convenciones
 
 - **Sin tildes ni ñ en nombres de archivo/identificador**, igual que el resto del proyecto.
-- **Móvil primero.** Los primitivos se diseñan para columnas angostas; el único caso pensado
-  para escritorio seguirá siendo el kiosco (B5), que no existe todavía.
-- **El rojo no es un color de acción.** Si un botón "se siente" urgente o destructivo, no se
-  resuelve poniéndolo rojo — se resuelve con texto claro y, si hace falta, confirmación. Hoy
-  no hay ninguna acción destructiva en la interfaz.
-- **El escudo** vive en `public/escudo-umg.webp`. Se usa como marca en el header autenticado
-  y arriba del título en las pantallas de entrada (ingreso, registro, perfil, recuperación de
-  contraseña), siempre vía `next/image`.
+- **Móvil primero.** La única pantalla pensada para escritorio es el kiosco (B5).
+- **El rojo no es un color de acción.** Rojo es error, y la pantalla roja del marcaje fallido
+  es exactamente eso. Una acción delicada se resuelve con texto claro y confirmación.
+- **El dorado es de los puntos.** Números de puntos extra, insignias de puntos y el botón
+  «+1» de repartir, que es la única acción dorada de la app (excepción decidida por Daniel al
+  elegir el prototipo: ese botón *es* un punto).
+- **El escudo** vive en `public/escudo-umg.webp` y aparece en las pantallas de entrada, en la
+  de marcar y en el kiosco. Ya no hay encabezado autenticado.
+- **Vocabulario:** «cursos» de cara al alumno (lo que él lleva), «clases» en el panel (el
+  catálogo que administra). «Puntos», nunca «punteo» ni «nota».
 
 ## Pendientes explícitos
 
-No resueltos todavía, para no fingir que sí:
+- **Modo oscuro.** Se evaluó (propuesta B) y se descartó: la app es clara.
+- **Vista de escritorio del panel.** Funciona, centrada en una columna; no se diseñó una
+  disposición propia para pantallas grandes porque casi todo el uso es desde el teléfono.
 
-- **Tipografía custom.** Se quedó en la fuente del sistema a propósito, por simplicidad. Si
-  se quiere una fuente de marca, evaluar impacto en rendimiento móvil antes de sumarla.
-- **Iconografía.** No hay set de íconos elegido. Hasta ahora la interfaz no los necesitó.
-- **PWA / `theme-color`.** El `manifest.json` con el color de tema de la barra del navegador
-  es de una fase posterior (ver `PLANIFICACION.md` §11 y `ESTRUCTURA.md`). Cuando se arme, el
-  color de tema debe ser `primary-600` (`#1C72A5`), no negro.
-- **Kiosco (B5).** Única pantalla pensada para escritorio, no existe todavía. No hay norma de
-  diseño para pantallas grandes más allá de lo que ya cubren los primitivos.
+## Prototipos
+
+`prototipos/` tiene los prototipos estáticos (HTML, CSS y JS, datos simulados) con los que se
+tomó la decisión: `propuesta-a/`, `propuesta-b/`, `final/` (la elegida) y `comparar.html`.
+No forman parte de la app ni se despliegan; son la referencia visual de este documento.
