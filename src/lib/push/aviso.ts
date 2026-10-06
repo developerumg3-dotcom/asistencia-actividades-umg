@@ -10,13 +10,47 @@ import { enGuatemala } from "@/lib/fechas";
 
 /** Lo que el service worker espera recibir en el payload (ver `public/sw.js`). */
 export type Aviso = {
+  /**
+   * Identifica el AVISO, no la pantalla a la que lleva. El service worker lo usa como `tag`
+   * de la notificacion: dos avisos con id distinto conviven en la bandeja, y solo se
+   * reemplaza el reintento de uno con el mismo id. Antes el tag era la URL y, como todos
+   * apuntan a `/inicio`, un aviso nuevo borraba al anterior.
+   */
+  id: string;
   titulo: string;
   cuerpo: string;
+  /** Siempre una ruta interna del sitio: ver `esRutaInterna`. */
   url: string;
 };
 
+/**
+ * `true` solo para una ruta del propio sitio ("/inicio", "/actividades/3?x=1").
+ *
+ * Rechaza lo que el navegador resolveria hacia otro origen: "//evil.com" (mismo esquema, otro
+ * host), "/\evil.com" (algunos navegadores tratan la barra invertida como "/"), URLs con
+ * esquema ("https://...", "javascript:...") y cualquier caracter de control. La URL viaja en
+ * un push: si apuntara fuera, abriria un sitio ajeno desde una notificacion con el nombre
+ * de la app.
+ */
+export function esRutaInterna(url: string): boolean {
+  if (typeof url !== "string" || !url.startsWith("/")) return false;
+  if (url.startsWith("//")) return false;
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f\\]/.test(url)) return false;
+  return true;
+}
+
+/** Lo que se le dice al administrador tras un envio: el detalle, no un "listo" a secas. */
+export function resumenDeEnvio(r: { entregados: number; borradas: number; fallidos: number }): string {
+  const partes = [`Enviado a ${r.entregados} ${r.entregados === 1 ? "dispositivo" : "dispositivos"}.`];
+  if (r.borradas > 0) partes.push(`Se descartaron ${r.borradas} que ya no existen.`);
+  if (r.fallidos > 0) partes.push(`${r.fallidos} fallaron y se van a reintentar en el próximo aviso.`);
+  return partes.join(" ");
+}
+
 /** Lo unico de una actividad que hace falta para armar el aviso. */
 export type ActividadParaAviso = {
+  id: string;
   nombre: string;
   lugar: string | null;
   iniciaEn: Date;
@@ -37,6 +71,9 @@ export function textoDeAviso(actividad: ActividadParaAviso): Aviso {
   const cuerpo = actividad.lugar ? `${cuando} · ${actividad.lugar}` : cuando;
 
   return {
+    // Reenviar el aviso de la MISMA actividad reemplaza al anterior (es el mismo aviso); el de
+    // otra actividad convive con el.
+    id: `actividad-${actividad.id}`,
     titulo: actividad.nombre,
     cuerpo,
     // Al inicio y no a la pantalla de marcaje: el marcaje se abre escaneando el QR del

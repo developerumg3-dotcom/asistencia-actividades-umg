@@ -51,6 +51,12 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   historial y resultados (ASI2-27); recordatorio de actividad un día antes (ASI2-26), con
   propuesta de 24 h antes y despachador programado en Netlify. Falta ratificar 24 h frente a
   una hora fija del día anterior. Registro de envíos y concurrencia en ASI2-22; ensayos en ASI2-6.
+- **Panel Notificaciones (ASI2-27, primera versión):** `/admin/notificaciones` con título y
+  mensaje en texto plano, vista previa, alcance antes de enviar, «Probarlo conmigo» (solo a los
+  dispositivos de la cuenta admin) y guarda contra el doble envío. **Sin historial, sin
+  programación y sin filtros**: el historial necesita tabla nueva y queda para cuando se ordene
+  la secuencia de migraciones. El `tag` de la notificación ya es el id del aviso (antes la URL,
+  y un aviso borraba al anterior).
 - **Esquema:** el archivo `0006_acoustic_mercury.sql` incorpora `fuera_de_zona`,
   `exige_ubicacion` y `suscripcion_push`. El kanban previo lo reporta aplicado y la interfaz
   usa esos campos. Esta sesión no ejecutó ni verificó el historial de migraciones.

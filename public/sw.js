@@ -61,6 +61,16 @@ self.addEventListener("fetch", (event) => {
 const ICONO_POR_DEFECTO = "/iconos/icon-192.png";
 const RUTA_POR_DEFECTO = "/inicio";
 
+// Solo rutas del propio sitio: "//otro.com", "https://..." o una barra invertida caen al inicio.
+// Mismo criterio que `esRutaInterna` en src/lib/push/aviso.ts; el servidor ya lo exige, esto es
+// por si algun push llega con otra cosa.
+function rutaInterna(url) {
+  if (typeof url !== "string" || !url.startsWith("/") || url.startsWith("//") || /[\u0000-\u001f\u007f\\]/.test(url)) {
+    return RUTA_POR_DEFECTO;
+  }
+  return url;
+}
+
 function leerAviso(event) {
   // El navegador puede despertar al service worker con un push sin datos (algunos lo usan
   // para verificar la suscripcion). Mostrar algo generico es mejor que no mostrar nada:
@@ -72,6 +82,7 @@ function leerAviso(event) {
       titulo: datos.titulo || "Ronda",
       cuerpo: datos.cuerpo || "",
       icono: datos.icono,
+      id: typeof datos.id === "string" ? datos.id : undefined,
       url: datos.url,
     };
   } catch {
@@ -89,10 +100,12 @@ self.addEventListener("push", (event) => {
       icon: aviso.icono || ICONO_POR_DEFECTO,
       badge: aviso.icono || ICONO_POR_DEFECTO,
       // La URL viaja en `data` porque es lo unico que sobrevive hasta el clic.
-      data: { url: aviso.url || RUTA_POR_DEFECTO },
-      // Avisos del mismo tipo se reemplazan en vez de apilarse: tres recordatorios de la
-      // misma actividad en la bandeja son ruido, no tres avisos.
-      tag: aviso.url || RUTA_POR_DEFECTO,
+      data: { url: rutaInterna(aviso.url) },
+      // El tag es el ID DEL AVISO, no la URL: todos los avisos abren /inicio y con la URL como
+      // tag uno nuevo borraba al anterior de la bandeja. Con id distinto conviven; con el mismo
+      // id (un reintento del mismo aviso) se reemplazan. Sin id (un push viejo o sin datos) no
+      // se pone tag: apilar es mejor que perder un aviso.
+      tag: aviso.id || undefined,
       renotify: false,
     }),
   );
@@ -101,7 +114,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const destino = new URL(event.notification.data?.url || RUTA_POR_DEFECTO, self.location.origin);
+  const destino = new URL(rutaInterna(event.notification.data?.url), self.location.origin);
 
   event.waitUntil(
     (async () => {
