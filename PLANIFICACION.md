@@ -98,8 +98,9 @@ el piloto.
 ## 4. Modelo de datos
 
 Nueve tablas del modelo inicial, más `suscripcion_push` incorporada en `0006`. El esquema
-implementado está en `src/db/esquema/`; avisos y entregas programadas son diseño pendiente,
-todavía sin tablas nuevas aprobadas. Los puntos **no se almacenan**: se calculan a partir de las asistencias y las
+implementado está en `src/db/esquema/`. ASI2-22 agrega el esquema de avisos y entregas en
+una migración 0007 para revisión, **sin aplicarla a producción**. Programación y aperturas
+se construyen en las siguientes tarjetas. Los puntos **no se almacenan**: se calculan a partir de las asistencias y las
 asignaciones. Un número almacenado se desincroniza; un número derivado, no.
 
 ### `alumno`
@@ -266,6 +267,32 @@ auditar después.
 | `ocurrio_en` | timestamptz |
 | `ip` | inet |
 | `dispositivo_id` | texto |
+
+### `aviso_push` y `entrega_push` (ASI2-22, migración pendiente)
+
+`aviso_push`: UUID, clave única de solicitud, tipo (`actividad`, `general`, `recordatorio`),
+autor, actividad opcional, título/cuerpo/destino interno, creación UTC y fechas opcionales
+de programación/cancelación. Un envío inicial de actividad usa una clave estable; un reenvío
+explícito confirmado usa otro UUID de solicitud y conserva autor y fecha como auditoría.
+El mensaje y sus destinatarios se congelan al crear; repetir una solicitud no los reemplaza.
+
+`entrega_push`: UUID, aviso, identificador histórico de suscripción, alumno destinatario,
+estado (`pendiente`, `procesando`, `aceptada`, `fallida`, `descartada`, `incierta`), intentos
+(máximo 3), reserva/aceptación/próximo reintento UTC y código de error seguro. Unicidad
+aviso + suscripción. La suscripción histórica no lleva FK para conservar resultados al
+eliminar un endpoint muerto; no se guardan endpoints, claves ni payloads de suscripción aquí.
+
+Creación y reserva usan `db.batch`: candado en la primera sentencia, escritura que lee en
+la siguiente. Las llamadas de red ocurren después de confirmar la reserva. Nunca reservar
+una aceptada, procesando o incierta automáticamente. Un corte después del envío y antes de
+persistir puede dejarla incierta: no se promete exactamente una entrega. Solo 429/5xx con
+respuesta conocida admiten reintento acotado; 404/410 descartan, sin respuesta exige revisión.
+
+Transporte: HTTPS de proveedores autorizados (FCM, Mozilla, dominios de Apple Push), timeout
+y lotes acotados, revalidación del propietario/estado activo de la suscripción antes de
+enviar. Los errores se registran sin endpoint, claves ni cuerpo ajeno. No usar QR como destino.
+La misma solicitud retoma pendientes sin duplicar aceptadas; para un aviso nuevo se requiere
+confirmación explícita del administrador. Pruebas de PostgreSQL y recepción quedan a Julio.
 
 ### Zona horaria
 

@@ -43,6 +43,14 @@ ingeniero. La descripción histórica de abajo no debe reintroducir decisiones s
   ya no distingue los tipos de aviso. No prometer exactamente una entrega entre DB y proveedor.
   Usar ID de aviso como tag: hoy todos usan `/inicio` y mensajes distintos se reemplazan.
   ASI2-22. Programación general reutilizaría el mismo despachador en una etapa posterior.
+  Implementación de ASI2-22 preparada en `codex/asi2-22`: tablas aviso/entrega, migración
+  0007 sin aplicar, reserva en `db.batch` con candado separado y registro por destinatario.
+  Lotes de hasta 20 por invocación, 10 conexiones concurrentes, timeout 8 s; repetir el
+  mismo aviso retoma pendientes. 429/5xx conocidos se reintentan hasta 3 veces con demora;
+  una entrega sin respuesta o reservada sin resultado no se repite automáticamente. Para
+  enviar de nuevo a quienes ya recibieron, confirmar un aviso nuevo con UUID de solicitud.
+  Proveedores HTTPS restringidos y errores sin endpoint/cuerpo. El alta/baja de suscripciones
+  sigue en el trabajo de autorización de Claude; el transporte valida también datos previos.
 - **Pruebas:** suscripción por dispositivo, cambio de cuenta/cierre de sesión, invitación
   pospuesta, permiso bloqueado, app/pestaña abierta y cerrada, navegador completamente cerrado,
   No molestar, falta de conexión; Windows Chrome, Android e iPhone instalado. La app no
@@ -50,6 +58,8 @@ ingeniero. La descripción histórica de abajo no debe reintroducir decisiones s
   apagado. ASI2-6. Aceptado por proveedor no significa leído (ASI2-23).
 
 Observación real: alcance 0 de 7 alumnos y ningún control de activación visible en `/inicio`.
+Esta observación es histórica: el 5/10 Julio confirmó VAPID cargado y redespliegue realizado.
+No regenerar esas claves ni inferir del dato anterior que la configuración sigue faltando.
 El componente devuelve `null` con claves faltantes; esto sugiere configuración incompleta,
 no demuestra cuáles variables faltan en producción. Se requieren `VAPID_PUBLIC_KEY`,
 `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`; no exponer la privada ni poner valores en los MD/kanban.

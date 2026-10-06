@@ -10,9 +10,13 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
 - ASI2-17: /clases valida UUID y clase activa en la escritura, mantiene idempotencia y
   muestra error controlado. Rama `codex/asi2-17`, sin migracion; pendientes de SQL concurrente
   y navegador descritos en docs/asi2-17.md. No toca las acciones admin/perfil en paralelo.
-- Workflow vigente corregido por Julio: una tarjeta Codex por rama y commit; merge local a
-  main al terminar, sin push de ninguna rama ni main. ASI2-19 se habia empujado solo a su rama
-  antes de la correccion; esta integrada localmente. Los despliegues los decide Julio.
+- ASI2-22: avisos y entregas persistentes, reintentos limitados y reserva mediante candado
+  separado en db.batch; migracion 0007 generada para revision, sin aplicar. Ver tarjeta para
+  pruebas pendientes de concurrencia PostgreSQL y recepción. VAPID ya cargado según Julio.
+- Workflow vigente: una tarjeta Codex por rama y commit; empujar esa rama y parar ahi.
+  Solo Julio integra a main y decide despliegues. No más docs/asi2-NN.md; validación y
+  pendientes en kanban. Los dos archivos ya creados se conservan. ASI2-19/17 se integraron
+  localmente antes de esta última corrección; no repetir integración desde Codex.
   No disparar deploys desde Netlify. Migraciones 0007 en adelante se generan de una en una,
   pero solo Julio las aplica tras revisar. No ejecutar probar:base contra produccion.
   Usar corepack pnpm; VAPID ya configurado en Netlify segun Julio, no regenerarlo.

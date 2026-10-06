@@ -24,13 +24,15 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
   const [resultado, setResultado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciarTransicion] = useTransition();
+  const [reenvio, setReenvio] = useState<string | undefined>();
 
   function abrirConfirmacion() {
     setError(null);
     setResultado(null);
+    setReenvio(undefined);
     iniciarTransicion(async () => {
       try {
-        setAlcance(await consultarAlcance());
+        setAlcance(await consultarAlcance(actividadId));
       } catch (fallo) {
         console.error("[push] no se pudo consultar el alcance:", fallo);
         setError("No se pudo consultar a cuántos alumnos llegaría. Probá de nuevo.");
@@ -41,7 +43,7 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
   function enviar() {
     setError(null);
     iniciarTransicion(async () => {
-      const r = await avisarDeActividad(actividadId);
+      const r = await avisarDeActividad(actividadId, reenvio);
       // La confirmacion se cierra en los dos casos: la cifra que se mostro ya quedo vieja
       // (el envio pudo borrar direcciones muertas) y dejarla a la vista mentiria.
       setAlcance(null);
@@ -54,6 +56,16 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
     return (
       <div className="flex flex-col items-end gap-2">
         <p className="text-sm font-medium text-neutral-900">{alcance.frase}</p>
+        {alcance.avisoAnterior && (
+          <div className="max-w-sm text-right text-sm">
+            <p>Ya se preparó un aviso el {alcance.avisoAnterior}. Continuar retoma pendientes sin duplicar las aceptadas.</p>
+            <label className="mt-2 flex items-center justify-end gap-2">
+              <input type="checkbox" checked={!!reenvio} disabled={pendiente}
+                onChange={(e) => setReenvio(e.target.checked ? crypto.randomUUID() : undefined)} />
+              Confirmo un aviso nuevo: también llegará a quienes recibieron el anterior.
+            </label>
+          </div>
+        )}
         {alcance.suscritos > 0 && alcance.suscritos < alcance.total && (
           <p className="max-w-xs text-right text-xs text-neutral-500">
             A los demás no les llega: no activaron los avisos, o tienen iPhone sin la app
@@ -69,7 +81,7 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
             onClick={enviar}
             disabled={pendiente || alcance.suscritos === 0}
           >
-            {pendiente ? "Enviando…" : "Enviar el aviso"}
+            {pendiente ? "Enviando…" : reenvio ? "Reenviar un aviso nuevo" : "Enviar el aviso"}
           </Boton>
         </div>
       </div>

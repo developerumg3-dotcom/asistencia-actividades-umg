@@ -4,7 +4,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad } from "@/db/esquema";
 import { frasePorcentajeAlcance, textoDeAviso } from "@/lib/push/aviso";
-import { enviarAvisoATodos } from "@/lib/push/envio";
+import { enviarAvisoGuardado } from "@/lib/push/envio";
+import { obtenerAvisoInicial, prepararAvisoActividad } from "@/lib/push/registro-envio";
+import { esUuid } from "@/lib/push/validacion";
+import { enGuatemala } from "@/lib/fechas";
 import {
   borrarSuscripcionPorEndpoint,
   contarAlcance,
@@ -59,7 +62,7 @@ export async function apagarAvisos(endpoint: string): Promise<ResultadoSuscripci
   }
 }
 
-export type AlcanceConFrase = Alcance & { frase: string };
+export type AlcanceConFrase = Alcance & { frase: string; avisoAnterior?: string | null };
 
 /**
  * A cuantos de cuantos alumnos le llegaria un aviso ahora mismo.
@@ -68,48 +71,54 @@ export type AlcanceConFrase = Alcance & { frase: string };
  * proposito: la cuenta cambia cada vez que un alumno acepta el permiso, y una cifra cacheada
  * de hace media hora es exactamente la clase de dato que hace confiar de mas.
  */
-export async function consultarAlcance(): Promise<AlcanceConFrase> {
+export async function consultarAlcance(actividadId?: string): Promise<AlcanceConFrase> {
   await requireAdmin();
   const alcance = await contarAlcance();
-  return { ...alcance, frase: frasePorcentajeAlcance(alcance.suscritos, alcance.total) };
+  if (actividadId !== undefined && !esUuid(actividadId)) throw new Error("Actividad no válida.");
+  const anterior = actividadId ? await obtenerAvisoInicial(actividadId) : null;
+  return { ...alcance, frase: frasePorcentajeAlcance(alcance.suscritos, alcance.total),
+    avisoAnterior: anterior ? enGuatemala(anterior.creadaEn) : null };
 }
 
 export type ResultadoAviso = { ok: true; mensaje: string } | { ok: false; error: string };
 
 /** Envio manual desde /admin/actividades. En la etapa 1 no hay nada automatico. */
-export async function avisarDeActividad(actividadId: string): Promise<ResultadoAviso> {
-  await requireAdmin();
+export async function avisarDeActividad(actividadId: string, reenvio?: string): Promise<ResultadoAviso> {
+  const quienAdministra = await requireAdmin();
+  if (!esUuid(actividadId) || (reenvio !== undefined && !esUuid(reenvio))) {
+    return { ok: false, error: "Actividad o solicitud no válida." };
+  }
 
   const [datos] = await db
     .select({
       nombre: actividad.nombre,
       lugar: actividad.lugar,
       iniciaEn: actividad.iniciaEn,
+      estado: actividad.estado,
     })
     .from(actividad)
     .where(eq(actividad.id, actividadId))
     .limit(1);
 
   if (!datos) return { ok: false, error: "Esa actividad ya no existe." };
+  if (datos.estado !== "publicada") return { ok: false, error: "Solo se puede avisar de una actividad publicada." };
 
-  const resultado = await enviarAvisoATodos(textoDeAviso(datos));
+  try {
+    const aviso = await prepararAvisoActividad(actividadId, quienAdministra.id, textoDeAviso(datos), reenvio);
+    if (!aviso) return { ok: false, error: "La actividad dejó de estar publicada." };
+    const resultado = await enviarAvisoGuardado(aviso.id);
 
-  if (!resultado.configurado) {
-    return {
-      ok: false,
-      error: "Las notificaciones no están configuradas en este entorno (faltan las claves VAPID).",
-    };
-  }
+    if (!resultado.configurado) {
+      return { ok: false, error: "Las notificaciones no están configuradas en este entorno." };
+    }
 
   // El detalle de lo que paso, no un "listo" a secas: el administrador tiene que poder ver
   // que una parte no llego, porque es justamente lo que no se nota solo.
-  const partes = [`Enviado a ${resultado.entregados} ${resultado.entregados === 1 ? "dispositivo" : "dispositivos"}.`];
-  if (resultado.borradas > 0) {
-    partes.push(`Se descartaron ${resultado.borradas} que ya no existen.`);
+    const r = resultado.resumen;
+    return { ok: true, mensaje: `Este aviso: ${r.aceptada ?? 0} aceptadas por el proveedor, ` +
+      `${r.pendiente ?? 0} pendientes, ${r.fallida ?? 0} fallidas, ${r.descartada ?? 0} descartadas, ` +
+      `${(r.procesando ?? 0) + (r.incierta ?? 0)} en proceso o inciertas. Repetir no reenvía las aceptadas.` };
+  } catch {
+    return { ok: false, error: "No se pudo completar el aviso. Pedí que revisen su estado antes de enviar uno nuevo." };
   }
-  if (resultado.fallidos > 0) {
-    partes.push(`${resultado.fallidos} fallaron y se van a reintentar en el próximo aviso.`);
-  }
-
-  return { ok: true, mensaje: partes.join(" ") };
 }

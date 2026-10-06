@@ -9,3 +9,4 @@ export * from "./asignacion-extra";
 export * from "./pantalla";
 export * from "./bitacora";
 export * from "./suscripcion-push";
+export * from "./aviso-push";

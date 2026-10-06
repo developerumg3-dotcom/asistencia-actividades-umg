@@ -1,87 +1,45 @@
 import "server-only";
-
 import webpush, { WebPushError } from "web-push";
-import { decidirSobreError, type Aviso } from "@/lib/push/aviso";
-import {
-  borrarSuscripcionPorId,
-  listarSuscripciones,
-  marcarErrorDeSuscripcion,
-  type SuscripcionGuardada,
-} from "@/lib/push/suscripciones";
-import { configurarEnvio } from "@/lib/push/vapid";
+import { db } from "@/db/cliente";
+import { avisoPush } from "@/db/esquema";
+import { eq } from "drizzle-orm";
+import { configurarEnvio } from "./vapid";
+import { esSuscripcionPush } from "./validacion";
+import { procesarEntrega } from "./proceso-entrega";
+import { borrarSuscripcionSinCambios, guardarResultado, resumenAviso, sigueVigente, tomarEntregas, type EntregaReservada } from "./registro-envio";
 
-/**
- * Envio de notificaciones push. La decision de que hacer con cada fallo esta en `aviso.ts`
- * (`decidirSobreError`), que es logica pura y se prueba sola; aca solo se aplica.
- *
- * Ver docs/plan-notificaciones-push.md, etapa 1.
- */
-
-export type ResultadoEnvio = {
-  /** Suscripciones que el servicio acepto. No garantiza que el alumno lo haya visto. */
-  entregados: number;
-  /** Direcciones muertas que se borraron en el camino (404/410). */
-  borradas: number;
-  /** Fallos pasajeros: la suscripcion queda, solo marcada. */
-  fallidos: number;
-  /** `false` si el entorno no tiene claves VAPID configuradas. */
-  configurado: boolean;
-};
-
-/** El payload que lee el manejador `push` de `public/sw.js`. */
-function comoPayload(aviso: Aviso): string {
-  return JSON.stringify({ titulo: aviso.titulo, cuerpo: aviso.cuerpo, url: aviso.url });
+async function enviarAUna(e: EntregaReservada, payload: string) {
+  await procesarEntrega({
+    // Incluye suscripciones anteriores: destino restringido y propietario revalidado.
+    vigente: async () => esSuscripcionPush(e) && await sigueVigente(e),
+    enviar: async () => { await webpush.sendNotification(
+      { endpoint: e.endpoint, keys: { p256dh: e.p256dh, auth: e.auth } }, payload,
+      { TTL: 86400, timeout: 8_000 }); },
+    codigo: (error) => error instanceof WebPushError ? error.statusCode : undefined,
+    // Nunca registrar error completo, endpoint, payload ni claves.
+    anotarFallo: (codigo) => console.error("[push] entrega " + e.id + ": codigo " + (codigo ?? "sin respuesta")),
+    guardar: (estado, codigo) => guardarResultado(e, estado, codigo),
+    baja: () => borrarSuscripcionSinCambios(e),
+  });
 }
 
-async function enviarAUna(suscripcion: SuscripcionGuardada, payload: string): Promise<"ok" | "borrada" | "fallida"> {
-  try {
-    await webpush.sendNotification(
-      {
-        endpoint: suscripcion.endpoint,
-        keys: { p256dh: suscripcion.p256dh, auth: suscripcion.auth },
-      },
-      payload,
-      // 24 horas: un recordatorio de actividad que llega mas tarde que eso ya no sirve de
-      // nada, y dejarlo en la cola del servicio solo gasta cuota.
-      { TTL: 60 * 60 * 24 },
-    );
-    return "ok";
-  } catch (error) {
-    const codigo = error instanceof WebPushError ? error.statusCode : undefined;
-
-    if (decidirSobreError(codigo) === "borrar") {
-      await borrarSuscripcionPorId(suscripcion.id);
-      return "borrada";
+/** Solo transporta entregas reservadas: nunca volver a enviar una aceptada. */
+export async function enviarAvisoGuardado(avisoId: string) {
+  if (!configurarEnvio()) return { configurado: false, resumen: {} as Record<string, number> };
+  const [aviso] = await db.select().from(avisoPush).where(eq(avisoPush.id, avisoId)).limit(1);
+  if (!aviso || aviso.canceladaEn || (aviso.programadaEn && aviso.programadaEn > new Date())) {
+    return { configurado: true, resumen: await resumenAviso(avisoId) };
+  }
+  const payload = JSON.stringify({ titulo: aviso.titulo, cuerpo: aviso.cuerpo, url: aviso.url, avisoId: aviso.id });
+  // Lote de 20, concurrencia de 10; trabajo acotado por invocacion serverless.
+  // Limite por invocacion; pendientes se retoman con la misma identidad.
+    const entregas = await tomarEntregas(avisoId);
+    for (let inicio = 0; inicio < entregas.length; inicio += 10) {
+      const resultados = await Promise.allSettled(entregas.slice(inicio, inicio + 10).map((e) => enviarAUna(e, payload)));
+      if (resultados.some((r) => r.status === "rejected")) {
+        // No incluir error ORM: puede llevar parametros de suscripcion.
+        console.error("[push] algunas entregas requieren revision de persistencia");
+      }
     }
-
-    // Se registra y se sigue: un endpoint que responde mal no tiene por que impedir que les
-    // llegue a los demas.
-    console.error(`[push] fallo el envio a ${suscripcion.id} (codigo ${codigo ?? "sin codigo"}):`, error);
-    await marcarErrorDeSuscripcion(suscripcion.id);
-    return "fallida";
-  }
-}
-
-/**
- * Manda un aviso a todas las suscripciones guardadas.
- *
- * En paralelo y con `Promise.all`, no en serie: con cientos de suscripciones, esperar una por
- * una contra tres servicios distintos excede el tiempo de una funcion de Netlify. Cada envio
- * atrapa su propio error, asi que ninguno puede tumbar a los demas.
- */
-export async function enviarAvisoATodos(aviso: Aviso): Promise<ResultadoEnvio> {
-  if (!configurarEnvio()) {
-    return { entregados: 0, borradas: 0, fallidos: 0, configurado: false };
-  }
-
-  const suscripciones = await listarSuscripciones();
-  const payload = comoPayload(aviso);
-  const resultados = await Promise.all(suscripciones.map((s) => enviarAUna(s, payload)));
-
-  return {
-    entregados: resultados.filter((r) => r === "ok").length,
-    borradas: resultados.filter((r) => r === "borrada").length,
-    fallidos: resultados.filter((r) => r === "fallida").length,
-    configurado: true,
-  };
+  return { configurado: true, resumen: await resumenAviso(avisoId) };
 }
