@@ -148,6 +148,12 @@ depender de `db.transaction()`. Sirve como patrón para cualquier otra escritura
 en adelante que necesite la misma garantía (por ejemplo, `asistencia` + `bitacora` al validar
 un marcaje).
 
+Para varias escrituras que deben ir juntas **sin** leer en medio, `db.batch([...])` sí sirve
+con `neon-http`: una sola petición, una sola transacción. Así se escribe el marcaje exitoso
+(`asistencia` + `bitacora` "ok", en [`src/lib/qr/escritura.ts`](src/lib/qr/escritura.ts)). Los
+rechazos no entran en ese batch: son una inserción suelta en `bitacora`, para que nada las
+revierta.
+
 ### `Intl.DateTimeFormat` no siempre coincide entre servidor y navegador
 
 El ICU de Node (servidor) y el de Chromium (navegador) pueden formatear el mismo `Date` con

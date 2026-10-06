@@ -5,6 +5,7 @@ import { db } from "@/db/cliente";
 import { actividad, alumno, asistencia, bitacora, inscripcion } from "@/db/esquema";
 import { slotDe, validarCodigo } from "@/lib/qr/codigo";
 import { esPuntoValido, evaluarZona } from "@/lib/geo";
+import { escribirMarcajeOk, esViolacionDeUnicidad } from "@/lib/qr/escritura";
 
 /**
  * Registro de asistencia por QR. Junta la derivacion del codigo (`codigo.ts`, logica pura)
@@ -209,21 +210,29 @@ export async function registrarMarcaje({
     .where(eq(inscripcion.alumnoId, alumno.id));
 
   try {
-    await db.insert(asistencia).values({
-      alumnoId: alumno.id,
-      actividadId: laActividad.id,
-      marcadaEn: momento,
-      slot: BigInt(slotDe(momento, laActividad.ventanaSeg)),
-      origen: "qr",
-      ip: datos.ip ?? null,
-      dispositivoId: datos.dispositivoId ?? null,
-      lat: lectura?.lat ?? null,
-      lon: lectura?.lon ?? null,
-      precisionM: ubicacion?.precisionM ?? null,
-      distanciaM,
-      // La asistencia se guarda aunque el arreglo venga vacio: sin clases inscritas
-      // tambien cuenta, y los puntos apareceran cuando se inscriba.
-      clasesSnapshot: inscripciones.map((i) => i.claseId),
+    // Asistencia y su fila "ok" de bitacora en una sola transaccion: las dos o ninguna.
+    // Antes eran dos escrituras sueltas y un fallo entre ellas dejaba la asistencia sin
+    // rastro en bitacora, con el alumno viendo un error. Los rechazos de arriba no pasan por
+    // aca, asi que siguen anotandose solos (ver `escritura.ts`).
+    await escribirMarcajeOk(db, {
+      ip: datos.ip,
+      dispositivoId: datos.dispositivoId,
+      asistencia: {
+        alumnoId: alumno.id,
+        actividadId: laActividad.id,
+        marcadaEn: momento,
+        slot: BigInt(slotDe(momento, laActividad.ventanaSeg)),
+        origen: "qr",
+        ip: datos.ip ?? null,
+        dispositivoId: datos.dispositivoId ?? null,
+        lat: lectura?.lat ?? null,
+        lon: lectura?.lon ?? null,
+        precisionM: ubicacion?.precisionM ?? null,
+        distanciaM,
+        // La asistencia se guarda aunque el arreglo venga vacio: sin clases inscritas
+        // tambien cuenta, y los puntos apareceran cuando se inscriba.
+        clasesSnapshot: inscripciones.map((i) => i.claseId),
+      },
     });
   } catch (error) {
     // Dos peticiones del mismo alumno en el mismo segundo: la restriccion unica
@@ -244,7 +253,6 @@ export async function registrarMarcaje({
     throw error;
   }
 
-  await anotar(alumno.id, laActividad.id, "ok", datos);
   return { resultado: "ok", marcadaEn: momento, actividadNombre: nombre };
 }
 
@@ -310,14 +318,16 @@ export async function registrarMarcajeManual({
     .where(eq(inscripcion.alumnoId, elAlumno.id));
 
   try {
-    await db.insert(asistencia).values({
-      alumnoId: elAlumno.id,
-      actividadId,
-      marcadaEn: momento,
-      slot: BigInt(slotDe(momento, laActividad.ventanaSeg)),
-      origen: "manual",
-      notaManual: justificacion,
-      clasesSnapshot: inscripciones.map((i) => i.claseId),
+    await escribirMarcajeOk(db, {
+      asistencia: {
+        alumnoId: elAlumno.id,
+        actividadId,
+        marcadaEn: momento,
+        slot: BigInt(slotDe(momento, laActividad.ventanaSeg)),
+        origen: "manual",
+        notaManual: justificacion,
+        clasesSnapshot: inscripciones.map((i) => i.claseId),
+      },
     });
   } catch (error) {
     if (esViolacionDeUnicidad(error)) {
@@ -327,17 +337,5 @@ export async function registrarMarcajeManual({
     throw error;
   }
 
-  await anotar(elAlumno.id, actividadId, "ok", {});
   return { resultado: "ok", marcadaEn: momento };
-}
-
-/**
- * El driver de @neondatabase/serverless envuelve el error real de Postgres dentro de
- * `.cause`. Mismo criterio que en el guardado del perfil.
- */
-function esViolacionDeUnicidad(error: unknown): boolean {
-  if (typeof error !== "object" || error === null) return false;
-  if ("code" in error && (error as { code?: string }).code === "23505") return true;
-  if ("cause" in error) return esViolacionDeUnicidad((error as { cause?: unknown }).cause);
-  return false;
 }
