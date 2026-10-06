@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { deshacerAsignacion, repartirPuntos, type ResultadoReparto } from "@/lib/puntos/consulta";
 import { requireAlumno } from "@/lib/sesion";
 
-/** Se llama tanto desde /inicio como desde /admin/mis-puntos: revalida las dos. */
+/** El saldo se ve en Puntos (/inicio) y se reparte en Extra (/puntos-extra): revalida las dos. */
 function revalidarPantallasDePuntos() {
   revalidatePath("/inicio");
-  revalidatePath("/admin/mis-puntos");
+  revalidatePath("/puntos-extra");
 }
 
 export async function repartir(claseId: string, puntos: number): Promise<ResultadoReparto> {

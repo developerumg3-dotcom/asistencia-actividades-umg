@@ -2,38 +2,43 @@
 
 import { useState, useTransition } from "react";
 import { deshacer, repartir } from "@/lib/puntos/acciones";
-import { Boton } from "@/componentes/ui/boton";
-import { Campo } from "@/componentes/ui/campo";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
-import { enGuatemala } from "@/lib/fechas";
-import type { AsignacionExtraVisible } from "@/lib/puntos/consulta";
+import { TituloSeccion } from "@/componentes/ui/titular";
 
+export type ClaseParaRepartir = { id: string; nombre: string; total: number; extra: number };
+export type AsignacionHecha = { id: string; claseNombre: string; puntos: number; cuando: string };
+
+/**
+ * A10 — el reparto, de a un punto: un toque en «+1» manda un punto a esa clase. Es la unica
+ * accion dorada de la app, a proposito: ese boton *es* un punto (docs/diseno-visual.md).
+ *
+ * Quien decide si el reparto es valido es el servidor (`repartirPuntos`, con su candado):
+ * aca solo se deshabilita el boton para no invitar a un toque que va a rebotar.
+ */
 export function RepartoPuntosExtra({
   saldoDisponible,
+  clases,
   asignaciones,
-  clasesParaRepartir,
   repartoAbierto,
 }: {
   saldoDisponible: number;
-  asignaciones: AsignacionExtraVisible[];
-  clasesParaRepartir: { id: string; codigo: string; nombre: string }[];
+  clases: ClaseParaRepartir[];
+  asignaciones: AsignacionHecha[];
   repartoAbierto: boolean;
 }) {
-  const [claseId, setClaseId] = useState(clasesParaRepartir[0]?.id ?? "");
-  const [puntos, setPuntos] = useState(1);
   const [pendiente, iniciarTransicion] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const puedeRepartir = saldoDisponible > 0 && repartoAbierto && !pendiente;
 
-  function enviarReparto() {
+  function sumar(claseId: string) {
     setError(null);
     iniciarTransicion(async () => {
-      const resultado = await repartir(claseId, puntos);
+      const resultado = await repartir(claseId, 1);
       if (!resultado.ok) setError(resultado.error);
-      else setPuntos(1);
     });
   }
 
-  function enviarDeshacer(asignacionId: string) {
+  function quitar(asignacionId: string) {
     setError(null);
     iniciarTransicion(async () => {
       const resultado = await deshacer(asignacionId);
@@ -42,76 +47,66 @@ export function RepartoPuntosExtra({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      {saldoDisponible > 0 && repartoAbierto && clasesParaRepartir.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 p-4">
-          <p className="text-sm font-medium text-neutral-900">Repartir</p>
-          <div className="flex flex-wrap items-end gap-3">
-            <Campo
-              id="clase-reparto"
-              as="select"
-              etiqueta="Clase"
-              value={claseId}
-              onChange={(evento) => setClaseId(evento.target.value)}
-              className="min-w-48"
-            >
-              {clasesParaRepartir.map((clase) => (
-                <option key={clase.id} value={clase.id}>
-                  {clase.codigo} — {clase.nombre}
-                </option>
-              ))}
-            </Campo>
-            <Campo
-              id="puntos-reparto"
-              type="number"
-              etiqueta="Puntos"
-              min={1}
-              max={saldoDisponible}
-              step={1}
-              value={puntos}
-              onChange={(evento) => setPuntos(Number(evento.target.value))}
-              className="w-24"
-            />
-            <Boton type="button" onClick={enviarReparto} disabled={pendiente || !claseId}>
-              {pendiente ? "Repartiendo…" : "Repartir"}
-            </Boton>
-          </div>
-        </div>
-      )}
-
+    <>
       {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
 
-      {asignaciones.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-neutral-900">Ya repartido</p>
-          <ul className="flex flex-col gap-2">
-            {asignaciones.map((asignacion) => (
-              <li
-                key={asignacion.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-neutral-200 px-3 py-2 text-sm"
-              >
-                <div>
-                  <p className="text-neutral-900">{asignacion.claseNombre}</p>
-                  <p className="text-xs text-neutral-500">{enGuatemala(asignacion.creadaEn)}</p>
+      {clases.length > 0 && (
+        <>
+          <TituloSeccion>Tus clases</TituloSeccion>
+          <ul className="overflow-hidden rounded-2xl bg-white shadow-tarjeta">
+            {clases.map((c) => (
+              <li key={c.id} className="flex items-center gap-3 border-b border-linea px-3.5 py-3 last:border-b-0">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-bold leading-snug">{c.nombre}</p>
+                  <p className="text-xs text-neutral-400">
+                    Lleva {c.total} {c.total === 1 ? "punto" : "puntos"}
+                    {c.extra > 0 && ` · ${c.extra} extra`}
+                  </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="tabular-nums font-semibold text-primary-700">+{asignacion.puntos}</span>
-                  {repartoAbierto && (
-                    <button
-                      type="button"
-                      onClick={() => enviarDeshacer(asignacion.id)}
-                      disabled={pendiente}
-                      className="text-xs text-neutral-500 underline hover:text-danger-600 disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      Deshacer
-                    </button>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => sumar(c.id)}
+                  disabled={!puedeRepartir}
+                  aria-label={`Sumar un punto extra a ${c.nombre}`}
+                  className="h-[38px] shrink-0 rounded-full bg-accent-100 px-4 text-sm font-extrabold text-accent-700 shadow-[inset_0_0_0_1.5px_var(--color-accent-500)] transition active:scale-95 disabled:bg-neutral-100 disabled:text-neutral-400 disabled:shadow-none"
+                >
+                  +1
+                </button>
               </li>
             ))}
           </ul>
-        </div>
+        </>
       )}
-    </div>
+
+      {asignaciones.length > 0 && (
+        <>
+          <TituloSeccion>Ya repartido</TituloSeccion>
+          <ul className="overflow-hidden rounded-2xl bg-white shadow-tarjeta">
+            {asignaciones.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 border-b border-linea px-3.5 py-3 last:border-b-0">
+                <span className="grid size-[42px] shrink-0 place-items-center rounded-full bg-accent-100 text-sm font-bold tabular-nums text-accent-700">
+                  +{a.puntos}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-bold leading-snug">{a.claseNombre}</p>
+                  <p className="text-xs text-neutral-400">{a.cuando}</p>
+                </div>
+                {repartoAbierto && (
+                  <button
+                    type="button"
+                    onClick={() => quitar(a.id)}
+                    disabled={pendiente}
+                    className="text-sm font-semibold text-primary-700 disabled:opacity-50"
+                  >
+                    Deshacer
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          {repartoAbierto && <p className="text-xs text-neutral-400">Podés deshacer un reparto hasta la fecha de corte.</p>}
+        </>
+      )}
+    </>
   );
 }
