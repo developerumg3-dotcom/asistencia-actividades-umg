@@ -3,7 +3,10 @@ import Link from "next/link";
 import { db } from "@/db/cliente";
 import { alumno } from "@/db/esquema";
 import { Boton } from "@/componentes/ui/boton";
-import { Campo } from "@/componentes/ui/campo";
+import { Avatar } from "@/componentes/ui/avatar";
+import { Etiqueta } from "@/componentes/ui/etiqueta";
+import { Icono } from "@/componentes/ui/icono";
+import { Titular, Vacio } from "@/componentes/ui/titular";
 
 const LIMITE_RESULTADOS = 50;
 
@@ -33,56 +36,51 @@ export default async function AlumnosAdminPage({
     : [];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Alumnos</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Buscar para ver sus clases y puntos, corregir inscripciones o liberar un carné.
-        </p>
-      </div>
+    <>
+      <Titular titulo="Alumnos" bajada="Buscá para ver sus clases y puntos, corregir inscripciones o liberar un carné." />
 
-      <form className="flex gap-2" action="/admin/alumnos">
-        <Campo
+      <form className="relative" action="/admin/alumnos">
+        <Icono nombre="buscar" className="pointer-events-none absolute left-3.5 top-[13px] text-neutral-400" />
+        <input
           id="q"
           name="q"
           type="search"
           defaultValue={termino}
-          placeholder="Carné, nombre o correo…"
-          className="flex-1"
+          placeholder="Carné, nombre o correo"
+          aria-label="Buscar alumno"
+          className="h-12 w-full rounded-[14px] bg-white pl-11 pr-24 text-base shadow-tarjeta outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
         />
-        <Boton type="submit">Buscar</Boton>
+        <Boton type="submit" tamano="chico" className="absolute right-1.5 top-1.5">
+          Buscar
+        </Boton>
       </form>
 
-      {termino && alumnos.length === 0 && (
-        <div className="rounded-md border border-dashed border-neutral-300 px-4 py-10 text-center">
-          <p className="text-sm text-neutral-600">No encontramos ningún alumno con ese criterio.</p>
-        </div>
-      )}
+      {!termino && <Vacio>Escribí un carné, un nombre o un correo para encontrar a un alumno.</Vacio>}
+
+      {termino && alumnos.length === 0 && <Vacio>No encontramos ningún alumno con ese criterio.</Vacio>}
 
       {alumnos.length > 0 && (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {alumnos.map((a) => (
             <li key={a.id}>
               <Link
                 href={`/admin/alumnos/${a.id}`}
-                className="flex items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white px-4 py-3 hover:border-primary-300 hover:bg-neutral-50"
+                className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-tarjeta transition active:scale-[.985]"
               >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-neutral-900">{a.nombre ?? a.email}</p>
-                  <p className="truncate text-sm text-neutral-500">
-                    {a.carne ?? "Sin carné"} · {a.email}
+                <Avatar nombre={a.nombre} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold leading-snug">{a.nombre ?? a.email}</p>
+                  <p className="truncate text-xs text-neutral-400">
+                    {a.carne ?? "Perfil sin completar"} · {a.email}
                   </p>
                 </div>
-                {a.estado === "bloqueado" && (
-                  <span className="shrink-0 rounded-full bg-danger-100 px-2 py-0.5 text-xs font-medium text-danger-700">
-                    Bloqueado
-                  </span>
-                )}
+                {a.estado === "bloqueado" && <Etiqueta tono="rojo">Bloqueado</Etiqueta>}
+                <Icono nombre="der" className="text-neutral-400" />
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }

@@ -7,6 +7,9 @@ import {
   type AlcanceConFrase,
 } from "@/lib/push/acciones";
 import { Boton } from "@/componentes/ui/boton";
+import { BotonAccion } from "@/componentes/ui/boton-accion";
+import { Hoja } from "@/componentes/ui/hoja";
+import { Tarjeta } from "@/componentes/ui/tarjeta";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 
 /**
@@ -50,39 +53,48 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
     });
   }
 
-  if (alcance) {
-    return (
-      <div className="flex flex-col items-end gap-2">
-        <p className="text-sm font-medium text-neutral-900">{alcance.frase}</p>
-        {alcance.suscritos > 0 && alcance.suscritos < alcance.total && (
-          <p className="max-w-xs text-right text-xs text-neutral-500">
-            A los demás no les llega: no activaron los avisos, o tienen iPhone sin la app
-            instalada. El aviso dentro de la app sigue siendo el canal que les llega a todos.
-          </p>
-        )}
-        <div className="flex items-center gap-3">
-          <Boton variante="enlace" onClick={() => setAlcance(null)} disabled={pendiente}>
-            Cancelar
-          </Boton>
-          <Boton
-            variante="secundario"
-            onClick={enviar}
-            disabled={pendiente || alcance.suscritos === 0}
-          >
-            {pendiente ? "Enviando…" : "Enviar el aviso"}
-          </Boton>
-        </div>
-      </div>
-    );
-  }
+  const hojaAbierta = alcance !== null || resultado !== null || error !== null;
+  const cerrar = () => {
+    setAlcance(null);
+    setResultado(null);
+    setError(null);
+  };
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <Boton variante="enlace" onClick={abrirConfirmacion} disabled={pendiente}>
-        {pendiente ? "Consultando…" : "Avisar a los alumnos"}
-      </Boton>
-      {resultado && <MensajeFormulario tipo="exito">{resultado}</MensajeFormulario>}
-      {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
-    </div>
+    <>
+      <BotonAccion icono="campana" onClick={abrirConfirmacion} disabled={pendiente}>
+        {pendiente && !alcance ? "Consultando…" : "Avisar a alumnos"}
+      </BotonAccion>
+      <Hoja abierta={hojaAbierta} alCerrar={cerrar} titulo="Avisar a los alumnos">
+        {alcance && (
+          <>
+            <Tarjeta className="flex flex-col gap-1.5">
+              <p className="font-bold leading-snug">{alcance.frase}</p>
+              {alcance.suscritos > 0 && alcance.suscritos < alcance.total && (
+                <p className="text-[13px] text-neutral-500">
+                  A los demás no les llega: no activaron los avisos, o tienen iPhone sin la app instalada.
+                  El aviso dentro de la app sigue siendo el canal que les llega a todos.
+                </p>
+              )}
+            </Tarjeta>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Boton variante="secundario" onClick={cerrar} disabled={pendiente}>
+                Cancelar
+              </Boton>
+              <Boton onClick={enviar} disabled={pendiente || alcance.suscritos === 0}>
+                {pendiente ? "Enviando…" : "Enviar el aviso"}
+              </Boton>
+            </div>
+          </>
+        )}
+        {resultado && <MensajeFormulario tipo="exito">{resultado}</MensajeFormulario>}
+        {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
+        {!alcance && (
+          <Boton variante="secundario" onClick={cerrar} className="w-full">
+            Cerrar
+          </Boton>
+        )}
+      </Hoja>
+    </>
   );
 }

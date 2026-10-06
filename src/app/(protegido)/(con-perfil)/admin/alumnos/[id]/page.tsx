@@ -1,12 +1,15 @@
 import { eq } from "drizzle-orm";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db/cliente";
 import { alumno } from "@/db/esquema";
 import { FormularioLiberarCarne } from "@/componentes/formulario-liberar-carne";
 import { SelectorClasesAdmin } from "@/componentes/selector-clases-admin";
+import { Avatar } from "@/componentes/ui/avatar";
+import { Tarjeta } from "@/componentes/ui/tarjeta";
+import { SubBarra, TituloSeccion, Vacio } from "@/componentes/ui/titular";
 import { obtenerClasesDisponibles, obtenerIdsInscritoDe } from "@/lib/clases";
 import { obtenerParticipaciones } from "@/lib/puntos/consulta";
+import { enTitulo } from "@/lib/texto";
 
 /** B7 — ficha de un alumno: sus clases y puntos, corregir inscripciones, liberar el carné. */
 export default async function DetalleAlumnoAdminPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,73 +24,64 @@ export default async function DetalleAlumnoAdminPage({ params }: { params: Promi
     obtenerIdsInscritoDe(id),
   ]);
 
+  const asistidas = tabla.filas[0] ? tabla.columnas.filter((c) => tabla.filas[0].marcas[c.id] === 1).length : null;
+
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/admin/alumnos" className="text-sm text-primary-700 underline">
-          ← Alumnos
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold">{unAlumno.nombre ?? unAlumno.email}</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          {unAlumno.email} · Ciclo {unAlumno.ciclo ?? "sin declarar"}
-        </p>
-      </div>
+    <>
+      <SubBarra titulo="Ficha del alumno" volverA="/admin/alumnos" />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white p-4">
-        <div>
-          <p className="text-sm text-neutral-600">Carné</p>
-          <p className="font-mono text-lg text-neutral-900">{unAlumno.carne ?? "—"}</p>
+      <Tarjeta className="flex items-center gap-3">
+        <Avatar nombre={unAlumno.nombre} tono="azul" className="!size-14 !text-lg" />
+        <div className="min-w-0">
+          <p className="text-[17px] font-bold leading-snug">{unAlumno.nombre ?? "Sin nombre"}</p>
+          <p className="text-[13px] text-neutral-500">
+            Carné <span className="font-mono">{unAlumno.carne ?? "—"}</span> · Ciclo {unAlumno.ciclo ?? "sin declarar"}
+          </p>
+          <p className="truncate text-xs text-neutral-400">{unAlumno.email}</p>
         </div>
-        {unAlumno.carne && <FormularioLiberarCarne alumnoId={unAlumno.id} carne={unAlumno.carne} />}
-      </div>
+      </Tarjeta>
 
-      <div>
-        <h2 className="font-medium text-neutral-900">Clases y puntos</h2>
-        {tabla.filas.length === 0 ? (
-          <p className="mt-2 text-sm text-neutral-500">Todavía no está inscrito en ninguna clase.</p>
-        ) : (
-          <div className="-mx-6 mt-2 overflow-x-auto px-6">
-            <table className="w-full min-w-[560px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-neutral-200 text-left text-neutral-500">
-                  <th className="py-2 pr-4 font-medium">Clase</th>
-                  {tabla.columnas.map((actividad) => (
-                    <th key={actividad.id} className="px-2 py-2 text-center font-medium">
-                      {actividad.nombre}
-                    </th>
-                  ))}
-                  <th className="px-2 py-2 text-center font-medium">Extra</th>
-                  <th className="pl-2 py-2 text-center font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tabla.filas.map((fila) => (
-                  <tr key={fila.claseId} className="border-b border-neutral-100">
-                    <td className="py-2 pr-4 font-medium text-neutral-900">{fila.claseNombre}</td>
-                    {tabla.columnas.map((actividad) => (
-                      <td key={actividad.id} className="px-2 py-2 text-center tabular-nums text-neutral-700">
-                        {fila.marcas[actividad.id]}
-                      </td>
-                    ))}
-                    <td className="px-2 py-2 text-center tabular-nums text-neutral-700">{fila.extra}</td>
-                    <td className="pl-2 py-2 text-center text-base font-semibold tabular-nums text-primary-700">
-                      {fila.total}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <TituloSeccion
+        lado={asistidas !== null ? `asistió a ${asistidas} de ${tabla.columnas.length} actividades` : undefined}
+      >
+        Puntos por clase
+      </TituloSeccion>
+      {tabla.filas.length === 0 ? (
+        <Vacio>Todavía no está inscrito en ninguna clase. Sus asistencias igual están guardadas.</Vacio>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl bg-white shadow-tarjeta">
+          {tabla.filas.map((fila) => {
+            const deActividades = fila.total - fila.extra;
+            return (
+              <li key={fila.claseId} className="flex items-center gap-3 border-b border-linea px-3.5 py-3 last:border-b-0">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-bold leading-snug">{enTitulo(fila.claseNombre)}</p>
+                  <p className="text-xs text-neutral-400">
+                    {fila.claseCodigo} · {deActividades} de actividades
+                    {fila.extra > 0 && ` + ${fila.extra} extra`}
+                  </p>
+                </div>
+                <b className="text-2xl font-extrabold tabular-nums text-primary-700">{fila.total}</b>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {unAlumno.carne && (
+        <Tarjeta className="flex flex-col gap-2.5">
+          <div>
+            <p className="font-bold leading-snug">Liberar carné</p>
+            <p className="text-[13px] text-neutral-500">
+              Si alguien registró este carné por error, liberarlo deja que su dueño lo use.
+            </p>
           </div>
-        )}
-      </div>
+          <FormularioLiberarCarne alumnoId={unAlumno.id} carne={unAlumno.carne} />
+        </Tarjeta>
+      )}
 
-      <div>
-        <h2 className="font-medium text-neutral-900">Corregir inscripciones</h2>
-        <p className="mt-1 text-sm text-neutral-600">Agregar o quitar clases de este alumno.</p>
-        <div className="mt-3">
-          <SelectorClasesAdmin alumnoId={id} clasesDisponibles={clasesDisponibles} idsInscritoInicial={idsInscrito} />
-        </div>
-      </div>
-    </div>
+      <TituloSeccion>Corregir inscripciones</TituloSeccion>
+      <SelectorClasesAdmin alumnoId={id} clasesDisponibles={clasesDisponibles} idsInscritoInicial={idsInscrito} />
+    </>
   );
 }

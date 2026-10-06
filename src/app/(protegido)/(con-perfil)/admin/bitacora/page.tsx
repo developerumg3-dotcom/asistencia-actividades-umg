@@ -1,6 +1,10 @@
 import { eventoBitacoraEnum, resultadoBitacoraEnum } from "@/db/esquema";
-import { Boton } from "@/componentes/ui/boton";
+import Link from "next/link";
+import { Boton, EnlaceBoton } from "@/componentes/ui/boton";
 import { Campo } from "@/componentes/ui/campo";
+import { Etiqueta } from "@/componentes/ui/etiqueta";
+import { Icono } from "@/componentes/ui/icono";
+import { SubBarra, Vacio } from "@/componentes/ui/titular";
 import { detectarSenales } from "@/lib/bitacora/senales";
 import {
   listarActividadesParaFiltro,
@@ -44,115 +48,132 @@ export default async function BitacoraAdminPage({ searchParams }: { searchParams
   const senales = detectarSenales(filas);
   const haySenales = senales.porIntentosFallidos.size > 0 || senales.porDispositivoCompartido.size > 0;
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Bitácora</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Todo intento de marcaje, válido o no, y los cambios de inscripción y carné. Las filas
-          resaltadas son señales para revisar — nada se bloquea solo.
-        </p>
-      </div>
+  const hayFiltro = Boolean(sp.alumno || sp.actividadId || sp.evento || sp.resultado || sp.desde || sp.hasta);
 
-      <form action="/admin/bitacora" className="grid gap-3 sm:grid-cols-3">
-        <Campo id="alumno" name="alumno" defaultValue={sp.alumno} placeholder="Carné, nombre o correo…" />
-        <Campo id="actividadId" name="actividadId" as="select" defaultValue={sp.actividadId ?? ""}>
-          <option value="">Todas las actividades</option>
-          {actividades.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nombre}
-            </option>
-          ))}
-        </Campo>
-        <Campo id="evento" name="evento" as="select" defaultValue={sp.evento ?? ""}>
-          <option value="">Todos los eventos</option>
-          {eventoBitacoraEnum.enumValues.map((v) => (
-            <option key={v} value={v}>
-              {etiqueta(v)}
-            </option>
-          ))}
-        </Campo>
-        <Campo id="resultado" name="resultado" as="select" defaultValue={sp.resultado ?? ""}>
-          <option value="">Todos los resultados</option>
-          {resultadoBitacoraEnum.enumValues.map((v) => (
-            <option key={v} value={v}>
-              {etiqueta(v)}
-            </option>
-          ))}
-        </Campo>
-        <Campo id="desde" name="desde" type="date" etiqueta="Desde" defaultValue={sp.desde} />
-        <Campo id="hasta" name="hasta" type="date" etiqueta="Hasta" defaultValue={sp.hasta} />
-        <div className="flex items-end">
-          <Boton type="submit">Filtrar</Boton>
-        </div>
-      </form>
+  return (
+    <>
+      <SubBarra titulo="Bitácora" volverA="/admin/mas" />
+      <p className="text-[13px] text-neutral-500">
+        Todo intento de marcaje, válido o no, y los cambios de inscripción y carné. Las tarjetas con
+        franja roja son señales para revisar: nada se bloquea solo.
+      </p>
+
+      {/* Los filtros arrancan plegados: lo que se viene a ver es la lista. */}
+      <details open={hayFiltro} className="group rounded-2xl bg-white shadow-tarjeta">
+        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-4 py-3 font-bold [&::-webkit-details-marker]:hidden">
+          <Icono nombre="filtro" />
+          <span className="flex-1">Filtros{hayFiltro && " · activos"}</span>
+          <Icono nombre="der" className="text-neutral-400 transition-transform group-open:rotate-90" />
+        </summary>
+        <form action="/admin/bitacora" className="flex flex-col gap-3 border-t border-linea p-4">
+          <Campo id="alumno" name="alumno" etiqueta="Alumno" defaultValue={sp.alumno} placeholder="Carné, nombre o correo" />
+          <Campo id="actividadId" name="actividadId" etiqueta="Actividad" as="select" defaultValue={sp.actividadId ?? ""}>
+            <option value="">Todas las actividades</option>
+            {actividades.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nombre}
+              </option>
+            ))}
+          </Campo>
+          <div className="grid grid-cols-2 gap-2.5">
+            <Campo id="evento" name="evento" etiqueta="Evento" as="select" defaultValue={sp.evento ?? ""}>
+              <option value="">Todos</option>
+              {eventoBitacoraEnum.enumValues.map((v) => (
+                <option key={v} value={v}>
+                  {etiqueta(v)}
+                </option>
+              ))}
+            </Campo>
+            <Campo id="resultado" name="resultado" etiqueta="Resultado" as="select" defaultValue={sp.resultado ?? ""}>
+              <option value="">Todos</option>
+              {resultadoBitacoraEnum.enumValues.map((v) => (
+                <option key={v} value={v}>
+                  {etiqueta(v)}
+                </option>
+              ))}
+            </Campo>
+            <Campo id="desde" name="desde" type="date" etiqueta="Desde" defaultValue={sp.desde} />
+            <Campo id="hasta" name="hasta" type="date" etiqueta="Hasta" defaultValue={sp.hasta} />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <EnlaceBoton href="/admin/bitacora" variante="secundario">
+              Limpiar
+            </EnlaceBoton>
+            <Boton type="submit">Filtrar</Boton>
+          </div>
+        </form>
+      </details>
 
       {haySenales && (
-        <p className="rounded-md border border-danger-300 bg-danger-50 px-4 py-3 text-sm text-danger-900">
-          Hay filas resaltadas: mismo alumno con varios intentos fallidos seguidos, o mismo
-          dispositivo detrás de varios alumnos. Revisalas antes de decidir algo en{" "}
-          <a href="/admin/alumnos" className="font-medium underline">
-            Alumnos
-          </a>
-          .
-        </p>
+        <div className="flex items-start gap-3 rounded-2xl bg-danger-50 px-4 py-3.5 text-[13.5px] text-danger-800">
+          <Icono nombre="alerta" />
+          <p>
+            Hay señales: un mismo alumno con varios intentos fallidos seguidos, o un mismo dispositivo
+            detrás de varios alumnos. Revisalas antes de decidir algo en{" "}
+            <Link href="/admin/alumnos" className="font-bold underline">
+              Alumnos
+            </Link>
+            .
+          </p>
+        </div>
       )}
 
       {filas.length === 0 ? (
-        <div className="rounded-md border border-dashed border-neutral-300 px-4 py-10 text-center">
-          <p className="text-sm text-neutral-600">No hay entradas con ese filtro.</p>
-        </div>
+        <Vacio>No hay entradas con ese filtro.</Vacio>
       ) : (
-        <div className="-mx-6 overflow-x-auto px-6">
-          <table className="w-full min-w-[900px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200 text-left text-neutral-500">
-                <th className="py-2 pr-3 font-medium">Cuándo</th>
-                <th className="py-2 pr-3 font-medium">Alumno</th>
-                <th className="py-2 pr-3 font-medium">Actividad</th>
-                <th className="py-2 pr-3 font-medium">Evento</th>
-                <th className="py-2 pr-3 font-medium">Resultado</th>
-                <th className="py-2 pr-3 font-medium">Origen</th>
-                <th className="py-2 pr-3 font-medium">Dispositivo / IP</th>
-                <th className="py-2 font-medium">Detalle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((fila) => {
-                const resaltada = senales.porIntentosFallidos.has(fila.id) || senales.porDispositivoCompartido.has(fila.id);
-                return (
-                  <tr
-                    key={fila.id}
-                    className={`border-b border-neutral-100 ${resaltada ? "bg-danger-50" : ""}`}
-                  >
-                    <td className="py-2 pr-3 whitespace-nowrap text-neutral-600">{enGuatemala(fila.ocurrioEn)}</td>
-                    <td className="py-2 pr-3">
-                      <p className="font-medium text-neutral-900">{fila.alumnoNombre ?? fila.alumnoEmail}</p>
-                      <p className="text-xs text-neutral-500">{fila.alumnoEmail}</p>
-                    </td>
-                    <td className="py-2 pr-3 text-neutral-700">{fila.actividadNombre ?? "—"}</td>
-                    <td className="py-2 pr-3 text-neutral-700">{etiqueta(fila.evento)}</td>
-                    <td className="py-2 pr-3 text-neutral-700">{fila.resultado ? etiqueta(fila.resultado) : "—"}</td>
-                    <td className="py-2 pr-3 text-neutral-700">
-                      {fila.origenAsistencia ? (
-                        <span title={fila.notaManual ?? undefined}>
-                          {fila.origenAsistencia === "manual" ? "Manual" : "QR"}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-xs text-neutral-500">
-                      {fila.dispositivoId ?? "—"} {fila.ip ? `· ${fila.ip}` : ""}
-                    </td>
-                    <td className="py-2 text-neutral-600">{fila.detalle ?? "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ul className="flex flex-col gap-2.5">
+          {filas.map((fila) => {
+            const porFallos = senales.porIntentosFallidos.has(fila.id);
+            const porDispositivo = senales.porDispositivoCompartido.has(fila.id);
+            const resaltada = porFallos || porDispositivo;
+            const ok = fila.resultado === "ok";
+            return (
+              <li
+                key={fila.id}
+                className={`flex flex-col gap-2 rounded-2xl bg-white p-4 ${
+                  // La franja roja a la izquierda: se ve cual es señal sin teñir toda la tarjeta.
+                  resaltada ? "shadow-[inset_3px_0_0_var(--color-danger-600),var(--shadow-tarjeta)]" : "shadow-tarjeta"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14.5px] font-bold leading-snug">
+                      {fila.alumnoNombre ?? fila.alumnoEmail}
+                    </p>
+                    <p className="text-xs text-neutral-400">{enGuatemala(fila.ocurrioEn)}</p>
+                  </div>
+                  {fila.resultado ? (
+                    <Etiqueta tono={ok ? "verde" : "rojo"}>{ok ? "Registrado" : etiqueta(fila.resultado)}</Etiqueta>
+                  ) : (
+                    <Etiqueta>{etiqueta(fila.evento)}</Etiqueta>
+                  )}
+                </div>
+                <p className="text-[13px] text-neutral-500">
+                  {[
+                    fila.actividadNombre,
+                    fila.resultado ? etiqueta(fila.evento) : null,
+                    fila.origenAsistencia ? (fila.origenAsistencia === "manual" ? "Manual" : "QR") : null,
+                    fila.detalle,
+                    fila.notaManual,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "—"}
+                </p>
+                {resaltada && (
+                  <p className="flex items-center gap-1.5 text-[13px] font-semibold text-danger-600">
+                    <Icono nombre="alerta" className="size-[17px]" />
+                    {porFallos ? "Varios intentos fallidos seguidos" : "Mismo dispositivo que otro alumno"}
+                  </p>
+                )}
+                <p className="break-all font-mono text-[11px] text-neutral-400">
+                  {fila.dispositivoId ?? "sin dispositivo"}
+                  {fila.ip ? ` · ${fila.ip}` : ""}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </>
   );
 }

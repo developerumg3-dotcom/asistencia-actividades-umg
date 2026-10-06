@@ -1,216 +1,145 @@
 import Link from "next/link";
-import { and, asc, eq } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 import { db } from "@/db/cliente";
-import { actividad, pantalla } from "@/db/esquema";
-import { asegurarPantalla } from "@/app/(protegido)/(con-perfil)/admin/actividades/acciones";
-import { BotonAvisarActividad } from "@/componentes/boton-avisar-actividad";
-import { Boton } from "@/componentes/ui/boton";
-import {
-  FormularioEditarActividad,
-  FormularioNuevaActividad,
-  type ActividadEditable,
-} from "@/componentes/formulario-actividad";
-import { enGuatemala, haciaCampoLocal } from "@/lib/fechas";
+import { actividad, asistencia } from "@/db/esquema";
+import { FormularioNuevaActividad } from "@/componentes/formulario-actividad";
+import { EnlaceChip, FilaDeChips } from "@/componentes/ui/chip";
+import { Etiqueta } from "@/componentes/ui/etiqueta";
+import { Fechita } from "@/componentes/ui/fechita";
+import { Titular, Vacio } from "@/componentes/ui/titular";
+import { horaEnGuatemala, relativoEnGuatemala } from "@/lib/fechas";
 
-const ETIQUETA_ESTADO: Record<string, string> = {
-  borrador: "Borrador",
-  publicada: "Publicada",
-  cerrada: "Cerrada",
-};
+const FILTROS = [
+  { valor: "", etiqueta: "Todas" },
+  { valor: "publicada", etiqueta: "Publicadas" },
+  { valor: "borrador", etiqueta: "Borradores" },
+  { valor: "cerrada", etiqueta: "Cerradas" },
+] as const;
 
-const CLASE_ESTADO: Record<string, string> = {
-  borrador: "border-neutral-300 bg-white text-neutral-600",
-  publicada: "border-primary-300 bg-primary-50 text-primary-800",
-  cerrada: "border-neutral-200 bg-neutral-100 text-neutral-500",
-};
+/**
+ * B4 — la lista de actividades. Cada tarjeta lleva al detalle (`/en-vivo`), que es donde
+ * estan las acciones: kiosco, marcaje manual, avisar y editar. Asi la lista se lee de un
+ * vistazo aunque haya muchas, que es para lo que estan los filtros.
+ */
+export default async function ActividadesAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string }>;
+}) {
+  const { estado } = await searchParams;
+  const filtro = FILTROS.some((f) => f.valor === estado) ? (estado ?? "") : "";
 
-/** Franja de color al costado de la tarjeta: el estado se lee sin buscar la insignia. */
-const FRANJA_ESTADO: Record<string, string> = {
-  borrador: "bg-neutral-300",
-  publicada: "bg-primary-600",
-  cerrada: "bg-neutral-200",
-};
-
-function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs uppercase tracking-wide text-neutral-500">{etiqueta}</dt>
-      <dd className="text-sm text-neutral-900">{children}</dd>
-    </div>
-  );
-}
-
-export default async function ActividadesAdminPage() {
   // `secretoQr` NO se selecciona: no tiene por que salir del servidor, ni siquiera hacia el
   // administrador. PLANIFICACION.md §6.3.
-  const actividades = await db
-    .select({
-      id: actividad.id,
-      codigoCorto: actividad.codigoCorto,
-      nombre: actividad.nombre,
-      descripcion: actividad.descripcion,
-      lugar: actividad.lugar,
-      tipo: actividad.tipo,
-      puntos: actividad.puntos,
-      estado: actividad.estado,
-      ventanaSeg: actividad.ventanaSeg,
-      iniciaEn: actividad.iniciaEn,
-      terminaEn: actividad.terminaEn,
-      marcajeAbreEn: actividad.marcajeAbreEn,
-      marcajeCierraEn: actividad.marcajeCierraEn,
-      lat: actividad.lat,
-      lon: actividad.lon,
-      radioM: actividad.radioM,
-      exigeUbicacion: actividad.exigeUbicacion,
-    })
-    .from(actividad)
-    .orderBy(asc(actividad.iniciaEn));
-
-  const pantallas = await db
-    .select({ actividadId: pantalla.actividadId, clave: pantalla.clave })
-    .from(pantalla)
-    .where(eq(pantalla.activa, true));
-  const claveDe = new Map(pantallas.map((p) => [p.actividadId, p.clave]));
-
+  const [actividades, conteos] = await Promise.all([
+    db
+      .select({
+        id: actividad.id,
+        nombre: actividad.nombre,
+        lugar: actividad.lugar,
+        tipo: actividad.tipo,
+        puntos: actividad.puntos,
+        estado: actividad.estado,
+        iniciaEn: actividad.iniciaEn,
+        marcajeAbreEn: actividad.marcajeAbreEn,
+        marcajeCierraEn: actividad.marcajeCierraEn,
+      })
+      .from(actividad)
+      .orderBy(desc(actividad.iniciaEn)),
+    db
+      .select({ actividadId: asistencia.actividadId, total: count() })
+      .from(asistencia)
+      .groupBy(asistencia.actividadId),
+  ]);
+  const asistenciasDe = new Map(conteos.map((c) => [c.actividadId, c.total]));
   const publicadas = actividades.filter((a) => a.estado === "publicada").length;
+  const visibles = filtro ? actividades.filter((a) => a.estado === filtro) : actividades;
+  const ahora = new Date();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Actividades</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          {actividades.length === 0
+    <>
+      <Titular
+        titulo="Actividades"
+        bajada={
+          actividades.length === 0
             ? "Cada actividad genera su propio QR rotativo."
-            : `${actividades.length} ${actividades.length === 1 ? "actividad" : "actividades"} · ${publicadas} ${publicadas === 1 ? "publicada" : "publicadas"}`}
-        </p>
-      </div>
+            : `${actividades.length} en total · ${publicadas} ${publicadas === 1 ? "publicada" : "publicadas"}`
+        }
+      />
 
-      <FormularioNuevaActividad />
+      <FilaDeChips>
+        {FILTROS.map((f) => (
+          <EnlaceChip
+            key={f.valor}
+            href={f.valor ? `/admin/actividades?estado=${f.valor}` : "/admin/actividades"}
+            activo={filtro === f.valor}
+          >
+            {f.etiqueta}
+          </EnlaceChip>
+        ))}
+      </FilaDeChips>
 
-      {actividades.length === 0 ? (
-        <div className="rounded-md border border-dashed border-neutral-300 px-4 py-12 text-center">
-          <p className="text-sm font-medium text-neutral-700">Todavía no hay actividades.</p>
-          <p className="mt-1 text-sm text-neutral-500">
-            Creá la primera para poder proyectar su QR en el evento.
-          </p>
-        </div>
+      {visibles.length === 0 ? (
+        <Vacio>
+          {actividades.length === 0 ? (
+            <>
+              <p className="font-bold text-tinta">Todavía no hay actividades</p>
+              <p className="mt-1">Creá la primera con el botón «Nueva» para poder proyectar su QR.</p>
+            </>
+          ) : (
+            "No hay actividades con ese filtro."
+          )}
+        </Vacio>
       ) : (
-        <div className="flex flex-col gap-3">
-          {actividades.map((a) => {
-            const editable: ActividadEditable = {
-              id: a.id,
-              codigoCorto: a.codigoCorto,
-              nombre: a.nombre,
-              descripcion: a.descripcion,
-              lugar: a.lugar,
-              tipo: a.tipo,
-              puntos: a.puntos,
-              estado: a.estado,
-              ventanaSeg: a.ventanaSeg,
-              iniciaEn: haciaCampoLocal(a.iniciaEn),
-              terminaEn: haciaCampoLocal(a.terminaEn),
-              marcajeAbreEn: haciaCampoLocal(a.marcajeAbreEn),
-              marcajeCierraEn: haciaCampoLocal(a.marcajeCierraEn),
-              lat: a.lat?.toString() ?? "",
-              lon: a.lon?.toString() ?? "",
-              radioM: a.radioM?.toString() ?? "",
-              exigeUbicacion: a.exigeUbicacion,
-            };
-
+        <ul className="flex flex-col gap-2.5">
+          {visibles.map((a) => {
+            const abierta = a.estado === "publicada" && ahora >= a.marcajeAbreEn && ahora <= a.marcajeCierraEn;
+            const apagada = a.estado !== "publicada" || a.marcajeCierraEn < ahora;
+            const total = asistenciasDe.get(a.id) ?? 0;
             return (
-              <article
-                key={a.id}
-                className="flex overflow-hidden rounded-md border border-neutral-200 bg-white"
-              >
-                <div className={`w-1 shrink-0 ${FRANJA_ESTADO[a.estado]}`} aria-hidden />
-                <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-medium text-neutral-900">{a.nombre}</h2>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-xs font-medium ${CLASE_ESTADO[a.estado]}`}
-                      >
-                        {ETIQUETA_ESTADO[a.estado]}
-                      </span>
-                      <span className="rounded-full border border-accent-300 bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-800">
-                        {a.tipo === "extra" ? "Extra" : "Global"} · {a.puntos}{" "}
-                        {a.puntos === 1 ? "punto" : "puntos"}
-                      </span>
+              <li key={a.id}>
+                <Link
+                  href={`/admin/actividades/${a.id}/en-vivo`}
+                  className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-tarjeta transition active:scale-[.985]"
+                >
+                  <Fechita fecha={a.iniciaEn} tono={abierta ? "viva" : apagada ? "apagada" : "normal"} />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div>
+                      <p className="font-bold leading-snug">{a.nombre}</p>
+                      <p className="truncate text-[13px] text-neutral-500">
+                        {horaEnGuatemala(a.iniciaEn)} · {a.lugar ?? "Sin lugar"}
+                      </p>
                     </div>
-                    {a.descripcion && (
-                      <p className="mt-1 text-sm text-neutral-600">{a.descripcion}</p>
-                    )}
-                  </div>
-
-                  <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <Dato etiqueta="Ocurre">
-                      {enGuatemala(a.iniciaEn)}
-                      <span className="block text-xs text-neutral-500">
-                        hasta {enGuatemala(a.terminaEn)}
-                      </span>
-                    </Dato>
-                    <Dato etiqueta="Se puede marcar">
-                      {enGuatemala(a.marcajeAbreEn)}
-                      <span className="block text-xs text-neutral-500">
-                        hasta {enGuatemala(a.marcajeCierraEn)}
-                      </span>
-                    </Dato>
-                    <Dato etiqueta="Lugar">
-                      {a.lugar ?? <span className="text-neutral-400">Sin definir</span>}
-                    </Dato>
-                    <Dato etiqueta="Zona">
-                      {a.radioM ? (
-                        <>
-                          {a.radioM} m
-                          <span className="block text-xs text-neutral-500">
-                            {a.exigeUbicacion ? "rechaza fuera del radio" : "solo se registra"}
-                          </span>
-                        </>
+                    <div className="flex flex-wrap gap-1.5">
+                      {a.estado === "borrador" ? (
+                        <Etiqueta>Borrador</Etiqueta>
+                      ) : a.estado === "cerrada" ? (
+                        <Etiqueta>Cerrada</Etiqueta>
+                      ) : abierta ? (
+                        <Etiqueta tono="azul">Abierta ahora</Etiqueta>
+                      ) : a.marcajeAbreEn > ahora ? (
+                        <Etiqueta tono="celeste">{relativoEnGuatemala(a.iniciaEn, ahora)}</Etiqueta>
                       ) : (
-                        <span className="text-neutral-400">Sin declarar</span>
+                        <Etiqueta>Ya pasó</Etiqueta>
                       )}
-                    </Dato>
-                    <Dato etiqueta="Código QR">
-                      <span className="font-mono">{a.codigoCorto}</span>
-                      <span className="block text-xs text-neutral-500">
-                        cambia cada {a.ventanaSeg} s
-                      </span>
-                    </Dato>
-                  </dl>
-
-                  <div className="flex flex-wrap items-center justify-end gap-3">
-                    <BotonAvisarActividad actividadId={a.id} />
-                    <Link
-                      href={`/admin/actividades/${a.id}/en-vivo`}
-                      className="text-sm text-primary-700 underline hover:text-primary-800"
-                    >
-                      Ver en vivo
-                    </Link>
-                    {claveDe.has(a.id) ? (
-                      <a
-                        href={`/kiosco/${claveDe.get(a.id)}`}
-                        target="_blank"
-                        rel="noopener"
-                        className="text-sm text-primary-700 underline hover:text-primary-800"
-                      >
-                        Abrir kiosco ↗
-                      </a>
-                    ) : (
-                      <form action={asegurarPantalla}>
-                        <input type="hidden" name="actividadId" value={a.id} />
-                        <Boton type="submit" variante="enlace">
-                          Generar pantalla de kiosco
-                        </Boton>
-                      </form>
-                    )}
-                    <FormularioEditarActividad actividad={editable} />
+                      <Etiqueta tono="oro">
+                        {a.tipo === "extra" && "Extra · "}
+                        {a.puntos} {a.puntos === 1 ? "punto" : "puntos"}
+                      </Etiqueta>
+                    </div>
                   </div>
-                </div>
-              </article>
+                  <div className="text-right leading-tight">
+                    <b className="text-xl font-extrabold tabular-nums">{total}</b>
+                    <p className="text-xs text-neutral-400">asist.</p>
+                  </div>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
-    </div>
+
+      <FormularioNuevaActividad />
+    </>
   );
 }

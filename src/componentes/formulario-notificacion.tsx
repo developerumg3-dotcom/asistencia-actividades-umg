@@ -3,9 +3,9 @@
 import { useRef, useState, useTransition } from "react";
 import { enviarAvisoGeneral, probarAvisoConmigo } from "@/app/(protegido)/(con-perfil)/admin/notificaciones/acciones";
 import { Boton } from "@/componentes/ui/boton";
-import { clasesCampo } from "@/componentes/ui/campo";
+import { Campo } from "@/componentes/ui/campo";
+import { Icono } from "@/componentes/ui/icono";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
-import { Tarjeta } from "@/componentes/ui/tarjeta";
 import { consultarAlcance, type AlcanceConFrase } from "@/lib/push/acciones";
 import {
   LIMITE_MENSAJE,
@@ -134,118 +134,103 @@ export function FormularioNotificacion() {
   const vistaMensaje = mensaje.trim() || "El mensaje aparece acá.";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <>
+      {/* Asi se va a ver: arriba, porque se actualiza mientras se escribe. */}
+      <div className="flex items-start gap-2.5 rounded-[18px] bg-neutral-200/70 p-3" aria-live="polite">
+        <div className="grid size-[38px] shrink-0 place-items-center rounded-[10px] bg-white" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element -- miniatura decorativa */}
+          <img src="/escudo-umg.webp" alt="" className="size-7" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-neutral-500">Actividades UMG · ahora</p>
+          <p className="break-words text-sm font-bold text-tinta">{vistaTitulo}</p>
+          <p className="whitespace-pre-line break-words text-[13px] text-neutral-600">{vistaMensaje}</p>
+        </div>
+      </div>
+
       <form
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-tarjeta"
         onSubmit={(e) => {
           e.preventDefault();
           if (!confirmando) revisar();
         }}
         noValidate
       >
-        <div className="flex flex-col gap-1">
-          <label htmlFor="titulo" className="text-sm font-medium text-neutral-900">
-            Título
-          </label>
-          <input
-            id="titulo"
-            name="titulo"
-            type="text"
-            className={clasesCampo}
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            readOnly={confirmando}
-            maxLength={LIMITE_TITULO + 40}
-            placeholder="Convocatoria"
-            autoComplete="off"
-            aria-invalid={errores.titulo ? true : undefined}
-          />
-          <p className="text-xs text-neutral-500">
-            {titulo.trim().length} de {LIMITE_TITULO} caracteres
-          </p>
-          {errores.titulo && <MensajeFormulario tipo="error">{errores.titulo}</MensajeFormulario>}
-        </div>
+        <Campo
+          id="titulo"
+          name="titulo"
+          type="text"
+          etiqueta="Título"
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          readOnly={confirmando}
+          maxLength={LIMITE_TITULO + 40}
+          placeholder="Convocatoria"
+          autoComplete="off"
+          aria-invalid={errores.titulo ? true : undefined}
+          ayuda={`${titulo.trim().length} de ${LIMITE_TITULO} caracteres`}
+        />
+        {errores.titulo && <MensajeFormulario tipo="error">{errores.titulo}</MensajeFormulario>}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="mensaje" className="text-sm font-medium text-neutral-900">
-            Mensaje
-          </label>
-          <textarea
-            id="mensaje"
-            name="mensaje"
-            rows={4}
-            className={clasesCampo}
-            value={mensaje}
-            onChange={(e) => setMensaje(e.target.value)}
-            readOnly={confirmando}
-            maxLength={LIMITE_MENSAJE + 100}
-            placeholder="Se les convoca a todos al salón 3, vengan."
-            aria-invalid={errores.mensaje ? true : undefined}
-          />
-          <p className="text-xs text-neutral-500">
-            {mensaje.trim().length} de {LIMITE_MENSAJE} caracteres · texto plano
-          </p>
-          {errores.mensaje && <MensajeFormulario tipo="error">{errores.mensaje}</MensajeFormulario>}
-        </div>
+        <Campo
+          id="mensaje"
+          name="mensaje"
+          as="textarea"
+          rows={3}
+          etiqueta="Mensaje"
+          value={mensaje}
+          onChange={(e) => setMensaje(e.target.value)}
+          readOnly={confirmando}
+          maxLength={LIMITE_MENSAJE + 100}
+          placeholder="Se les convoca a todos al salón 3, vengan."
+          aria-invalid={errores.mensaje ? true : undefined}
+          ayuda={`${mensaje.trim().length} de ${LIMITE_MENSAJE} caracteres · texto plano`}
+        />
+        {errores.mensaje && <MensajeFormulario tipo="error">{errores.mensaje}</MensajeFormulario>}
 
         <p className="text-xs text-neutral-500">
-          El aviso se ve en la pantalla bloqueada del teléfono: no pongas notas, carnés ni otros
-          datos de un alumno. Al tocarlo se abre el inicio de la app.
+          El aviso se ve en la pantalla bloqueada del teléfono: no pongas notas, carnés ni otros datos
+          de un alumno. Al tocarlo se abre el inicio de la app.
         </p>
 
         {confirmando ? (
-          <Tarjeta className="flex flex-col gap-3 bg-neutral-50">
-            <p className="text-sm font-medium text-neutral-900">{alcance.frase}</p>
+          <div className="flex flex-col gap-2.5 rounded-xl bg-fondo p-3.5">
+            <p className="font-bold leading-snug">{alcance.frase}</p>
             {alcance.suscritos > 0 && alcance.suscritos < alcance.total && (
               <p className="text-xs text-neutral-500">
-                A los demás no les llega: no activaron los avisos, o tienen iPhone sin la app
-                instalada. El aviso dentro de la app sigue siendo el canal que les llega a todos.
+                A los demás no les llega: no activaron los avisos, o tienen iPhone sin la app instalada.
+                El aviso dentro de la app sigue siendo el canal que les llega a todos.
               </p>
             )}
-            <div className="flex flex-wrap items-center gap-3">
-              <Boton type="button" variante="enlace" onClick={volverAEditar} disabled={pendiente}>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Boton type="button" variante="secundario" onClick={volverAEditar} disabled={pendiente}>
                 Volver a editar
               </Boton>
               <Boton type="button" onClick={enviar} disabled={pendiente || alcance.suscritos === 0}>
-                {pendiente ? "Enviando…" : "Enviar a los alumnos"}
+                <Icono nombre="enviar" className="size-[18px]" />
+                {pendiente ? "Enviando…" : "Enviar"}
               </Boton>
             </div>
-          </Tarjeta>
+          </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-3">
-            <Boton type="submit" disabled={pendiente || !hayTexto}>
-              {pendiente ? "Consultando…" : "Revisar y enviar"}
-            </Boton>
+          <div className="grid grid-cols-2 gap-2.5">
             <Boton type="button" variante="secundario" onClick={probar} disabled={pendiente || !hayTexto}>
               Probarlo conmigo
+            </Boton>
+            <Boton type="submit" disabled={pendiente || !hayTexto}>
+              {pendiente ? "Consultando…" : "Revisar y enviar"}
             </Boton>
           </div>
         )}
 
         {resultado && <MensajeFormulario tipo="exito">{resultado}</MensajeFormulario>}
         {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
-      </form>
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-neutral-900">Así se va a ver</h2>
-        <Tarjeta className="flex items-start gap-3 bg-neutral-100" aria-live="polite">
-          <div
-            className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-600 text-sm font-semibold text-white"
-            aria-hidden
-          >
-            R
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-neutral-500">Ronda · ahora</p>
-            <p className="break-words text-sm font-semibold text-neutral-900">{vistaTitulo}</p>
-            <p className="whitespace-pre-line break-words text-sm text-neutral-700">{vistaMensaje}</p>
-          </div>
-        </Tarjeta>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-400">
           Cada sistema recorta el texto a su manera: lo más importante va al principio. «Probarlo
           conmigo» lo manda solo a tus dispositivos, con «{PREFIJO_PRUEBA.trim()}» delante del título.
         </p>
-      </div>
-    </div>
+      </form>
+    </>
   );
 }

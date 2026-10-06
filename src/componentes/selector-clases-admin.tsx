@@ -6,6 +6,7 @@ import {
   quitarInscripcionAdmin,
 } from "@/app/(protegido)/(con-perfil)/admin/alumnos/acciones";
 import { Campo } from "@/componentes/ui/campo";
+import { Icono } from "@/componentes/ui/icono";
 import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 import type { ClaseDisponible } from "@/lib/clases";
 import { enTitulo } from "@/lib/texto";
@@ -73,14 +74,14 @@ export function SelectorClasesAdmin({
       {pendiente && <p className="text-xs text-neutral-500">Guardando…</p>}
       {error && <MensajeFormulario tipo="error">{error}</MensajeFormulario>}
 
-      <ul className="grid max-h-96 gap-2 overflow-y-auto sm:grid-cols-2">
+      <ul className="flex max-h-[26rem] flex-col gap-2 overflow-y-auto">
         {clasesFiltradas.map((c) => {
           const marcada = inscritos.has(c.id);
           return (
             <li key={c.id}>
               <label
-                className={`flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
-                  marcada ? "border-primary-600 bg-primary-50" : "border-neutral-200 bg-white hover:bg-neutral-50"
+                className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-3 transition-shadow ${
+                  marcada ? "shadow-[inset_0_0_0_2px_var(--color-primary-600)]" : "shadow-tarjeta"
                 }`}
               >
                 <input
@@ -88,11 +89,12 @@ export function SelectorClasesAdmin({
                   checked={marcada}
                   disabled={pendiente}
                   onChange={(evento) => alternar(c.id, evento.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-primary-600"
+                  className="sr-only"
                 />
-                <span>
-                  <span className="block font-medium text-neutral-900">{enTitulo(c.nombre)}</span>
-                  <span className="text-xs text-neutral-500">
+                <Marca marcada={marcada} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold leading-snug">{enTitulo(c.nombre)}</span>
+                  <span className="text-xs text-neutral-400">
                     {c.codigo}
                     {c.seccion && ` · Sección ${c.seccion}`} · {c.jornada}
                   </span>
@@ -103,5 +105,18 @@ export function SelectorClasesAdmin({
         })}
       </ul>
     </div>
+  );
+}
+
+function Marca({ marcada }: { marcada: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`grid size-[26px] shrink-0 place-items-center rounded-[9px] border-2 text-white transition-colors ${
+        marcada ? "border-primary-600 bg-primary-600" : "border-neutral-300 bg-white"
+      }`}
+    >
+      {marcada && <Icono nombre="ok" grosor={3} className="size-4" />}
+    </span>
   );
 }

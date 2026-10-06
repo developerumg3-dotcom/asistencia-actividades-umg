@@ -17,22 +17,20 @@ export function ImportarClasesCsv() {
 
   if (!abierto) {
     return (
-      <div className="flex justify-end">
-        <Boton variante="secundario" onClick={() => setAbierto(true)}>
-          Importar por CSV
-        </Boton>
-      </div>
+      <Boton variante="secundario" tamano="chico" onClick={() => setAbierto(true)}>
+        Importar por CSV
+      </Boton>
     );
   }
 
   return (
     <form
       action={accion}
-      className="flex w-full flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4"
+      className="flex w-full flex-col gap-4 rounded-2xl bg-white shadow-tarjeta p-4"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-medium text-neutral-900">Importar clases por CSV</h2>
+          <h2 className="font-bold text-tinta">Importar clases por CSV</h2>
           <p className="mt-1 text-xs text-neutral-500">
             Columnas requeridas:{" "}
             <code className="font-mono">
@@ -51,7 +49,7 @@ export function ImportarClasesCsv() {
         name="archivo"
         accept=".csv,text/csv"
         required
-        className="text-sm file:mr-3 file:rounded-md file:border file:border-neutral-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-neutral-900 hover:file:bg-neutral-50"
+        className="text-sm file:mr-3 file:rounded-lg file:border file:border-neutral-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-tinta hover:file:bg-neutral-50"
       />
       {estado.error && <MensajeFormulario tipo="error">{estado.error}</MensajeFormulario>}
       {estado.mensaje && <MensajeFormulario tipo="exito">{estado.mensaje}</MensajeFormulario>}
