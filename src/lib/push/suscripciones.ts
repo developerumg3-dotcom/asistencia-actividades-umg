@@ -119,3 +119,16 @@ export async function contarAlcance(): Promise<Alcance> {
 
   return { suscritos: suscritos?.cuenta ?? 0, total: total?.cuenta ?? 0 };
 }
+
+/** Los dispositivos de UNA cuenta: es lo que usa "Probarlo conmigo" para no avisarle a nadie mas. */
+export async function listarSuscripcionesDeAlumno(alumnoId: string): Promise<SuscripcionGuardada[]> {
+  return db
+    .select({
+      id: suscripcionPush.id,
+      endpoint: suscripcionPush.endpoint,
+      p256dh: suscripcionPush.p256dh,
+      auth: suscripcionPush.auth,
+    })
+    .from(suscripcionPush)
+    .where(eq(suscripcionPush.alumnoId, alumnoId));
+}

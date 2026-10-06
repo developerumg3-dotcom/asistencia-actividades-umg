@@ -19,6 +19,7 @@ import {
 
 /** 5 de septiembre de 2026, 14:30 en Guatemala (UTC−6) = 20:30 UTC. */
 const CONFERENCIA: ActividadParaAviso = {
+  id: "a1b2c3",
   nombre: "Conferencia de ingeniería",
   lugar: "Salón 204",
   iniciaEn: new Date("2026-09-05T20:30:00Z"),

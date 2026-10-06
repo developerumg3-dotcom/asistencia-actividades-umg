@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad } from "@/db/esquema";
-import { frasePorcentajeAlcance, textoDeAviso } from "@/lib/push/aviso";
+import { frasePorcentajeAlcance, resumenDeEnvio, textoDeAviso } from "@/lib/push/aviso";
 import { enviarAvisoATodos } from "@/lib/push/envio";
 import {
   borrarSuscripcionPorEndpoint,
@@ -82,6 +82,7 @@ export async function avisarDeActividad(actividadId: string): Promise<ResultadoA
 
   const [datos] = await db
     .select({
+      id: actividad.id,
       nombre: actividad.nombre,
       lugar: actividad.lugar,
       iniciaEn: actividad.iniciaEn,
@@ -103,13 +104,5 @@ export async function avisarDeActividad(actividadId: string): Promise<ResultadoA
 
   // El detalle de lo que paso, no un "listo" a secas: el administrador tiene que poder ver
   // que una parte no llego, porque es justamente lo que no se nota solo.
-  const partes = [`Enviado a ${resultado.entregados} ${resultado.entregados === 1 ? "dispositivo" : "dispositivos"}.`];
-  if (resultado.borradas > 0) {
-    partes.push(`Se descartaron ${resultado.borradas} que ya no existen.`);
-  }
-  if (resultado.fallidos > 0) {
-    partes.push(`${resultado.fallidos} fallaron y se van a reintentar en el próximo aviso.`);
-  }
-
-  return { ok: true, mensaje: partes.join(" ") };
+  return { ok: true, mensaje: resumenDeEnvio(resultado) };
 }

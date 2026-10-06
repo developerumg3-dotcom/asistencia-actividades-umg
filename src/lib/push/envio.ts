@@ -1,10 +1,11 @@
 import "server-only";
 
 import webpush, { WebPushError } from "web-push";
-import { decidirSobreError, type Aviso } from "@/lib/push/aviso";
+import { decidirSobreError, esRutaInterna, type Aviso } from "@/lib/push/aviso";
 import {
   borrarSuscripcionPorId,
   listarSuscripciones,
+  listarSuscripcionesDeAlumno,
   marcarErrorDeSuscripcion,
   type SuscripcionGuardada,
 } from "@/lib/push/suscripciones";
@@ -24,13 +25,17 @@ export type ResultadoEnvio = {
   borradas: number;
   /** Fallos pasajeros: la suscripcion queda, solo marcada. */
   fallidos: number;
+  /** A cuantas suscripciones se intento mandar (0 si la cuenta no tiene ningun dispositivo). */
+  dispositivos: number;
   /** `false` si el entorno no tiene claves VAPID configuradas. */
   configurado: boolean;
 };
 
 /** El payload que lee el manejador `push` de `public/sw.js`. */
 function comoPayload(aviso: Aviso): string {
-  return JSON.stringify({ titulo: aviso.titulo, cuerpo: aviso.cuerpo, url: aviso.url });
+  // Ultima barrera: ningun camino que arme un aviso puede mandar a un sitio ajeno.
+  if (!esRutaInterna(aviso.url)) throw new Error("La URL del aviso no es una ruta interna.");
+  return JSON.stringify({ id: aviso.id, titulo: aviso.titulo, cuerpo: aviso.cuerpo, url: aviso.url });
 }
 
 async function enviarAUna(suscripcion: SuscripcionGuardada, payload: string): Promise<"ok" | "borrada" | "fallida"> {
@@ -70,15 +75,32 @@ async function enviarAUna(suscripcion: SuscripcionGuardada, payload: string): Pr
  * atrapa su propio error, asi que ninguno puede tumbar a los demas.
  */
 export async function enviarAvisoATodos(aviso: Aviso): Promise<ResultadoEnvio> {
+  return enviarASuscripciones(aviso, listarSuscripciones);
+}
+
+/**
+ * Manda un aviso SOLO a los dispositivos de una cuenta. Es lo que usa "Probarlo conmigo":
+ * misma ruta de envio que el aviso real, pero el universo es el del administrador que lo
+ * pide. `alumnoId` sale siempre de la sesion, nunca de lo que mande el navegador.
+ */
+export async function enviarAvisoAAlumno(alumnoId: string, aviso: Aviso): Promise<ResultadoEnvio> {
+  return enviarASuscripciones(aviso, () => listarSuscripcionesDeAlumno(alumnoId));
+}
+
+async function enviarASuscripciones(
+  aviso: Aviso,
+  obtener: () => Promise<SuscripcionGuardada[]>,
+): Promise<ResultadoEnvio> {
   if (!configurarEnvio()) {
-    return { entregados: 0, borradas: 0, fallidos: 0, configurado: false };
+    return { dispositivos: 0, entregados: 0, borradas: 0, fallidos: 0, configurado: false };
   }
 
-  const suscripciones = await listarSuscripciones();
+  const suscripciones = await obtener();
   const payload = comoPayload(aviso);
   const resultados = await Promise.all(suscripciones.map((s) => enviarAUna(s, payload)));
 
   return {
+    dispositivos: suscripciones.length,
     entregados: resultados.filter((r) => r === "ok").length,
     borradas: resultados.filter((r) => r === "borrada").length,
     fallidos: resultados.filter((r) => r === "fallida").length,

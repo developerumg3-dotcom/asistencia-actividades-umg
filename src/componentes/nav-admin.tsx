@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const pestanas = [
   { href: "/admin", etiqueta: "Tablero" },
   { href: "/admin/actividades", etiqueta: "Actividades" },
+  { href: "/admin/notificaciones", etiqueta: "Notificaciones" },
   { href: "/admin/catedraticos", etiqueta: "Catedráticos" },
   { href: "/admin/clases", etiqueta: "Clases" },
   { href: "/admin/alumnos", etiqueta: "Alumnos" },
