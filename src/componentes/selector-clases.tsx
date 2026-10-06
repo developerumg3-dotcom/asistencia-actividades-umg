@@ -96,7 +96,17 @@ export function SelectorClases({
     });
     iniciarTransicion(async () => {
       try {
-        if (marcada) await inscribirse(claseId);
+        if (marcada) {
+          const resultado = await inscribirse(claseId);
+          if (resultado.error) {
+            setError(resultado.error);
+            setInscritos((previo) => {
+              const nuevo = new Set(previo);
+              nuevo.delete(claseId);
+              return nuevo;
+            });
+          }
+        }
         else await desinscribirse(claseId);
       } catch {
         setError("No se pudo guardar el cambio. Probá de nuevo.");
