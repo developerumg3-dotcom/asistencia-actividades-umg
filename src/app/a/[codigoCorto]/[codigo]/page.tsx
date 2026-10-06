@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad } from "@/db/esquema";
 import { BotonMarcar } from "@/componentes/boton-marcar";
@@ -34,7 +34,9 @@ export default async function MarcarPage({
   const [laActividad] = await db
     .select({ nombre: actividad.nombre, lugar: actividad.lugar, puntos: actividad.puntos })
     .from(actividad)
-    .where(eq(actividad.codigoCorto, codigoCorto))
+    // Un codigo conocido no hace publico un borrador. La validez temporal del QR
+    // sigue comprobándose al pulsar Marcar, no al renderizar esta pagina.
+    .where(and(eq(actividad.codigoCorto, codigoCorto), inArray(actividad.estado, ["publicada", "cerrada"])))
     .limit(1);
 
   return (

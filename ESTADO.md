@@ -2,6 +2,17 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
+## Cola Codex — 5/10/2026
+
+- ASI2-19: consulta publica de marcaje oculta borradores y conserva contexto de publicadas
+  y cerradas. Rama `codex/asi2-19`, entrega En pruebas. TypeScript y 81 unitarias correctos;
+  prueba de navegador pendiente del proximo despliegue agrupado de Julio. Sin migracion.
+- Workflow vigente: una tarjeta Codex por rama y commit; empujar solo esas ramas, nunca main.
+  No disparar deploys desde Netlify. Migraciones 0007 en adelante se generan de una en una,
+  pero solo Julio las aplica tras revisar. No ejecutar probar:base contra produccion.
+  Usar corepack pnpm; VAPID ya configurado en Netlify segun Julio, no regenerarlo.
+  Estas autorizaciones actualizan las restricciones historicas de la sesion anterior.
+
 - **Última actualización:** 4 de octubre de 2026 (hora de Guatemala).
 - **Estado actual:** geolocalización etapas 1 y 2 integrada, con rechazo fuera y aceptación
   dentro verificados en producción. Push etapa 1 tiene código y botón de envío desplegado,
