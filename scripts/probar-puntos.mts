@@ -208,3 +208,65 @@ test("el aviso se vuelve urgente en las ultimas 24 horas antes del corte", () =>
   assert.equal(avisoEsUrgente(veintitresHorasAntes, corte), true);
   assert.equal(avisoEsUrgente(new Date(corte.getTime() + 1000), corte), false);
 });
+
+// ---- Repartos concurrentes -----------------------------------------------------------------
+//
+// El candado contra repartos simultaneos vive en la base (consulta.ts, `repartirPuntos`) y solo
+// se puede probar contra Postgres. Aca se prueba lo que si es puro: que validar contra una
+// foto vieja del saldo deja pasar de mas (por eso el INSERT no puede fiarse de la validacion
+// previa y vuelve a revisar el saldo), y que con el saldo releido el segundo se rechaza.
+
+test("dos repartos que validan contra la misma foto del saldo reparten mas de lo ganado", () => {
+  const asistenciasExtra = [{ actividadId: "feria", puntos: 2 }];
+  const foto = { asistenciasExtra, asignacionesExtra: [] as { actividadId: string; puntos: number }[] };
+
+  const saldoA = calcularSaldoExtra(foto);
+  const saldoB = calcularSaldoExtra(foto);
+  assert.equal(esRepartoValido({ puntos: 2, saldoDisponible: saldoA, claseInscrita: true }), true);
+  assert.equal(esRepartoValido({ puntos: 2, saldoDisponible: saldoB, claseInscrita: true }), true);
+
+  const escritas = [
+    ...distribuirEntreActividadesExtra({ puntos: 2, saldosPorActividad: calcularSaldoPorActividad(foto) }),
+    ...distribuirEntreActividadesExtra({ puntos: 2, saldosPorActividad: calcularSaldoPorActividad(foto) }),
+  ];
+  assert.equal(escritas.reduce((suma, e) => suma + e.puntos, 0), 4);
+  assert.equal(calcularSaldoExtra({ asistenciasExtra, asignacionesExtra: escritas }), -2);
+});
+
+test("con el saldo releido despues del primer reparto, el segundo se rechaza", () => {
+  const asistenciasExtra = [{ actividadId: "feria", puntos: 2 }];
+  const primero = distribuirEntreActividadesExtra({
+    puntos: 2,
+    saldosPorActividad: calcularSaldoPorActividad({ asistenciasExtra, asignacionesExtra: [] }),
+  });
+  const saldoReleido = calcularSaldoExtra({ asistenciasExtra, asignacionesExtra: primero });
+  assert.equal(saldoReleido, 0);
+  assert.equal(esRepartoValido({ puntos: 2, saldoDisponible: saldoReleido, claseInscrita: true }), false);
+});
+
+test("un reparto que abarca dos actividades toma de la mas antigua primero y respeta cada saldo", () => {
+  const saldosPorActividad = [
+    { actividadId: "feria", disponible: 1 },
+    { actividadId: "charla", disponible: 2 },
+  ];
+  const distribucion = distribuirEntreActividadesExtra({ puntos: 3, saldosPorActividad });
+  assert.deepEqual(distribucion, [
+    { actividadId: "feria", puntos: 1 },
+    { actividadId: "charla", puntos: 2 },
+  ]);
+  for (const { actividadId, puntos } of distribucion) {
+    assert.ok(puntos <= saldosPorActividad.find((s) => s.actividadId === actividadId)!.disponible);
+  }
+});
+
+test("una actividad con saldo negativo o cero no aporta puntos al reparto", () => {
+  const distribucion = distribuirEntreActividadesExtra({
+    puntos: 1,
+    saldosPorActividad: [
+      { actividadId: "sobregirada", disponible: -2 },
+      { actividadId: "agotada", disponible: 0 },
+      { actividadId: "libre", disponible: 2 },
+    ],
+  });
+  assert.deepEqual(distribucion, [{ actividadId: "libre", puntos: 1 }]);
+});

@@ -131,14 +131,20 @@ export type ResultadoReparto = { ok: true } | { ok: false; error: string };
  * Reparte `puntos` del saldo del alumno hacia `claseId`.
  *
  * `neon-http` (el driver que usa esta app, ver ESTRUCTURA.md) no soporta transacciones
- * interactivas — `db.transaction()` tira "No transactions support in neon-http driver". La
- * regla de la §5 ("la suma de asignaciones nunca supera el saldo, validado en base de
- * datos") se cumple con un `INSERT ... SELECT ... WHERE` por actividad de origen: el chequeo
- * del saldo y la insercion son la misma sentencia SQL, atomica de por si. Para que dos
- * repartos que llegan de verdad al mismo tiempo tampoco se pisen, la sentencia toma antes un
- * `pg_advisory_xact_lock` sobre (alumno, actividad de origen): el segundo espera a que el
- * primero termine su propia sentencia (que Postgres ya envuelve en una transaccion implicita)
- * y recien entonces lee el saldo, ya actualizado.
+ * interactivas, pero si `db.batch()`: varias sentencias en UNA transaccion, enviadas juntas.
+ * Se usa asi:
+ *
+ *   1. `pg_advisory_xact_lock(alumno)`: serializa los repartos del mismo alumno. El candado
+ *      vive hasta el final de la transaccion.
+ *   2. Un solo `INSERT ... SELECT ... WHERE` que revisa el saldo real de cada actividad de
+ *      origen y la inscripcion, y escribe todas las filas o ninguna.
+ *
+ * Tienen que ser DOS sentencias. Antes el candado iba en una CTE de la misma sentencia que
+ * revisaba el saldo, y no servia: en READ COMMITTED cada sentencia toma su foto de la base al
+ * empezar, ANTES de esperar el candado. La peticion que esperaba despertaba con el candado
+ * liberado pero leyendo la foto vieja, sin ver el reparto que acababa de confirmarse, y
+ * repartia de mas. Con el candado en una sentencia anterior, la sentencia del INSERT toma su
+ * foto recien despues de conseguirlo.
  */
 export async function repartirPuntos(
   alumnoId: string,
@@ -174,30 +180,40 @@ export async function repartirPuntos(
 
   const distribucion = distribuirEntreActividadesExtra({ puntos, saldosPorActividad });
 
-  // Una fila por actividad de origen, cada una con su propio chequeo atomico contra el
-  // saldo real de esa actividad en este momento (no el snapshot que se leyo arriba).
-  for (const { actividadId, puntos: puntosDeEsaActividad } of distribucion) {
-    const resultado = await db.execute(sql`
-      with candado as (
-        select pg_advisory_xact_lock(hashtext(${alumnoId}), hashtext(${actividadId}))
-      )
+  // El calculo de arriba (con datos leidos hace un momento) solo decide *como* repartir y da
+  // un error rapido. La verificacion que cuenta es la del INSERT, contra la base ya bajo
+  // candado: si algo cambio entre la lectura y la escritura, no inserta nada.
+  const pedido = sql.join(
+    distribucion.map(({ actividadId, puntos: p }) => sql`(${actividadId}::uuid, ${p}::int)`),
+    sql`, `,
+  );
+  const [, insercion] = await db.batch([
+    db.execute(sql`select pg_advisory_xact_lock(hashtext('reparto_extra'), hashtext(${alumnoId}))`),
+    db.execute(sql`
+      with pedido (actividad_id, puntos) as (values ${pedido})
       insert into asignacion_extra (alumno_id, actividad_id, clase_id, puntos)
-      select ${alumnoId}, ${actividadId}, ${claseId}, ${puntosDeEsaActividad}
-      from candado
-      where ${puntosDeEsaActividad} <= (
-        select coalesce(sum(a.puntos), 0) - coalesce((
-          select sum(ae.puntos) from asignacion_extra ae
-          where ae.alumno_id = ${alumnoId} and ae.actividad_id = ${actividadId}
-        ), 0)
-        from asistencia s
-        join actividad a on a.id = s.actividad_id
-        where s.alumno_id = ${alumnoId} and s.actividad_id = ${actividadId} and a.tipo = 'extra'
+      select ${alumnoId}, p.actividad_id, ${claseId}::uuid, p.puntos
+      from pedido p
+      where exists (
+        select 1 from inscripcion i where i.alumno_id = ${alumnoId} and i.clase_id = ${claseId}::uuid
+      )
+      and not exists (
+        select 1 from pedido q
+        where q.puntos > (
+          select coalesce(sum(a.puntos), 0) - coalesce((
+            select sum(ae.puntos) from asignacion_extra ae
+            where ae.alumno_id = ${alumnoId} and ae.actividad_id = q.actividad_id
+          ), 0)
+          from asistencia s
+          join actividad a on a.id = s.actividad_id
+          where s.alumno_id = ${alumnoId} and s.actividad_id = q.actividad_id and a.tipo = 'extra'
+        )
       )
       returning id
-    `);
-    if (resultado.rows.length === 0) {
-      return { ok: false, error: "El saldo cambió mientras repartías. Revisá el total y volvé a intentar." };
-    }
+    `),
+  ]);
+  if (insercion.rows.length === 0) {
+    return { ok: false, error: "El saldo cambió mientras repartías. Revisá el total y volvé a intentar." };
   }
 
   return { ok: true };
