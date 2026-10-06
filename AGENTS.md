@@ -140,13 +140,14 @@ transactions support in neon-http driver` en cuanto se llama `db.transaction(...
 regla que necesite "leer, decidir, escribir" de forma atómica (por ejemplo, que un total no
 supere un saldo — §5) no se puede resolver con una transacción de Drizzle.
 
-La salida que se usó en la Fase 3 ([`src/lib/puntos/consulta.ts`](src/lib/puntos/consulta.ts),
-`repartirPuntos`): una sola sentencia `INSERT ... SELECT ... WHERE` con
-`pg_advisory_xact_lock` en una CTE al principio. Postgres envuelve cada sentencia suelta en su
-propia transacción implícita, así que el candado y el chequeo quedan atómicos igual, sin
-depender de `db.transaction()`. Sirve como patrón para cualquier otra escritura de la Fase 2
-en adelante que necesite la misma garantía (por ejemplo, `asistencia` + `bitacora` al validar
-un marcaje).
+La salida: `db.batch([...])` (varias sentencias en una transacción, sí soportado por
+`neon-http`) con `pg_advisory_xact_lock` en la **primera** sentencia y el `INSERT ... SELECT
+... WHERE` que revisa el saldo en la **segunda** ([`src/lib/puntos/consulta.ts`](src/lib/puntos/consulta.ts),
+`repartirPuntos`). **No pongas el candado en una CTE de la misma sentencia que lee**: en READ
+COMMITTED la sentencia toma su foto de la base al empezar, antes de esperar el candado, y al
+despertar lee datos viejos; el candado queda de adorno. Sirve como patrón para cualquier otra
+escritura que necesite la misma garantía (por ejemplo, `asistencia` + `bitacora` al validar un
+marcaje).
 
 ### `Intl.DateTimeFormat` no siempre coincide entre servidor y navegador
 
