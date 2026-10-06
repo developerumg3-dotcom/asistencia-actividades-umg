@@ -2,6 +2,71 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
+## Sesión del 6/10/2026 — seguridad integrada y push funcionando
+
+**Lo más importante: las notificaciones push funcionan de punta a punta.** Se envió un aviso
+desde `/admin/notificaciones` en producción y llegó a un iPhone y a un Android. Es la primera
+vez que se comprueba; hasta ayer era código sin verificar.
+
+### Para Daniel (UX/UI)
+
+Hay **una pantalla nueva** y **dos cambios visibles**, todos ya desplegados:
+
+- **`/admin/notificaciones`** (pestaña nueva en el panel, junto a Actividades). Es el módulo
+  de avisos generales: título (60), mensaje (200), vista previa de cómo se ve la notificación,
+  y antes de mandar muestra el alcance real. Dos pasos a propósito: «Revisar y enviar» NO
+  manda, solo muestra la cifra; recién ahí aparece «Enviar a los alumnos». También tiene
+  «Probarlo conmigo», que manda solo a los dispositivos de quien lo pulsa.
+  Componente: `src/componentes/formulario-notificacion.tsx`.
+- **Control de suscripción en el panel**, al final de esa misma pantalla («Tus avisos en este
+  dispositivo»). Es el mismo `ActivarAvisos` que ya estaba al final de `/inicio`, reutilizado.
+  Sin esto, quien manda los avisos era el único que no los recibía.
+- **La frase del alcance dice «cuentas», no «alumnos»**: el envío va a todas las suscripciones
+  sin mirar el rol, así que las cuentas de administración también reciben.
+
+La UI de estas pantallas es funcional, no definitiva: se armó con los componentes existentes
+de `src/componentes/ui/` para no inventar un lenguaje visual nuevo. **Queda para Daniel.**
+
+### Qué se arregló (todo desplegado y verificado)
+
+| Tarjeta | Qué era | Cómo se comprobó |
+| --- | --- | --- |
+| ASI2-13 | `ADMIN_EMAILS` concedía rol admin **sin exigir correo verificado** | Confirmado en la consola de Neon: «Verify at Sign-up» está DESACTIVADO y el alta es abierta. Era explotable, no teórico. Se leyó la base: 3 admins, los 3 esperados — no se usó. |
+| ASI2-14 | Carrera en el reparto de puntos extra: el candado iba en una CTE de la misma sentencia que leía, y en READ COMMITTED la foto se toma antes de esperarlo | `scripts/integracion-puntos.mts`: con el código viejo falla («2 !== 1», se repartían 4 puntos sobre 2 ganados); con el nuevo pasa |
+| ASI2-16 | Redirect abierto tras el login: `/\ejemplo.com` pasaba el filtro | Verificado en producción: el QR vuelve exactamente a `/a/{corto}/{codigo}` |
+| ASI2-18 | Liberar un carné dejaba `perfilCompleto: true` y la cuenta seguía marcando | Leída la base: 0 filas afectadas por liberaciones previas |
+| ASI2-20 | Asistencia y bitácora se escribían sueltas | `probar:base`: el duplicado en carrera sigue dando «duplicado» y ningún intento se pierde |
+| ASI2-17, ASI2-19 | Inscripción en cursos inactivos; borradores visibles por enlace | De Codex, integradas |
+| ASI2-21, ASI2-27 | Claves VAPID y módulo de avisos generales | Aviso real recibido en iPhone y Android |
+
+### Lo que sigue abierto
+
+- **Ensayo en campo en Enchulados (ASI2-5)** y prueba con varios teléfonos (ASI2-6). Es lo
+  único que cierra la Fase 2 y no se puede hacer desde la computadora.
+- **No existe rol de catedrático.** Los roles son `alumno` y `admin` (ver `enums.ts`). A las
+  cuentas de maestro no les puede llegar nada porque no existen: es ASI2-9, decisión abierta.
+- **Sin historial de avisos**: no queda registro de quién mandó qué. Necesita tabla nueva y la
+  secuencia de migraciones la tiene Codex con ASI2-22.
+- **La guarda contra doble envío vive en memoria**: protege dentro de una instancia de Netlify,
+  no entre varias. El `tag` cubre el caso en el teléfono.
+- **Después del evento, no antes:** activar «Verify at Sign-up» en Neon. Hoy las 7 cuentas
+  tienen `emailVerified = false`, los 3 admins incluidos; no se comprobó si activarlo también
+  bloquea el inicio de sesión de cuentas sin verificar, y eso dejaría a administración afuera
+  durante el evento. No hay urgencia: el agujero ya está cerrado del lado de la aplicación.
+
+### Alcance real hoy
+
+**2 dispositivos suscritos de 7 cuentas** (un iPhone y un Android). Las push no reemplazan el
+recorrido salón por salón hasta que los alumnos activen los avisos — y en iPhone, además,
+instalen la app en la pantalla de inicio. La cifra que muestra la pantalla antes de enviar es
+la que hay que mirar.
+
+### Verificación al cierre
+
+TypeScript limpio · **133 pruebas unitarias** (eran 81) · **26 de integración** contra Neon ·
+build de producción compila. Se agregó el script `pnpm typecheck`, que la documentación daba
+por existente desde antes pero no estaba.
+
 ## Cola Codex — 5/10/2026
 
 - ASI2-19: consulta publica de marcaje oculta borradores y conserva contexto de publicadas
@@ -40,10 +105,10 @@ Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar c
   `fuera_de_zona` y 0 asistencias; a las 23:26, zona de prueba, radio 200 m, resultado `ok`,
   1 asistencia QR, distancia 12 m y precisión ±9 m. Falta probar permisos denegados, lectura
   imprecisa, reuso/expiración y ensayo con varios teléfonos. No equivale a cerrar el ensayo en campo.
-- **Push etapa 1:** `src/lib/push/`, `ActivarAvisos`, `BotonAvisarActividad` y manejadores de
-  push/clic en `public/sw.js` existen. En Chrome se vio el botón del panel, alcance 0 de 7
-  alumnos y ausencia del control de suscripción en `/inicio`. Es compatible con VAPID
-  incompleto; no se verificaron las variables de producción ni una recepción real. ASI2-21.
+- **Push etapa 1:** ~~recepción real sin verificar~~ — **SUPERADO el 6/10/2026**: las claves
+  VAPID están en Netlify, el control de suscripción aparece en `/inicio` y en el panel, y un
+  aviso enviado desde producción llegó a un iPhone y a un Android. ASI2-21 y ASI2-2 cerradas.
+  Ver la sección del 6/10 al principio de este archivo.
 - **Decisión push:** entra al alcance. Tras el primer login, proponer invitación general
   «Activar notificaciones» / «Ahora no» para alumno y admin. El permiso nativo se solicita al
   pulsar Activar, sin bloquear la app ni repetir la invitación en cada login. ASI2-27.
