@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1622">
+<title>Ronda — Propuesta B · Marcador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo:#0a1622;--sup:#11222f;--sup2:#19303f;--linea:rgba(255,255,255,.09);
+  --texto:#eef4f9;--gris:#9db0c0;--tenue:#6f8496;
+  --azul:#4aa8dc;--azul-f:#1c72a5;--azul-t:rgba(74,168,220,.16);
+  --oro:#e6bd72;--oro-t:rgba(230,189,114,.15);
+  --verde:#55d9a3;--verde-t:rgba(85,217,163,.15);--rojo:#ff8380;--rojo-t:rgba(255,131,128,.14);
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--texto);background:#03080d;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit;text-decoration:none}
+.ico{width:22px;height:22px;flex:none}
+.sora{font-family:Sora,Inter,sans-serif}
+#app{height:100dvh;display:flex;justify-content:center;align-items:center}
+.marco{position:relative;width:100%;height:100dvh;background:radial-gradient(120% 60% at 50% -10%,#16405c 0%,var(--fondo) 60%);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:600px){.marco{width:402px;height:min(860px,calc(100dvh - 32px));border-radius:38px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 10px #1b2731}}
+.cuerpo{flex:1;overflow-y:auto;padding:20px 16px 120px;display:flex;flex-direction:column;gap:18px;scrollbar-width:none}
+.cuerpo::-webkit-scrollbar{display:none}
+.cuerpo.sin-nav{padding-bottom:28px}
+/* Barra flotante */
+.nav{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));height:66px;border-radius:33px;background:rgba(25,48,63,.86);backdrop-filter:blur(18px);border:1px solid var(--linea);display:flex;align-items:center;padding:0 6px;box-shadow:0 14px 34px rgba(0,0,0,.45);z-index:6}
+.nav a,.nav button.lado{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--tenue);position:relative}
+.nav a.activa{color:var(--texto)}
+.nav a.activa::after{content:"";position:absolute;bottom:-8px;width:5px;height:5px;border-radius:50%;background:var(--oro)}
+.nav .centro{width:60px;height:60px;border-radius:50%;margin:-26px 6px 0;background:linear-gradient(145deg,#5cb9ec,#1c72a5);color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 8px 22px rgba(74,168,220,.5),0 0 0 6px var(--fondo)}
+.nav .centro .ico{width:27px;height:27px}
+.nav .centro.viva{animation:late 2s infinite}
+@keyframes late{50%{box-shadow:0 8px 22px rgba(74,168,220,.5),0 0 0 6px var(--fondo),0 0 0 13px rgba(74,168,220,.22)}}
+.nav .globo{position:absolute;top:-4px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:8px;background:var(--oro);color:#2b1f06;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+/* Tipografia */
+.cab{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cab h1{font-family:Sora;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.cab p{color:var(--gris);font-size:13.5px;margin-top:3px}
+.sobre{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tenue)}
+.t1{font-weight:600;font-size:15px;line-height:1.3}
+.t2{color:var(--gris);font-size:13px}
+.t3{color:var(--tenue);font-size:12px}
+.corta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila{display:flex;align-items:center;gap:12px}
+.crece{flex:1;min-width:0}
+.pila{display:flex;flex-direction:column;gap:12px}
+.sec{display:flex;justify-content:space-between;align-items:baseline}
+.sec h2{font-family:Sora;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.sec a,.sec button{color:var(--azul);font-size:13px;font-weight:600}
+.atras{display:flex;align-items:center;gap:8px;padding:14px 12px 0}
+.atras a{width:40px;height:40px;border-radius:50%;background:var(--sup2);display:grid;place-items:center}
+.atras h1{font-family:Sora;font-size:18px;font-weight:700;flex:1}
+/* Superficies */
+.sup{background:var(--sup);border:1px solid var(--linea);border-radius:var(--r);padding:16px}
+.avatar{width:42px;height:42px;border-radius:14px;background:var(--azul-t);color:var(--azul);font-weight:700;font-size:14px;display:grid;place-items:center;flex:none}
+.avatar.oro{background:var(--oro-t);color:var(--oro)}
+.heroe{border-radius:26px;padding:20px;background:linear-gradient(150deg,#1f7fb8 0%,#14506f 55%,#0f3a52 100%);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14)}
+.heroe::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(230,189,114,.35),transparent 65%)}
+.heroe .gran{font-family:Sora;font-size:58px;font-weight:800;letter-spacing:-.05em;line-height:1}
+.heroe .gran small{font-size:20px;font-weight:600;opacity:.7;letter-spacing:-.01em}
+.tramos{display:flex;gap:5px;margin-top:14px}
+.tramos i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.2)}
+.tramos i.si{background:#fff}.tramos i.viva{background:var(--oro);animation:parpadea 1.4s infinite}
+@keyframes parpadea{50%{opacity:.45}}
+.rejilla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.loseta{background:var(--sup);border:1px solid var(--linea);border-radius:22px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:10px;min-height:138px;position:relative}
+.loseta:active{transform:scale(.97)}
+.loseta .num{font-family:Sora;font-size:46px;font-weight:800;letter-spacing:-.05em;line-height:.95;color:var(--oro)}
+.loseta .num small{font-family:Inter;font-size:12px;font-weight:600;letter-spacing:0;color:var(--tenue);margin-left:4px}
+.loseta .nom{font-size:13.5px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:auto}
+.loseta .mas-extra{position:absolute;top:12px;right:12px}
+.etq{display:inline-flex;align-items:center;gap:4px;height:23px;padding:0 9px;border-radius:8px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.etq .ico{width:13px;height:13px;stroke-width:2.6}
+.etq.azul{background:var(--azul);color:#06202f}.etq.celeste{background:var(--azul-t);color:var(--azul)}
+.etq.verde{background:var(--verde-t);color:var(--verde)}.etq.gris{background:rgba(255,255,255,.08);color:var(--gris)}
+.etq.oro{background:var(--oro-t);color:var(--oro)}.etq.rojo{background:var(--rojo-t);color:var(--rojo)}
+/* Linea de tiempo */
+.tiempo{display:flex;flex-direction:column}
+.hito{display:flex;gap:14px;position:relative;padding-bottom:18px}
+.hito:last-child{padding-bottom:0}
+.hito::before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:var(--linea)}
+.hito:last-child::before{display:none}
+.nodo{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--sup2);color:var(--tenue);border:1px solid var(--linea)}
+.nodo .ico{width:17px;height:17px;stroke-width:2.6}
+.nodo.si{background:var(--verde-t);color:var(--verde);border-color:transparent}
+.nodo.viva{background:var(--azul);color:#06202f;border-color:transparent;box-shadow:0 0 0 5px var(--azul-t)}
+.nodo.prox{background:var(--azul-t);color:var(--azul);border-color:transparent}
+/* Filas densas */
+.tabla{background:var(--sup);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden}
+.tabla>*{display:flex;align-items:center;gap:12px;padding:13px 14px;width:100%;text-align:left;border-bottom:1px solid var(--linea)}
+.tabla>*:last-child{border-bottom:0}
+.tabla>.nuevo{animation:nuevo 1.8s}
+@keyframes nuevo{from{background:var(--verde-t)}}
+/* Botones y campos */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border-radius:25px;font-weight:700;font-size:15px;background:var(--azul);color:#06202f;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn.ancho{width:100%}
+.btn.sec{background:var(--sup2);color:var(--texto);border:1px solid var(--linea)}
+.btn.blanco{background:#fff;color:#0f3a52}
+.btn.chico{height:36px;padding:0 14px;font-size:13px}
+.btn.chico .ico{width:17px;height:17px}
+.enlace{color:var(--azul);font-weight:600;font-size:14px}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label{font-size:13px;font-weight:600;color:var(--gris)}
+.campo input,.campo select,.campo textarea{height:50px;border-radius:14px;border:1px solid var(--linea);background:var(--sup2);padding:0 14px;font-size:16px;outline:none;width:100%;color-scheme:dark}
+.campo textarea{height:auto;padding:12px 14px;resize:none}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--azul);box-shadow:0 0 0 4px var(--azul-t)}
+.campo input::placeholder,.campo textarea::placeholder,.busca input::placeholder{color:var(--tenue)}
+.campo small{color:var(--tenue);font-size:12px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.busca{position:relative}
+.busca .ico{position:absolute;left:16px;top:14px;color:var(--tenue)}
+.busca input{height:50px;width:100%;border-radius:25px;border:1px solid var(--linea);background:var(--sup);padding:0 16px 0 46px;font-size:16px;outline:none}
+.busca input:focus{border-color:var(--azul)}
+.error{color:var(--rojo);font-size:13.5px;font-weight:500}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:36px;padding:0 15px;border-radius:18px;border:1px solid var(--linea);font-weight:600;font-size:13.5px;color:var(--gris)}
+.chip.activo{background:var(--texto);color:var(--fondo);border-color:transparent}
+.caja{width:24px;height:24px;border-radius:8px;border:2px solid var(--tenue);display:grid;place-items:center;flex:none;color:#06202f}
+.caja .ico{width:15px;height:15px;stroke-width:3.2}
+.caja.si{background:var(--azul);border-color:var(--azul)}
+.interruptor{width:50px;height:30px;border-radius:15px;background:var(--sup2);border:1px solid var(--linea);position:relative;flex:none;transition:background .2s}
+.interruptor::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--gris);transition:left .2s,background .2s}
+.interruptor.si{background:var(--azul)}.interruptor.si::after{left:23px;background:#fff}
+.mas1{height:38px;padding:0 14px;border-radius:19px;background:var(--oro);color:#2b1f06;font-weight:700;font-size:14px;flex:none}
+.mas1:disabled{background:var(--sup2);color:var(--tenue);cursor:default}
+.vacio{border:1.5px dashed var(--linea);border-radius:var(--r);padding:28px 18px;text-align:center;color:var(--gris);font-size:14px}
+.nota{border-radius:18px;padding:13px 15px;display:flex;gap:12px;align-items:center;font-size:13.5px}
+.nota.oro{background:var(--oro-t);color:var(--oro)}.nota.verde{background:var(--verde-t);color:var(--verde)}.nota.rojo{background:var(--rojo-t);color:var(--rojo)}
+.nota b{color:var(--texto)}
+/* Hojas */
+.velo{position:absolute;inset:0;background:rgba(2,8,13,.66);display:flex;align-items:flex-end;z-index:20;animation:aparece .18s;backdrop-filter:blur(3px)}
+.hoja{width:100%;max-height:88%;overflow-y:auto;background:var(--sup);border-radius:30px 30px 0 0;border-top:1px solid var(--linea);padding:10px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:sube .28s cubic-bezier(.2,.8,.2,1)}
+.hoja::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--sup2);align-self:center;flex:none}
+.hoja h3{font-family:Sora;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.hoja .sup{background:var(--sup2)}
+.hoja .campo input,.hoja .campo select,.hoja .campo textarea{background:var(--fondo)}
+@keyframes aparece{from{opacity:0}}@keyframes sube{from{transform:translateY(40px);opacity:.5}}
+.toast{position:absolute;left:16px;right:16px;top:16px;background:#fff;color:#0a1622;border-radius:18px;padding:13px 16px;font-size:14px;font-weight:600;z-index:30;display:flex;gap:10px;align-items:center;animation:baja .28s;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+.toast .ico{color:#0e8a5f}
+@keyframes baja{from{transform:translateY(-30px);opacity:0}}
+.rapidas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rapidas button,.rapidas a{background:var(--sup2);border:1px solid var(--linea);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;text-align:left;font-weight:600}
+.rapidas .ico{width:26px;height:26px;color:var(--azul)}
+.rapidas span{font-weight:400;font-size:12.5px;color:var(--gris)}
+/* Entrada */
+.auth{flex:1;overflow-y:auto;padding:40px 22px 28px;display:flex;flex-direction:column;gap:20px}
+.auth>:first-child{margin-top:auto}.auth>:last-child{margin-bottom:auto}
+.marca{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.marca .aro{width:96px;height:96px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 0 0 8px rgba(255,255,255,.07),0 20px 40px rgba(0,0,0,.4)}
+.marca img{width:78px;height:78px;object-fit:contain}
+.marca h1{font-family:Sora;font-size:34px;font-weight:800;letter-spacing:-.04em;margin-top:12px}
+.marca p{color:var(--gris);font-size:14px;max-width:280px}
+.demo{border:1px dashed rgba(230,189,114,.45);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.demo>p{font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.1em}
+.demo button{display:flex;align-items:center;gap:10px;background:var(--sup);border:1px solid var(--linea);border-radius:16px;padding:10px 12px;text-align:left;font-size:13px}
+.demo button b{display:block;font-size:14px}
+.demo button span span{color:var(--gris)}
+/* Marcaje */
+.marcaje{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px;padding:28px 24px;text-align:center}
+.marcaje.bien{background:radial-gradient(90% 60% at 50% 30%,#1b8f68,#0a3d2e 75%)}
+.marcaje.mal{background:radial-gradient(90% 60% at 50% 30%,#a53b39,#3d1312 75%)}
+.boton-marcar{width:214px;height:214px;border-radius:50%;background:linear-gradient(145deg,#62bff0,#1c72a5);color:#fff;font-family:Sora;font-size:22px;font-weight:700;line-height:1.15;box-shadow:0 0 0 14px rgba(74,168,220,.16),0 0 0 30px rgba(74,168,220,.07),0 24px 50px rgba(28,114,165,.5);animation:respira 2.4s infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.boton-marcar .ico{width:44px;height:44px}
+.boton-marcar:active{transform:scale(.95)}
+@keyframes respira{50%{box-shadow:0 0 0 20px rgba(74,168,220,.14),0 0 0 42px rgba(74,168,220,.05),0 24px 50px rgba(28,114,165,.5)}}
+.sello{width:128px;height:128px;border-radius:50%;background:#fff;display:grid;place-items:center;animation:sello .55s cubic-bezier(.2,1.5,.4,1)}
+.sello .ico{width:66px;height:66px;stroke-width:2.8}
+.bien .sello{color:#0e8a5f}.mal .sello{color:#b3302e}
+@keyframes sello{from{transform:scale(.3) rotate(-20deg);opacity:0}}
+.cinta{background:var(--oro-t);color:var(--oro);font-size:12.5px;font-weight:600;padding:9px 16px;display:flex;justify-content:space-between;gap:8px}
+/* Kiosco */
+.kiosco{position:fixed;inset:0;background:radial-gradient(100% 70% at 50% 0%,#16405c,#0a1622 70%);z-index:100;display:flex;align-items:center;justify-content:center;gap:6vw;padding:4vh 5vw;flex-wrap:wrap;text-align:center}
+.kiosco .qr{background:#fff;padding:2.4vh;border-radius:3vh;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.kiosco canvas{display:block;width:min(64vh,80vw);height:min(64vh,80vw)}
+.kiosco .lado{display:flex;flex-direction:column;align-items:center;gap:2.4vh;max-width:520px}
+.kiosco h1{font-family:Sora;font-size:clamp(26px,4.6vh,56px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.kiosco .aro{width:clamp(120px,22vh,230px);height:clamp(120px,22vh,230px);border-radius:50%;border:8px solid var(--azul-t);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.kiosco .aro b{font-family:Sora;font-size:clamp(44px,9vh,100px);font-weight:800;color:var(--oro);line-height:1}
+.kiosco .riel{width:100%;height:10px;border-radius:5px;background:var(--azul-t);overflow:hidden}
+.kiosco .riel div{height:100%;background:var(--azul);transition:width .5s linear}
+.kiosco .cerrar{position:absolute;top:18px;right:18px}
+@media(max-aspect-ratio:13/10){.kiosco{flex-direction:column;flex-wrap:nowrap;gap:2vh}.kiosco canvas{width:min(44vh,78vw);height:min(44vh,78vw)}.kiosco .lado{gap:1.4vh}.kiosco .lado img{display:none}.kiosco .aro{width:15vh;height:15vh;border-width:5px}.kiosco .aro b{font-size:6.5vh}}
+.cuerpo>*,.hoja>*,.auth>*,.marcaje>*{flex-shrink:0}
+.btn{white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../comun.js?v=3"></script>
+<script>
+const R = Ronda, E = R.E, ico = R.ico, esc = R.esc;
+const campo = (id, etq, extra = "", ayuda = "") => `<div class="campo"><label for="${id}">${etq}</label><input id="${id}" ${extra}>${ayuda ? `<small>${ayuda}</small>` : ""}</div>`;
+const corto = (n) => (n || "").split(" ")[0];
+const MARCA = (titulo, texto) => `<div class="marca"><div class="aro"><img src="../escudo-umg.webp" alt=""></div><h1>${titulo}</h1><p>${texto}</p></div>`;
+
+// En esta propuesta el punto extra se reparte de a uno, con un toque por clase.
+R.on("sumar-extra", (d) => {
+  const yo = R.yo(); if (R.puntos(yo).saldo < 1) return;
+  yo.extra.push({ claseId: d.id, puntos: 1, cuando: new Date() });
+  R.toast(`+1 para ${R.clase(d.id).nombre}`);
+});
+
+/* ---------- Piezas ---------- */
+function nav(lados, centro) {
+  const r = R.ruta();
+  const lado = ([href, icono, texto, globo]) => { const activa = href === "/admin" ? r === "/admin" : r.startsWith(href); return `<a class="${activa ? "activa" : ""}" href="#${href}">${ico(icono)}${texto}${globo ? `<span class="globo">${globo}</span>` : ""}</a>`; };
+  return `<nav class="nav">${lados.slice(0, 2).map(lado).join("")}${centro}${lados.slice(2).map(lado).join("")}</nav>`;
+}
+function navAlumno() {
+  const yo = R.yo(), a = R.abierta(); const viva = a && !yo.asis[a.id];
+  return nav([["/inicio", "puntos", "Puntos"], ["/agenda", "calendario", "Agenda"], ["/extra", "regalo", "Extra", R.puntos(yo).saldo || ""], ["/yo", "usuario", "Perfil"]],
+    `<button class="centro ${viva ? "viva" : ""}" data-accion="hoja" data-hoja="marcar" aria-label="Marcar asistencia">${ico("qr")}</button>`);
+}
+const navAdmin = () => nav([["/admin", "tablero", "Hoy"], ["/admin/actividades", "calendario", "Actividades"], ["/admin/alumnos", "usuarios", "Alumnos"], ["/admin/mas", "mas", "Más"]],
+  `<button class="centro" data-accion="hoja" data-hoja="rapidas" aria-label="Acciones rápidas">${ico("sumar")}</button>`);
+const atras = (titulo, href, extra = "") => `<div class="atras"><a href="#${href}" aria-label="Volver">${ico("izq")}</a><h1>${esc(titulo)}</h1>${extra}</div>`;
+const hoja = (html) => `<div class="velo" data-accion="cerrar-hoja" data-solo="1"><div class="hoja">${html}</div></div>`;
+function etqAct(a, al) {
+  const est = R.estadoAct(a);
+  if (est === "borrador") return `<span class="etq gris">Borrador</span>`;
+  if (al && al.asis[a.id]) return `<span class="etq verde">${ico("ok")}Asististe</span>`;
+  if (est === "abierta") return `<span class="etq azul">Abierta ahora</span>`;
+  if (est === "proxima") return `<span class="etq celeste">${R.relativo(a.inicia)}</span>`;
+  return al ? `<span class="etq gris">No asististe</span>` : `<span class="etq gris">Cerrada</span>`;
+}
+const pts = (a) => `<span class="etq oro">${a.tipo === "extra" ? "Extra · " : ""}+${a.puntos}</span>`;
+
+/* ---------- Entrada ---------- */
+function vIngreso() {
+  return `<div class="auth">${MARCA("Ronda", "Tus puntos por participar en las actividades de la UMG")}
+    <form class="pila" data-envio="ingresar">
+      ${campo("correo", "Correo", 'type="email" autocomplete="username" placeholder="tu.correo@miumg.edu.gt"')}
+      ${campo("clave", "Contraseña", 'type="password" autocomplete="current-password"')}
+      ${E.ui.errorIngreso ? `<p class="error">${E.ui.errorIngreso}</p>` : ""}
+      <button class="btn ancho">Ingresar</button>
+      <div class="fila" style="justify-content:space-between"><a class="enlace" href="#/recuperar">Olvidé mi contraseña</a><a class="enlace" href="#/registro">Crear cuenta</a></div>
+    </form>
+    <div class="demo"><p>Cuentas de demostración · un toque y entrás</p>
+      <button data-accion="demo" data-email="alumno@ronda.test"><span class="avatar">AL</span><span><b>Alumna · Ana Lucía</b><span>alumno@ronda.test · alumno123</span></span></button>
+      <button data-accion="demo" data-email="admin@ronda.test"><span class="avatar oro">CR</span><span><b>Administrador · Carlos</b><span>admin@ronda.test · admin123</span></span></button>
+      <button data-accion="demo" data-email="nuevo@ronda.test"><span class="avatar">+</span><span><b>Cuenta nueva, sin perfil</b><span>nuevo@ronda.test · nuevo123</span></span></button>
+    </div></div>`;
+}
+function vRegistro() {
+  return `<div class="auth">${MARCA("Creá tu cuenta", "Con tu correo y una contraseña. Después completás tu carné y tu nombre.")}
+    <form class="pila" data-envio="registrar">${campo("correo", "Correo", 'type="email" placeholder="tu.correo@miumg.edu.gt"')}${campo("clave", "Contraseña", 'type="password"', "Al menos 8 caracteres.")}
+      ${E.ui.errorRegistro ? `<p class="error">${E.ui.errorRegistro}</p>` : ""}<button class="btn ancho">Crear cuenta</button></form>
+    <a class="enlace" href="#/ingreso" style="text-align:center">Ya tengo cuenta</a></div>`;
+}
+function vRecuperar() {
+  return `<div class="auth">${MARCA("Recuperar contraseña", "Te mandamos un enlace a tu correo para que elijas una contraseña nueva.")}
+    ${E.ui.recuperado ? `<div class="nota verde">${ico("ok")}<p><b>Revisá tu correo.</b> Si la cuenta existe, el enlace ya va en camino.</p></div>` : `<form class="pila" data-envio="recuperar">${campo("correo", "Correo", 'type="email" placeholder="tu.correo@miumg.edu.gt"')}<button class="btn ancho">Enviar enlace</button></form>`}
+    <a class="enlace" href="#/ingreso" style="text-align:center">Volver a iniciar sesión</a></div>`;
+}
+function vPerfil() {
+  const yo = R.yo();
+  return `<div class="auth">${MARCA("Completá tu perfil", "Un paso único. Sin tu carné no podemos acreditarte los puntos.")}
+    <form class="pila" data-envio="guardar-perfil">
+      ${campo("p-nombre", "Nombre completo", `value="${esc(yo.nombre)}" placeholder="Como aparece en tu carné"`)}
+      ${campo("p-carne", "Carné", `value="${esc(yo.carne)}" placeholder="0908-22-12345" inputmode="numeric"`)}
+      <div class="campo"><label for="p-ciclo">Ciclo que cursás</label><select id="p-ciclo">${[...Array(10)].map((_, i) => `<option ${String(i + 1) === (yo.ciclo || "10") ? "selected" : ""}>${i + 1}</option>`).join("")}</select><small>Solo decide qué cursos te mostramos primero.</small></div>
+      ${E.ui.errorPerfil ? `<p class="error">${E.ui.errorPerfil}</p>` : ""}<button class="btn ancho">Guardar y elegir mis cursos</button></form>
+    <button class="enlace" data-accion="salir">Cerrar sesión</button></div>`;
+}
+
+/* ---------- Alumno ---------- */
+function vInicio() {
+  const yo = R.yo(), p = R.puntos(yo), a = R.abierta(), px = R.proxima();
+  const asisG = p.globales.filter((x) => yo.asis[x.id]).length;
+  const viva = a && !yo.asis[a.id];
+  return `<main class="cuerpo" data-desliz="c">
+    <div class="cab"><div><p class="sobre">Hola, ${esc(corto(yo.nombre))}</p><h1>Tu marcador</h1></div><a class="avatar" href="#/yo">${R.iniciales(yo.nombre)}</a></div>
+    <div class="heroe"><p class="sobre" style="color:rgba(255,255,255,.75)">Actividades asistidas</p>
+      <p class="gran">${asisG}<small> de ${p.globales.length}</small></p>
+      <div class="tramos">${p.globales.map((x) => `<i class="${yo.asis[x.id] ? "si" : R.estadoAct(x) === "abierta" ? "viva" : ""}"></i>`).join("")}</div>
+      <p style="font-size:13.5px;margin-top:12px;color:rgba(255,255,255,.85);position:relative;z-index:1">${viva ? `<b>${esc(a.nombre)}</b> está abierta ahora, hasta las ${R.hora(a.cierra)}` : px ? `Próxima: <b>${esc(px.nombre)}</b>, ${R.relativo(px.inicia)}.` : "Cada asistencia suma un punto en todas tus clases."}</p>
+      ${viva ? `<button class="btn blanco ancho" style="margin-top:14px;position:relative;z-index:1" data-accion="hoja" data-hoja="marcar">${ico("qr")}Marcar mi asistencia</button>` : ""}</div>
+    ${p.saldo > 0 ? `<a class="nota oro" href="#/extra">${ico("regalo")}<p class="crece"><b>${R.pl(p.saldo, "punto extra", "puntos extra")} sin repartir.</b> Sumalos a una clase antes del ${R.dia(E.corteExtra)}.</p>${ico("der")}</a>` : ""}
+    <div class="sec"><h2>Puntos por clase</h2><a href="#/cursos">Mis cursos</a></div>
+    ${p.porClase.length ? `<div class="rejilla">${p.porClase.map((f) => `<button class="loseta" data-accion="hoja" data-hoja="clase" data-id="${f.clase.id}">
+      <span class="sobre">${f.clase.codigo}</span>${f.extra ? `<span class="etq oro mas-extra">+${f.extra} extra</span>` : ""}
+      <span class="num">${f.total}<small>${f.total === 1 ? "pto" : "pts"}</small></span><span class="nom">${esc(f.clase.nombre)}</span></button>`).join("")}</div>`
+    : `<div class="vacio"><p class="t1" style="color:var(--texto)">Todavía no elegiste tus cursos</p><p>Tus asistencias ya están guardadas: los puntos aparecen solos cuando te inscribas.</p><a class="btn chico" style="margin-top:12px" href="#/cursos">Elegir mis cursos</a></div>`}
+    <div class="sec"><h2>Tu recorrido</h2><a href="#/agenda">Ver agenda</a></div>
+    ${recorrido(yo, R.visibles().filter((x) => R.estadoAct(x) !== "proxima").reverse().slice(0, 4))}
+  </main>${navAlumno()}`;
+}
+function recorrido(yo, lista) {
+  return `<div class="sup tiempo">${lista.map((a) => { const est = R.estadoAct(a), si = !!yo.asis[a.id];
+    return `<div class="hito"><span class="nodo ${si ? "si" : est === "abierta" ? "viva" : est === "proxima" ? "prox" : ""}">${ico(si ? "ok" : est === "abierta" ? "qr" : est === "proxima" ? "reloj" : "x")}</span>
+      <div class="crece"><p class="t1">${esc(a.nombre)}</p><p class="t3">${R.dia(a.inicia)} · ${R.hora(a.inicia)} · ${esc(a.lugar)}</p><div class="fila" style="gap:6px;margin-top:6px;flex-wrap:wrap">${etqAct(a, yo)}${pts(a)}</div></div></div>`; }).join("")}</div>`;
+}
+function hojaClase(id) {
+  const yo = R.yo(), p = R.puntos(yo), f = p.porClase.find((x) => x.clase.id === id); if (!f) return "";
+  return hoja(`<div class="fila" style="align-items:flex-start"><div class="crece"><p class="sobre">${f.clase.codigo} · Sección ${f.clase.seccion}</p><h3>${esc(f.clase.nombre)}</h3><p class="t2">${esc(R.docente(f.clase.docenteId)?.nombre || "Sin catedrático asignado")}</p></div>
+      <p class="sora" style="font-size:52px;font-weight:800;color:var(--oro);line-height:1;letter-spacing:-.05em">${f.total}</p></div>
+    <div class="tabla" style="background:var(--sup2)">${p.globales.map((a) => { const si = !!yo.asis[a.id]; return `<div><span class="nodo ${si ? "si" : ""}">${ico(si ? "ok" : "x")}</span><div class="crece"><p class="t1" style="font-size:14px">${esc(a.nombre)}</p><p class="t3">${R.dia(a.inicia)}${si ? ` · marcaste ${R.hora(yo.asis[a.id])}` : R.estadoAct(a) === "abierta" ? " · abierta ahora" : ""}</p></div><b class="sora" style="color:${si ? "var(--texto)" : "var(--tenue)"}">${si ? "+" + a.puntos : "0"}</b></div>`; }).join("")}
+      ${f.extra ? `<div><span class="nodo" style="background:var(--oro-t);color:var(--oro)">${ico("regalo")}</span><div class="crece"><p class="t1" style="font-size:14px">Puntos extra que sumaste acá</p></div><b class="sora" style="color:var(--oro)">+${f.extra}</b></div>` : ""}</div>
+    <p class="t3">Las actividades globales suman en todas tus clases a la vez. Los puntos extra van solo a la clase que elijas.</p>`);
+}
+function hojaMarcar() {
+  const yo = R.yo(), a = R.abierta(), px = R.proxima();
+  if (a && yo.asis[a.id]) return hoja(`<h3>Ya marcaste</h3><div class="nota verde">${ico("ok")}<p><b>${esc(a.nombre)}</b><br>Marcaste a las ${R.hora(yo.asis[a.id])} y tu punto ya está sumado</p></div><button class="btn sec ancho" data-accion="cerrar-hoja">Cerrar</button>`);
+  if (!a) return hoja(`<h3>No hay marcaje abierto</h3><p class="t2">${px ? `La próxima actividad es <b style="color:var(--texto)">${esc(px.nombre)}</b>, ${R.relativo(px.inicia)} a las ${R.hora(px.inicia)}` : "Te avisamos cuando haya una actividad."}</p><button class="btn sec ancho" data-accion="cerrar-hoja">Entendido</button>`);
+  const paso = (n, t) => `<div><span class="nodo prox sora" style="font-weight:700">${n}</span><p class="t1 crece" style="font-size:14px">${t}</p></div>`;
+  return hoja(`<p class="sobre" style="color:var(--azul)">Abierta ahora · cierra ${R.hora(a.cierra)}</p><h3>${esc(a.nombre)}</h3><p class="t2">${esc(a.lugar)} · ${R.pl(a.puntos, "punto", "puntos")}</p>
+    <div class="tabla" style="background:var(--sup2)">${paso(1, "Abrí la cámara de tu teléfono, la de siempre")}${paso(2, "Apuntá al QR proyectado en el salón")}${paso(3, "Tocá el enlace y pulsá el botón de marcar")}</div>
+    <div class="demo"><p>Solo en este prototipo</p><button data-accion="escanear" data-id="${a.id}">${ico("qr")}<span><b>Simular que escaneé el QR</b><span>Abre la pantalla a la que llega el enlace real</span></span></button></div>`);
+}
+function vAgenda() {
+  const yo = R.yo(), todas = R.visibles();
+  const ahora = todas.filter((a) => R.estadoAct(a) === "abierta"), prox = todas.filter((a) => R.estadoAct(a) === "proxima"), pas = todas.filter((a) => R.estadoAct(a) === "pasada").reverse();
+  const bloque = (t, l) => l.length ? `<div class="sec"><h2>${t}</h2><span class="t3">${l.length}</span></div>${recorrido(yo, l)}` : "";
+  return `<main class="cuerpo" data-desliz="c"><div class="cab"><div><h1>Agenda</h1><p>Cada asistencia suma en todas tus clases.</p></div></div>
+    ${bloque("Ahora", ahora)}${bloque("Próximas", prox)}${bloque("Ya pasaron", pas)}</main>${navAlumno()}`;
+}
+function vExtra() {
+  const yo = R.yo(), p = R.puntos(yo);
+  return `<main class="cuerpo" data-desliz="c"><div class="cab"><div><h1>Puntos extra</h1><p>Los ganás en actividades especiales. Vos elegís la clase.</p></div></div>
+    <div class="sup" style="display:flex;align-items:center;gap:18px;background:linear-gradient(140deg,rgba(230,189,114,.22),rgba(230,189,114,.05));border-color:rgba(230,189,114,.3)">
+      <div style="width:96px;height:96px;border-radius:50%;border:5px solid var(--oro);display:grid;place-items:center;flex:none"><b class="sora" style="font-size:44px;font-weight:800;color:var(--oro);line-height:1">${p.saldo}</b></div>
+      <div><p class="sobre" style="color:var(--oro)">Saldo por repartir</p><p class="t1" style="margin-top:4px">${p.saldo > 0 ? "Tocá +1 en la clase que quieras." : p.ganadoExtra ? "Ya repartiste todo." : "Todavía no ganaste puntos extra."}</p><p class="t3" style="margin-top:2px">${p.saldo > 0 ? `Se pierden si no los repartís antes del ${R.dia(E.corteExtra)}.` : `Ganados en total: ${p.ganadoExtra}`}</p></div></div>
+    ${yo.clases.length ? `<div class="sec"><h2>Tus clases</h2></div><div class="tabla">${p.porClase.map((f) => `<div><div class="crece"><p class="t1" style="font-size:14px">${esc(f.clase.nombre)}</p><p class="t3">Lleva ${R.pl(f.total, "punto", "puntos")}${f.extra ? ` · ${f.extra} extra` : ""}</p></div><button class="mas1" data-accion="sumar-extra" data-id="${f.clase.id}" ${p.saldo < 1 ? "disabled" : ""}>+1</button></div>`).join("")}</div>` : ""}
+    ${yo.extra.length ? `<div class="sec"><h2>Ya repartido</h2></div><div class="tabla">${yo.extra.map((x, i) => `<div><span class="avatar oro">+${x.puntos}</span><div class="crece"><p class="t1" style="font-size:14px">${esc(R.clase(x.claseId).nombre)}</p><p class="t3">${R.fecha(x.cuando)}</p></div><button class="enlace" data-accion="deshacer" data-i="${i}">Deshacer</button></div>`).join("")}</div><p class="t3">Podés deshacer un reparto hasta la fecha de corte.</p>` : ""}
+  </main>${navAlumno()}`;
+}
+function vCursos() {
+  const yo = R.yo(); const ciclo = E.ui.ciclo ?? (yo.ciclo || "todos"); const q = (E.ui.qCursos || "").toLowerCase();
+  const lista = E.clases.filter((c) => (q ? (c.nombre + c.codigo).toLowerCase().includes(q) : ciclo === "mios" ? yo.clases.includes(c.id) : ciclo === "todos" || c.ciclo === ciclo));
+  const chip = (v, t) => `<button class="chip ${ciclo === v ? "activo" : ""}" data-accion="ui" data-k="ciclo" data-v="${v}">${t}</button>`;
+  return atras("Mis cursos", yo.clases.length ? "/yo" : "/inicio", `<span class="etq oro">${yo.clases.length} elegidos</span>`) + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">
+    <p class="t2">Marcá los que llevás este ciclo. Se guarda solo.</p>
+    <div class="busca">${ico("buscar")}<input id="q-cursos" data-m="qCursos" data-vivo value="${esc(E.ui.qCursos || "")}" placeholder="Buscar por nombre o código" type="search"></div>
+    <div class="chips">${chip("mios", "Solo los míos")}${yo.ciclo ? chip(yo.ciclo, `Mi ciclo (${yo.ciclo})`) : ""}${chip("todos", "Todos")}${[...new Set(E.clases.map((c) => c.ciclo))].filter((c) => c !== yo.ciclo).map((c) => chip(c, "Ciclo " + c)).join("")}</div>
+    ${lista.length ? `<div class="tabla">${lista.map((c) => { const si = yo.clases.includes(c.id); return `<button data-accion="curso" data-id="${c.id}"><span class="caja ${si ? "si" : ""}">${si ? ico("ok") : ""}</span><div class="crece"><p class="t1" style="font-size:14.5px">${esc(c.nombre)}</p><p class="t3">${c.codigo} · Ciclo ${c.ciclo} · Sección ${c.seccion}${c.docenteId ? " · " + esc(R.docente(c.docenteId).nombre) : ""}</p></div></button>`; }).join("")}</div>` : `<div class="vacio">No encontramos cursos con ese criterio.</div>`}
+    <a class="btn ancho" href="#/inicio">Listo</a></main>`;
+}
+function vYo() {
+  const yo = R.yo(), p = R.puntos(yo);
+  return `<main class="cuerpo" data-desliz="c">
+    <div class="sup" style="text-align:center;padding:24px 16px"><span class="avatar" style="width:72px;height:72px;font-size:24px;border-radius:24px;margin:0 auto">${R.iniciales(yo.nombre)}</span><h1 class="sora" style="font-size:21px;margin-top:12px;letter-spacing:-.02em">${esc(yo.nombre)}</h1><p class="t2">Carné ${yo.carne} · Ciclo ${yo.ciclo}</p><p class="t3">${yo.email}</p></div>
+    <div class="tabla">
+      <a href="#/cursos">${ico("libro")}<div class="crece"><p class="t1">Mis cursos</p><p class="t3">${R.pl(yo.clases.length, "curso inscrito", "cursos inscritos")}</p></div>${ico("der")}</a>
+      <button data-accion="avisos">${ico("campana")}<div class="crece"><p class="t1">Avisarme de las actividades</p><p class="t3">Actividad nueva o puntos extra por vencer. Nada más.</p></div><span class="interruptor ${E.avisos ? "si" : ""}"></span></button>
+      <button data-accion="hoja" data-hoja="ios">${ico("celular")}<div class="crece"><p class="t1">Instalar en mi teléfono</p><p class="t3">Queda en tu pantalla de inicio.</p></div>${ico("der")}</button>
+      ${yo.rol === "admin" ? `<button data-accion="vista-alumno" data-v="0">${ico("cambio")}<div class="crece"><p class="t1">Volver a Administración</p></div>${ico("der")}</button>` : ""}
+      <button data-accion="salir" style="color:var(--gris)">${ico("salir")}<div class="crece"><p class="t1">Cerrar sesión</p></div></button>
+    </div></main>${navAlumno()}`;
+}
+function hojaIos() {
+  const paso = (n, t, d) => `<div><span class="nodo prox sora" style="font-weight:700">${n}</span><div class="crece"><p class="t1" style="font-size:14px">${t}</p><p class="t3">${d}</p></div></div>`;
+  return hoja(`<h3>Instalar en tu iPhone</h3><div class="tabla" style="background:var(--sup2)">${paso(1, "Abrí esta página en Safari", "Es el único que puede agregarla.")}${paso(2, "Tocá el botón Compartir", "El cuadrado con la flecha hacia arriba.")}${paso(3, "Elegí «Agregar a inicio»", "Puede estar más abajo en la lista.")}${paso(4, "Confirmá tocando «Agregar»", "El ícono aparece en tu pantalla de inicio.")}</div><p class="t3">En Android, Chrome te ofrece instalarla solo. Marcar asistencia siempre necesita internet.</p><button class="btn sec ancho" data-accion="cerrar-hoja">Entendido</button>`);
+}
+function vMarcar(id) {
+  const yo = R.yo(), a = R.actividad(id);
+  if (!a) return `<div class="marcaje"><h1 class="sora" style="font-size:24px">Actividad no encontrada</h1><p class="t2">Ese código no corresponde a ninguna actividad. Volvé a escanear el QR de la pantalla.</p><a class="btn sec" href="#/inicio">Ir al inicio</a></div>`;
+  if (E.resultado) {
+    const t = R.textoResultado(E.resultado, a, yo);
+    return `<div class="marcaje ${t.bien ? "bien" : "mal"}"><div class="sello">${ico(t.bien ? "ok" : "x")}</div>
+      <div><h1 class="sora" style="font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.2">${t.titulo}</h1><p style="margin-top:10px;font-size:15px;opacity:.85">${t.detalle}</p></div>
+      ${t.bien ? `<p class="sora" style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-.04em">+${a.puntos}<span style="display:block;font-family:Inter;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-top:8px">${a.tipo === "extra" ? "a tu saldo extra" : `en tus ${yo.clases.length} clases`}</span></p><a class="btn blanco ancho" href="#/inicio">Ver mi marcador</a>`
+      : `<button class="btn blanco ancho" data-accion="reintentar">${ico("qr")}Escanear otra vez</button><a href="#/inicio" style="font-weight:600;opacity:.85">Ir al inicio</a>`}</div>`;
+  }
+  return `<div class="marcaje"><div><p class="sobre" style="color:var(--azul)">Vas a marcar asistencia en</p><h1 class="sora" style="font-size:27px;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-top:8px">${esc(a.nombre)}</h1><p class="t2" style="margin-top:8px">${esc(a.lugar)} · ${R.pl(a.puntos, "punto", "puntos")}</p></div>
+    <button class="boton-marcar" data-accion="marcar" data-id="${a.id}">${ico("ok")}Marcar<br>asistencia</button>
+    <p class="t2">${esc(yo.nombre)} · ${yo.carne}</p>
+    <div class="demo" style="text-align:left;width:100%"><p>Solo en este prototipo</p><button data-accion="alternar" data-k="simVencido"><span class="interruptor ${E.ui.simVencido ? "si" : ""}"></span><span><b>Simular código vencido</b><span>Para ver la pantalla de error</span></span></button></div>
+    <a class="enlace" href="#/inicio">Cancelar</a></div>`;
+}
+
+/* ---------- Administracion ---------- */
+function vHoy() {
+  const yo = R.yo(), a = R.abierta(), px = R.proxima();
+  const sinDoc = E.clases.filter((c) => !c.docenteId).length;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const asisHoy = E.alumnos.reduce((s, al) => s + Object.values(al.asis).filter((d) => d >= hoy).length, 0);
+  const conSaldo = E.alumnos.filter((al) => al.perfil && R.puntos(al).saldo > 0).length;
+  const senales = E.bitacora.filter((x) => x.senal).length;
+  const pend = (icono, t, d, href) => `<a href="#${href}"><span class="nodo" style="background:var(--oro-t);color:var(--oro);border-color:transparent">${ico(icono)}</span><div class="crece"><p class="t1" style="font-size:14px">${t}</p><p class="t3">${d}</p></div>${ico("der")}</a>`;
+  return `<main class="cuerpo" data-desliz="c">
+    <div class="cab"><div><p class="sobre">Panel · ${R.dia(new Date())}</p><h1>Hola, ${esc(corto(yo.nombre))}</h1></div><a class="avatar oro" href="#/admin/mas">${R.iniciales(yo.nombre)}</a></div>
+    ${a ? `<div class="heroe"><div class="fila" style="position:relative;z-index:1"><span class="etq" style="background:#fff;color:#0f3a52"><span style="width:7px;height:7px;border-radius:50%;background:#0e8a5f"></span>En vivo</span><span style="font-size:13px;color:rgba(255,255,255,.8)">cierra ${R.hora(a.cierra)}</span></div>
+      <p class="gran" style="margin-top:14px">${R.asistentes(a.id).length}<small> asistencias</small></p><p style="font-weight:600;margin-top:6px;position:relative;z-index:1">${esc(a.nombre)} · ${esc(a.lugar)}</p>
+      <div class="dos" style="margin-top:16px;position:relative;z-index:1"><a class="btn blanco" style="padding:0 12px" href="#/admin/vivo/${a.id}">${ico("vivo")}Ver en vivo</a><button class="btn sec" style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25)" data-accion="kiosco" data-id="${a.id}">${ico("pantalla")}Kiosco</button></div></div>`
+    : `<div class="sup fila">${ico("reloj")}<div class="crece"><p class="t1">No hay marcaje abierto</p><p class="t2">${px ? `Próxima: ${esc(px.nombre)}, ${R.relativo(px.inicia)}.` : "Creá o publicá una actividad."}</p></div></div>`}
+    <div class="rejilla" style="grid-template-columns:repeat(3,1fr);gap:10px">${[[asisHoy, "asistencias hoy"], [E.alumnos.length, "alumnos"], [E.actividades.filter((x) => x.estado === "publicada").length, "publicadas"]].map(([n, t]) => `<div class="sup" style="padding:14px 12px"><p class="sora" style="font-size:28px;font-weight:800;line-height:1">${n}</p><p class="t3" style="margin-top:6px">${t}</p></div>`).join("")}</div>
+    <div class="sec"><h2>Pendientes</h2><span class="t3">${[sinDoc, conSaldo, senales].filter(Boolean).length}</span></div>
+    <div class="tabla">${sinDoc ? pend("birrete", `${sinDoc} clases sin catedrático`, "No se pueden exportar hasta asignarlo.", "/admin/clases") : ""}${conSaldo ? pend("regalo", `${R.pl(conSaldo, "alumno", "alumnos")} con puntos extra sin repartir`, `El corte es el ${R.dia(E.corteExtra)}. Conviene avisarles.`, "/admin/avisos") : ""}${senales ? pend("alerta", `${senales} señales en la bitácora`, "Intentos fallidos repetidos o dispositivos compartidos.", "/admin/bitacora") : ""}</div>
+    <button class="btn sec ancho" data-accion="demo-toast" data-t="Prototipo: acá se descarga el Excel global.">${ico("bajar")}Descargar reporte global</button>
+  </main>${navAdmin()}`;
+}
+function hojaRapidas() {
+  const a = R.abierta();
+  const sinAct = 'data-accion="demo-toast" data-t="No hay ninguna actividad con marcaje abierto ahora."';
+  return hoja(`<h3>Acciones rápidas</h3><div class="rapidas">
+    <button data-accion="hoja" data-hoja="actividad">${ico("calendario")}Nueva actividad<span>Crear y publicar</span></button>
+    <button ${a ? `data-accion="hoja" data-hoja="manual" data-id="${a.id}"` : sinAct}>${ico("editar")}Marcaje manual<span>${a ? esc(a.nombre) : "Sin actividad abierta"}</span></button>
+    <button ${a ? `data-accion="kiosco" data-id="${a.id}"` : sinAct}>${ico("pantalla")}Abrir kiosco<span>Proyectar el QR</span></button>
+    <a href="#/admin/avisos">${ico("campana")}Enviar aviso<span>Notificación a los teléfonos</span></a></div>`);
+}
+function vAdminActividades() {
+  const grupos = [["Abierta ahora", (a) => R.estadoAct(a) === "abierta"], ["Próximas", (a) => R.estadoAct(a) === "proxima"], ["Borradores", (a) => a.estado === "borrador"], ["Ya pasaron", (a) => R.estadoAct(a) === "pasada"]];
+  return `<main class="cuerpo" data-desliz="c"><div class="cab"><div><h1>Actividades</h1><p>${E.actividades.length} en total · ${E.actividades.filter((a) => a.estado === "publicada").length} publicadas</p></div><button class="btn chico" data-accion="hoja" data-hoja="actividad">${ico("sumar")}Nueva</button></div>
+    ${grupos.map(([t, f]) => { const l = E.actividades.filter(f).sort((x, y) => y.inicia - x.inicia); return l.length ? `<div class="sec"><h2>${t}</h2><span class="t3">${l.length}</span></div><div class="tabla">${l.map((a) => `<a href="#/admin/vivo/${a.id}"><div style="width:44px;text-align:center;flex:none"><p class="sora" style="font-size:22px;font-weight:800;line-height:1">${a.inicia.getDate()}</p><p class="sobre" style="margin-top:3px">${R.mes(a.inicia)}</p></div><div class="crece"><p class="t1" style="font-size:14.5px">${esc(a.nombre)}</p><p class="t3 corta">${R.hora(a.inicia)} · ${esc(a.lugar || "Sin lugar")}</p></div><div style="text-align:right"><p class="sora" style="font-size:18px;font-weight:700;color:var(--oro);line-height:1.1">${R.asistentes(a.id).length}</p>${pts(a)}</div></a>`).join("")}</div>` : ""; }).join("")}
+  </main>${navAdmin()}`;
+}
+function hojaActividad(id) {
+  const a = id ? R.actividad(id) : null;
+  const local = (d) => new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const op = (v, t, sel) => `<option value="${v}" ${sel === v ? "selected" : ""}>${t}</option>`;
+  return hoja(`<h3>${a ? "Editar actividad" : "Nueva actividad"}</h3><form class="pila" data-envio="guardar-actividad" ${a ? `data-id="${a.id}"` : ""}>
+    ${campo("f-nombre", "Nombre", `value="${esc(a?.nombre || "")}" placeholder="Conferencia de…"`)}
+    ${campo("f-lugar", "Lugar", `value="${esc(a?.lugar || "")}" placeholder="Salón 201"`)}${campo("f-inicia", "Empieza", `type="datetime-local" value="${a ? local(a.inicia) : ""}"`, "Hora de Guatemala.")}
+    <div class="dos"><div class="campo"><label for="f-tipo">Tipo</label><select id="f-tipo">${op("global", "Global", a?.tipo)}${op("extra", "Extra", a?.tipo)}</select></div>${campo("f-puntos", "Puntos", `type="number" min="1" value="${a?.puntos || 1}"`)}</div>
+    <div class="dos"><div class="campo"><label for="f-estado">Estado</label><select id="f-estado">${op("borrador", "Borrador", a?.estado)}${op("publicada", "Publicada", a?.estado)}${op("cerrada", "Cerrada", a?.estado)}</select></div>${campo("f-radio", "Zona (metros)", `type="number" value="${a?.radioM || ""}" placeholder="Opcional"`)}</div>
+    <div class="campo"><label for="f-desc">Descripción</label><textarea id="f-desc" rows="2">${esc(a?.descripcion || "")}</textarea></div>
+    <p class="t3">Las globales acreditan el punto en todas las clases del alumno. La extra le da saldo que él reparte.</p>
+    ${E.ui.errorAct ? `<p class="error">${E.ui.errorAct}</p>` : ""}<button class="btn ancho">${a ? "Guardar cambios" : "Crear actividad"}</button></form>`);
+}
+function vVivo(id) {
+  const a = R.actividad(id); if (!a) return vAdminActividades();
+  const est = R.estadoAct(a), gente = R.asistentes(a.id);
+  const acc = (attrs, icono, t) => `<button ${attrs} style="display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--gris);flex:1"><span class="avatar" style="width:52px;height:52px;border-radius:50%">${ico(icono)}</span>${t}</button>`;
+  const html = atras(est === "abierta" ? "En vivo" : "Actividad", "/admin/actividades", etqAct(a)) + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">
+    <div class="heroe" style="text-align:center"><p class="sobre" style="color:rgba(255,255,255,.75)">${est === "abierta" ? "Se actualiza solo · cierra " + R.hora(a.cierra) : "Asistencias registradas"}</p><p class="gran" style="font-size:84px;margin-top:6px">${gente.length}</p>
+      <p style="font-weight:600;margin-top:8px;position:relative;z-index:1">${esc(a.nombre)}</p><p style="font-size:13px;color:rgba(255,255,255,.8);position:relative;z-index:1">${R.fecha(a.inicia)} · ${esc(a.lugar || "Sin lugar")}${a.radioM ? ` · zona ${a.radioM} m` : ""}</p></div>
+    ${a.estado === "borrador" ? `<button class="btn ancho" data-accion="estado-act" data-id="${a.id}" data-v="publicada">Publicar actividad</button>` : ""}
+    <div class="fila" style="align-items:flex-start;gap:4px">${acc(`data-accion="kiosco" data-id="${a.id}"`, "pantalla", "Kiosco")}${acc(`data-accion="hoja" data-hoja="manual" data-id="${a.id}"`, "editar", "Manual")}${acc('data-accion="demo-toast" data-t="Aviso enviado a 2 dispositivos suscritos."', "campana", "Avisar")}${acc(`data-accion="hoja" data-hoja="actividad" data-id="${a.id}"`, "lista", "Editar")}</div>
+    <div class="sec"><h2>Quiénes marcaron</h2></div>
+    ${gente.length ? `<div class="tabla">${gente.map((al) => `<a class="${E.nuevoEnVivo === al.id ? "nuevo" : ""}" href="#/admin/alumno/${al.id}"><span class="avatar">${R.iniciales(al.nombre)}</span><div class="crece"><p class="t1 corta" style="font-size:14.5px">${esc(al.nombre)}</p><p class="t3">${al.carne}</p></div><div style="text-align:right"><p class="t1" style="font-size:13px">${R.hora(al.asis[a.id])}</p><span class="etq ${al.manual?.[a.id] ? "oro" : "gris"}">${al.manual?.[a.id] ? "Manual" : "QR"}</span></div></a>`).join("")}</div>` : `<div class="vacio">Todavía no marcó nadie. Van a aparecer acá apenas escaneen.</div>`}</main>`;
+  E.nuevoEnVivo = null;
+  return html;
+}
+function hojaManual(id) {
+  return hoja(`<h3>Marcaje manual</h3><p class="t2">Para quien sí estuvo y no pudo escanear. Queda en la bitácora con tu nombre.</p><form class="pila" data-envio="manual" data-id="${id}">${campo("mm-alumno", "Alumno", 'placeholder="Carné, nombre o correo"', "Probá con «Sofía» o «0908-22-10488».")}
+    <div class="campo"><label for="mm-nota">Justificación</label><textarea id="mm-nota" rows="2" placeholder="Se quedó sin batería en la puerta"></textarea><small>Obligatoria.</small></div>${E.ui.errorManual ? `<p class="error">${E.ui.errorManual}</p>` : ""}<button class="btn ancho">Registrar asistencia</button></form>`);
+}
+function vAlumnos() {
+  const q = (E.ui.qAl || "").toLowerCase();
+  const lista = E.alumnos.filter((al) => !q || (al.nombre + al.carne + al.email).toLowerCase().includes(q));
+  return `<main class="cuerpo" data-desliz="c"><div class="cab"><div><h1>Alumnos</h1><p>${E.alumnos.length} cuentas registradas</p></div></div>
+    <div class="busca">${ico("buscar")}<input id="q-al" data-m="qAl" data-vivo value="${esc(E.ui.qAl || "")}" placeholder="Carné, nombre o correo" type="search"></div>
+    ${lista.length ? `<div class="tabla">${lista.map((al) => `<a href="#/admin/alumno/${al.id}"><span class="avatar ${al.rol === "admin" ? "oro" : ""}">${al.perfil ? R.iniciales(al.nombre) : "?"}</span><div class="crece"><p class="t1 corta">${esc(al.nombre || al.email)}</p><p class="t3 corta">${al.perfil ? al.carne + " · Ciclo " + al.ciclo : "Perfil sin completar"}</p></div>${al.rol === "admin" ? '<span class="etq oro">Admin</span>' : `<b class="sora" style="color:var(--oro)">${al.perfil ? R.puntos(al).asistidas : ""}</b>`}${ico("der")}</a>`).join("")}</div><p class="t3">El número dorado es la cantidad de actividades a las que asistió.</p>` : `<div class="vacio">No encontramos ningún alumno con ese criterio.</div>`}
+  </main>${navAdmin()}`;
+}
+function vAlumno(id) {
+  const al = R.alumno(id); if (!al) return vAlumnos();
+  const p = R.puntos(al);
+  return atras("Ficha del alumno", "/admin/alumnos") + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">
+    <div class="sup fila"><span class="avatar" style="width:58px;height:58px;font-size:20px;border-radius:20px">${al.perfil ? R.iniciales(al.nombre) : "?"}</span><div class="crece"><p class="t1" style="font-size:17px">${esc(al.nombre || "Sin nombre")}</p><p class="t2">${al.perfil ? `Carné ${al.carne} · Ciclo ${al.ciclo}` : "Perfil sin completar"}</p><p class="t3 corta">${al.email}</p></div></div>
+    <div class="rejilla" style="grid-template-columns:repeat(3,1fr);gap:10px">${[[`${p.asistidas}/${p.pasadas.length}`, "asistencias"], [al.clases.length, "cursos"], [p.saldo, "extra sin repartir"]].map(([n, t]) => `<div class="sup" style="padding:14px 12px"><p class="sora" style="font-size:24px;font-weight:800;line-height:1">${n}</p><p class="t3" style="margin-top:6px">${t}</p></div>`).join("")}</div>
+    <div class="sec"><h2>Puntos por clase</h2><button data-accion="hoja" data-hoja="inscripciones" data-id="${al.id}">Corregir inscripciones</button></div>
+    ${p.porClase.length ? `<div class="tabla">${p.porClase.map((f) => `<div><div class="crece"><p class="t1" style="font-size:14.5px">${esc(f.clase.nombre)}</p><p class="t3">${f.clase.codigo} · ${f.base} de actividades${f.extra ? ` + ${f.extra} extra` : ""}</p></div><b class="sora" style="font-size:24px;color:var(--oro)">${f.total}</b></div>`).join("")}</div>` : `<div class="vacio">No está inscrito en ninguna clase. Sus asistencias igual están guardadas.</div>`}
+    <button class="btn sec ancho" data-accion="demo-toast" data-t="Prototipo: acá se pide confirmación antes de liberar el carné.">Liberar carné</button></main>`;
+}
+function hojaInscripciones(id) {
+  const al = R.alumno(id);
+  return hoja(`<h3>Inscripciones de ${esc(corto(al.nombre))}</h3><div class="tabla" style="background:var(--sup2)">${E.clases.map((c) => { const si = al.clases.includes(c.id); return `<button data-accion="inscripcion-admin" data-alumno="${al.id}" data-id="${c.id}"><span class="caja ${si ? "si" : ""}">${si ? ico("ok") : ""}</span><div class="crece"><p class="t1" style="font-size:14px">${esc(c.nombre)}</p><p class="t3">${c.codigo} · Ciclo ${c.ciclo}</p></div></button>`; }).join("")}</div><button class="btn ancho" data-accion="cerrar-hoja">Listo</button>`);
+}
+function vAvisos() {
+  const t = E.ui.avTitulo || "", m = E.ui.avMensaje || "", paso2 = E.ui.avPaso === 2;
+  return atras("Enviar aviso", "/admin/mas") + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">
+    <div class="sup" style="background:#e9edf1;color:#13212d;display:flex;gap:10px;border-radius:22px"><div style="width:40px;height:40px;border-radius:11px;background:#fff;display:grid;place-items:center;flex:none"><img src="../escudo-umg.webp" alt="" style="width:30px;height:30px"></div><div class="crece"><p style="font-size:12px;color:#5a6a79">Ronda · ahora</p><p style="font-weight:700;font-size:14px;word-break:break-word">${esc(t.trim() || "Título del aviso")}</p><p style="font-size:13px;color:#42525f;word-break:break-word">${esc(m.trim() || "El mensaje aparece acá.")}</p></div></div>
+    ${paso2 ? `<div class="sup pila"><p class="sora" style="font-size:20px;font-weight:700">Le llega a 2 de 9 cuentas</p><p class="t2">A las demás no: no activaron los avisos, o tienen iPhone sin la app instalada.</p><div class="dos"><button class="btn sec" data-accion="ui" data-k="avPaso" data-v="1">Editar</button><button class="btn" data-accion="aviso-enviar">${ico("enviar")}Enviar</button></div></div>`
+    : `<div class="campo"><label for="av-t">Título · ${t.trim().length} de 60</label><input id="av-t" data-m="avTitulo" data-vivo maxlength="60" value="${esc(t)}" placeholder="Convocatoria"></div>
+      <div class="campo"><label for="av-m">Mensaje · ${m.trim().length} de 200</label><textarea id="av-m" data-m="avMensaje" data-vivo rows="3" maxlength="200" placeholder="Los esperamos a todos en el salón 3.">${esc(m)}</textarea><small>Se ve en la pantalla bloqueada: no pongas datos de un alumno.</small></div>
+      ${E.ui.errorAviso ? `<p class="error">${E.ui.errorAviso}</p>` : ""}
+      <button class="btn ancho" data-accion="aviso-revisar">Revisar y enviar</button><button class="btn sec ancho" data-accion="demo-toast" data-t="Aviso de prueba enviado solo a tus dispositivos.">Probarlo conmigo</button>`}
+    <div class="tabla"><button data-accion="avisos">${ico("campana")}<div class="crece"><p class="t1">Tus avisos en este dispositivo</p><p class="t3">Para que también te lleguen a vos.</p></div><span class="interruptor ${E.avisos ? "si" : ""}"></span></button></div></main>`;
+}
+function vMas() {
+  const yo = R.yo(); const sinDoc = E.clases.filter((c) => !c.docenteId).length;
+  const f = (href, icono, t, d) => `<a href="#${href}">${ico(icono)}<div class="crece"><p class="t1">${t}</p><p class="t3">${d}</p></div>${ico("der")}</a>`;
+  return `<main class="cuerpo" data-desliz="c"><div class="cab"><h1>Más</h1></div>
+    <div class="sup fila"><span class="avatar oro" style="width:52px;height:52px;border-radius:18px">${R.iniciales(yo.nombre)}</span><div class="crece"><p class="t1" style="font-size:16px">${esc(yo.nombre)}</p><p class="t3 corta">${yo.email} · Administrador</p></div></div>
+    <div class="tabla">${f("/admin/avisos", "campana", "Avisos", "Notificación a los teléfonos")}${f("/admin/catedraticos", "birrete", "Catedráticos", `${E.docentes.length} · reportes en Excel`)}${f("/admin/clases", "libro", "Clases", `${sinDoc} sin catedrático`)}${f("/admin/bitacora", "escudo", "Bitácora", `${E.bitacora.filter((x) => x.senal).length} señales para revisar`)}</div>
+    <div class="tabla"><button data-accion="vista-alumno" data-v="1">${ico("puntos")}<div class="crece"><p class="t1">Mi marcador</p><p class="t3">Verme como alumno</p></div>${ico("der")}</button><button data-accion="salir" style="color:var(--gris)">${ico("salir")}<div class="crece"><p class="t1">Cerrar sesión</p></div></button></div></main>${navAdmin()}`;
+}
+function vCatedraticos() {
+  return atras("Catedráticos", "/admin/mas", `<button class="btn chico" data-accion="hoja" data-hoja="docente">${ico("sumar")}Nuevo</button>`) + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">${E.docentes.map((d) => { const cl = E.clases.filter((c) => c.docenteId === d.id); return `<div class="sup pila"><div class="fila"><span class="avatar">${R.iniciales(d.nombre.replace(/^Inga?\. /, ""))}</span><div class="crece"><p class="t1">${esc(d.nombre)}</p><p class="t3">${R.pl(cl.length, "clase", "clases")}</p></div></div>
+    ${cl.length ? `<div class="fila" style="flex-wrap:wrap;gap:6px">${cl.map((c) => `<span class="etq gris">${esc(c.nombre)}</span>`).join("")}</div><button class="btn sec chico" data-accion="demo-toast" data-t="Prototipo: acá se descarga el Excel de ${esc(d.nombre)}.">${ico("bajar")}Descargar su Excel</button>` : `<p class="t2">Todavía sin clases. Asignáselas desde Clases.</p>`}</div>`; }).join("")}</main>`;
+}
+const hojaDocente = () => hoja(`<h3>Nuevo catedrático</h3><p class="t2">No tiene cuenta: es solo el nombre que agrupa sus clases en el Excel.</p><form class="pila" data-envio="nuevo-docente">${campo("nd-nombre", "Nombre", 'placeholder="Ing. Nombre Apellido"')}<button class="btn ancho">Crear</button></form>`);
+function vClases() {
+  const f = E.ui.fCl || "todas"; const q = (E.ui.qCl || "").toLowerCase(); const sin = E.clases.filter((c) => !c.docenteId).length;
+  const lista = E.clases.filter((c) => (f === "todas" || (f === "sin" ? !c.docenteId : c.ciclo === f)) && (!q || (c.nombre + c.codigo).toLowerCase().includes(q)));
+  const chip = (v, t) => `<button class="chip ${f === v ? "activo" : ""}" data-accion="ui" data-k="fCl" data-v="${v}">${t}</button>`;
+  return atras("Clases", "/admin/mas") + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px">
+    ${sin ? `<div class="nota oro">${ico("alerta")}<p><b>${sin} de ${E.clases.length}</b> clases no tienen catedrático. Esas no se pueden exportar.</p></div>` : ""}
+    <div class="busca">${ico("buscar")}<input id="q-cl" data-m="qCl" data-vivo value="${esc(E.ui.qCl || "")}" placeholder="Buscar por nombre o código" type="search"></div>
+    <div class="chips">${chip("todas", "Todas")}${chip("sin", `Sin catedrático (${sin})`)}${[...new Set(E.clases.map((c) => c.ciclo))].map((c) => chip(c, "Ciclo " + c)).join("")}</div>
+    ${lista.map((c) => `<div class="sup pila" style="gap:10px"><div class="fila"><div class="crece"><p class="t1">${esc(c.nombre)}</p><p class="t3">${c.codigo} · Ciclo ${c.ciclo} · Sección ${c.seccion} · ${c.jornada}</p></div>${c.docenteId ? "" : '<span class="etq oro">Sin catedrático</span>'}</div>
+      <div class="campo"><select data-cambio="docente" data-id="${c.id}" aria-label="Catedrático"><option value="">Sin catedrático</option>${E.docentes.map((d) => `<option value="${d.id}" ${c.docenteId === d.id ? "selected" : ""}>${esc(d.nombre)}</option>`).join("")}</select></div></div>`).join("")}</main>`;
+}
+function vBitacora() {
+  const f = E.ui.fBit || "todo";
+  const lista = E.bitacora.filter((x) => f === "todo" || (f === "senales" ? x.senal : x.resultado && x.resultado !== "ok"));
+  const chip = (v, t) => `<button class="chip ${f === v ? "activo" : ""}" data-accion="ui" data-k="fBit" data-v="${v}">${t}</button>`;
+  return atras("Bitácora", "/admin/mas") + `<main class="cuerpo sin-nav" data-desliz="c" style="padding-top:12px"><p class="t2">Todo intento de marcaje, válido o no. Las señales son para revisar: nada se bloquea solo.</p>
+    <div class="chips">${chip("todo", "Todo")}${chip("senales", "Señales")}${chip("fallidos", "Intentos fallidos")}</div>
+    <div class="sup tiempo">${lista.map((x) => { const al = R.alumno(x.alumnoId), a = x.actividadId && R.actividad(x.actividadId); const ok = x.resultado === "ok";
+      return `<div class="hito"><span class="nodo ${ok ? "si" : ""}" ${x.resultado && !ok ? 'style="background:var(--rojo-t);color:var(--rojo);border-color:transparent"' : ""}>${ico(ok ? "ok" : x.resultado ? "x" : "editar")}</span><div class="crece"><div class="fila" style="gap:8px"><p class="t1 corta crece" style="font-size:14.5px">${esc(al?.nombre || al?.email)}</p><span class="t3" style="white-space:nowrap">${R.hora(x.cuando)}</span></div>
+        <p class="t3">${R.dia(x.cuando)} · ${a ? esc(a.nombre) : esc(x.detalle || "")}${x.origen ? ` · ${x.origen === "manual" ? "Manual" : "QR"}` : ""}</p>
+        <div class="fila" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="etq ${ok ? "verde" : x.resultado ? "rojo" : "gris"}">${R.etiqueta(x.resultado || x.evento)}</span>${x.senal ? `<span class="etq rojo">${ico("alerta")}${x.senal}</span>` : ""}</div></div></div>`; }).join("")}</div></main>`;
+}
+function kiosco() {
+  const a = R.actividad(E.kiosco);
+  return `<div class="kiosco"><button class="btn sec chico cerrar" data-accion="kiosco">${ico("x")}Salir</button>
+    <div class="qr"><canvas data-qr="${a.id}" width="870" height="870"></canvas></div>
+    <div class="lado"><img src="../escudo-umg.webp" alt="" style="height:9vh;background:#fff;border-radius:50%;padding:4px"><h1>${esc(a.nombre)}</h1><p class="t2" style="font-size:clamp(15px,2.4vh,24px)">${esc(a.lugar || "")}</p>
+      <div class="aro"><b data-cuenta>60</b><span class="sobre">segundos</span></div><div class="riel"><div data-barra></div></div>
+      <p style="font-size:clamp(17px,2.8vh,28px);font-weight:600">Escaneá con la cámara de tu teléfono</p><p class="t3">QR de demostración · en la app real cambia cada ${a.ventanaSeg} s</p></div></div>`;
+}
+
+/* ---------- Enrutado ---------- */
+R.pintar = function () {
+  const r = R.ruta(), yo = R.yo();
+  let v = "";
+  if (!yo) v = r === "/registro" ? vRegistro() : r === "/recuperar" ? vRecuperar() : vIngreso();
+  else if (!yo.perfil) v = vPerfil();
+  else if (r.startsWith("/marcar/")) v = vMarcar(r.split("/")[2]);
+  else if (yo.rol === "admin" && !E.vistaAlumno) {
+    const p = r.split("/");
+    v = r === "/admin/actividades" ? vAdminActividades() : p[2] === "vivo" ? vVivo(p[3]) : r === "/admin/alumnos" ? vAlumnos() : p[2] === "alumno" ? vAlumno(p[3])
+      : r === "/admin/avisos" ? vAvisos() : r === "/admin/mas" ? vMas() : r === "/admin/catedraticos" ? vCatedraticos() : r === "/admin/clases" ? vClases() : r === "/admin/bitacora" ? vBitacora() : vHoy();
+  } else {
+    v = r === "/agenda" ? vAgenda() : r === "/extra" ? vExtra() : r === "/cursos" ? vCursos() : r === "/yo" ? vYo() : vInicio();
+    if (yo.rol === "admin") v = `<div class="cinta"><span>Te estás viendo como alumno</span><button style="text-decoration:underline;font-weight:600" data-accion="vista-alumno" data-v="0">Volver al panel</button></div>` + v;
+  }
+  const h = E.hoja;
+  const hojas = !h ? "" : h.tipo === "clase" ? hojaClase(h.id) : h.tipo === "marcar" ? hojaMarcar() : h.tipo === "ios" ? hojaIos() : h.tipo === "rapidas" ? hojaRapidas() : h.tipo === "actividad" ? hojaActividad(h.id)
+    : h.tipo === "manual" ? hojaManual(h.id) : h.tipo === "inscripciones" ? hojaInscripciones(h.id) : h.tipo === "docente" ? hojaDocente() : "";
+  const toast = E.toast ? `<div class="toast">${ico("ok")}${esc(E.toast.texto)}</div>` : "";
+  return `<div class="marco">${v}${hojas}${toast}</div>${E.kiosco ? kiosco() : ""}`;
+};
+R.arrancar();
+</script>
+</body>
+</html>

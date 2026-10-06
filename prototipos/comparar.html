@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda — Comparación A / B</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#e6ebf0;color:#13212d}
+header{position:sticky;top:0;z-index:5;background:rgba(230,235,240,.94);backdrop-filter:blur(10px);padding:10px 12px;display:flex;gap:8px;align-items:center;overflow-x:auto;border-bottom:1px solid #d3dbe2}
+header b{white-space:nowrap;margin-right:6px}
+header a{flex:none;font-size:13px;font-weight:600;color:#42525f;text-decoration:none;padding:6px 11px;border-radius:14px;background:#fff}
+h2.grupo{max-width:780px;margin:26px auto 0;padding:0 12px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#5a6a79}
+section{max-width:780px;margin:0 auto;padding:14px 8px 10px;scroll-margin-top:52px}
+section h3{font-size:19px;letter-spacing:-.01em;padding:0 4px}
+section p{font-size:13.500px;color:#5a6a79;padding:2px 4px 10px}
+.par{display:flex;gap:14px;justify-content:center}
+.lado{flex:1;max-width:375px;min-width:0}
+.rot{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px 6px}
+.rot.a{color:#1c72a5}.rot.b{color:#84662f}
+.rot a{color:inherit;font-weight:600;letter-spacing:0;text-transform:none}
+iframe{display:block;width:100%;height:660px;border:0;border-radius:26px;background:#fff;box-shadow:0 8px 26px rgba(19,33,45,.18)}
+.par.ancho{flex-direction:column;align-items:stretch}
+.par.ancho .lado{max-width:none}
+.par.ancho .caja{aspect-ratio:16/9;overflow:hidden;border-radius:16px;box-shadow:0 8px 26px rgba(19,33,45,.18)}
+.par.ancho iframe{width:1280px;height:720px;border-radius:0;box-shadow:none;transform-origin:0 0}
+body.solo .par:not(.ancho) iframe{height:780px}
+@media(max-width:640px){.par{flex-direction:column;align-items:center}.lado{width:100%}}
+</style>
+</head>
+<body>
+<header id="indice"><b>A · Claro &nbsp;vs&nbsp; B · Marcador</b></header>
+<div id="lista"></div>
+<script>
+const AL = "alumno@ronda.test", AD = "admin@ronda.test";
+// [grupo, id, titulo, nota, como, rutaA, rutaB, extraA, extraB, ancho]
+const P = [
+  ["Entrada", "ingreso", "Ingreso", "Marca, formulario y cuentas de demostración.", "nadie", "/ingreso", "/ingreso"],
+  ["Entrada", "perfil", "Completar perfil", "Cuenta nueva: carné, nombre y ciclo.", "nuevo@ronda.test", "/perfil", "/perfil"],
+  ["Alumno", "puntos", "Puntos por clase (inicio)", "Lo primero que ve el alumno. A: lista. B: losetas.", AL, "/inicio", "/inicio"],
+  ["Alumno", "clase", "Detalle de una clase", "Al tocar una clase: actividad por actividad.", AL, "/inicio", "/inicio", "hoja=clase:c048", "hoja=clase:c048"],
+  ["Alumno", "actividades", "Actividades / Agenda", "A: pestañas Próximas y Pasadas. B: línea de tiempo.", AL, "/actividades", "/agenda"],
+  ["Alumno", "como", "Cómo marcar", "A: desde el aviso del inicio. B: botón central de la barra.", AL, "/inicio", "/inicio", "hoja=como-marcar:a5", "hoja=marcar"],
+  ["Alumno", "marcar", "Marcar asistencia", "La pantalla a la que llega el QR.", AL, "/marcar/a5", "/marcar/a5"],
+  ["Alumno", "ok", "Resultado: asistencia registrada", "", AL, "/marcar/a5", "/marcar/a5", "res=ok", "res=ok"],
+  ["Alumno", "vencido", "Resultado: código vencido", "Texto oficial del error, con la salida clara.", AL, "/marcar/a5", "/marcar/a5", "res=expirado", "res=expirado"],
+  ["Alumno", "extra", "Puntos extra", "A: elegir clase, cantidad y confirmar. B: «+1» por clase.", AL, "/extra", "/extra"],
+  ["Alumno", "cursos", "Mis cursos", "A: pestaña propia. B: dentro de Perfil.", AL, "/cursos", "/cursos"],
+  ["Alumno", "cuenta", "Mi cuenta / Perfil", "", AL, "/yo", "/yo"],
+  ["Administración", "tablero", "Tablero / Hoy", "", AD, "/admin", "/admin"],
+  ["Administración", "rapidas", "Más / Acciones rápidas", "A: pestaña Más. B: botón central «+».", AD, "/admin/mas", "/admin", "", "hoja=rapidas"],
+  ["Administración", "admin-act", "Actividades", "A: filtros en pastillas y botón flotante. B: agrupadas por estado.", AD, "/admin/actividades", "/admin/actividades"],
+  ["Administración", "nueva", "Nueva actividad", "", AD, "/admin/actividades", "/admin/actividades", "hoja=actividad", "hoja=actividad"],
+  ["Administración", "vivo", "En vivo", "Se actualiza solo: van llegando alumnos.", AD, "/admin/vivo/a5", "/admin/vivo/a5"],
+  ["Administración", "manual", "Marcaje manual", "", AD, "/admin/vivo/a5", "/admin/vivo/a5", "hoja=manual:a5", "hoja=manual:a5"],
+  ["Administración", "alumnos", "Alumnos", "", AD, "/admin/alumnos", "/admin/alumnos"],
+  ["Administración", "ficha", "Ficha de un alumno", "", AD, "/admin/alumno/u1", "/admin/alumno/u1"],
+  ["Administración", "avisos", "Avisos", "", AD, "/admin/avisos", "/admin/avisos"],
+  ["Administración", "clases", "Clases", "", AD, "/admin/clases", "/admin/clases"],
+  ["Administración", "catedraticos", "Catedráticos", "", AD, "/admin/catedraticos", "/admin/catedraticos"],
+  ["Administración", "bitacora", "Bitácora", "A: tarjetas. B: línea de tiempo.", AD, "/admin/bitacora", "/admin/bitacora"],
+  ["Administración", "mas-b", "Menú Más", "", AD, "/admin/mas", "/admin/mas"],
+  ["Kiosco", "kiosco", "Kiosco (pantalla del salón)", "Única pantalla de escritorio. A: clara, vertical. B: oscura, QR a un lado.", AD, "/admin", "/admin", "kiosco=a5", "kiosco=a5", true],
+];
+const url = (prop, como, ruta, extra) => `propuesta-${prop}/index.html?v=5&como=${encodeURIComponent(como)}${extra ? "&" + extra : ""}#${ruta}`;
+// ?solo=id deja una sola comparacion en pantalla, sin indice: sirve para sacar capturas.
+const SOLO = new URLSearchParams(location.search).get("solo");
+if (SOLO) { document.getElementById("indice").remove(); document.body.classList.add("solo"); }
+let grupo = "", html = "", indice = "";
+for (const [g, id, titulo, nota, como, ra, rb, ea, eb, ancho] of P) {
+  if (SOLO && id !== SOLO) continue;
+  if (g !== grupo && !SOLO) { html += `<h2 class="grupo">${g}</h2>`; grupo = g; }
+  const lado = (p, nombre, ruta, extra) => `<div class="lado"><div class="rot ${p}"><span>${nombre}</span><a href="${url(p, como, ruta, extra)}" target="_blank">abrir</a></div><div class="caja"><iframe ${SOLO ? "" : 'loading="lazy"'} title="${nombre}: ${titulo}" src="${url(p, como, ruta, extra)}"></iframe></div></div>`;
+  html += `<section id="${id}"><h3>${titulo}</h3><p>${nota || "&nbsp;"}</p><div class="par ${ancho ? "ancho" : ""}">${lado("a", "A · Claro", ra, ea)}${lado("b", "B · Marcador", rb, eb)}</div></section>`;
+  indice += `<a href="#${id}">${titulo.split(" / ")[0].split(" (")[0]}</a>`;
+}
+document.getElementById("lista").innerHTML = html;
+// El kiosco se muestra a tamano de proyector (1280x720) y se reduce para que quepa.
+const escalar = () => document.querySelectorAll(".par.ancho .caja").forEach((c) => (c.firstChild.style.transform = `scale(${c.clientWidth / 1280})`));
+escalar(); addEventListener("resize", escalar);
+document.getElementById("indice")?.insertAdjacentHTML("beforeend", indice);
+</script>
+</body>
+</html>

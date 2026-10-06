@@ -4,9 +4,25 @@
     {
       "name": "dev",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm", "run", "dev"],
+      "runtimeArgs": [
+        "pnpm",
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "prototipos",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4321",
+        "--directory",
+        "prototipos"
+      ],
+      "port": 4321
     }
   ]
 }
