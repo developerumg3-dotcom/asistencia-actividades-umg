@@ -2,6 +2,56 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
+## Puesta a punto — 10/10/2026: clases sin catedrático
+
+**La facultad todavía no entregó la lista de profesores y secciones.** La pregunta del día
+fue si el sistema funciona igual. **Sí, y ya funcionaba antes de tocar nada:**
+
+- **Inscribirse en clases sin catedrático:** hay 44 de 51 clases sin profesor y ya existen
+  22 inscripciones reales en ellas. La lista del alumno solo filtra que la clase esté activa
+  (`obtenerClasesDisponibles`, `src/lib/clases.ts`).
+- **Marcar asistencia:** no depende de las clases. La asistencia se guarda aunque el alumno no
+  esté inscrito en ninguna (regla del proyecto, cubierta por `probar:base`).
+- **Crear o duplicar una sección a mano:** el catedrático tiene la opción «Por asignar».
+- **Lo único que NO se puede sin profesor:** exportar el Excel de esa clase para su
+  catedrático. El aviso ya está en `/admin/clases`.
+
+### Lo que sí se cambió: la importación por CSV (`/admin/clases` → «Importar por CSV»)
+
+- **El catedrático es opcional.** Antes, las filas sin `docente_nombre` y `docente_email` se
+  descartaban en silencio: un CSV entero de secciones sin profesor daba «Se importaron 0».
+  Ahora la sección se crea con `docente_id` nulo. Si viene solo el nombre o solo el correo,
+  la fila se omite: con eso no hay cómo identificar al catedrático.
+- **Al terminar dice qué filas se omitieron y por qué**, con el número de fila de Excel.
+- **Volver a cargar el mismo archivo no duplica.** Una sección es la misma si coinciden código,
+  sección y jornada (sin distinguir mayúsculas). Antes, recargar para corregir una fila creaba
+  todas las secciones de nuevo y los alumnos las veían dos veces.
+- **Cuando llegue la lista de profesores:** volver a cargar el mismo CSV con los catedráticos
+  llenos. Las secciones sin catedrático lo reciben; una que ya tiene **otro** no se pisa.
+
+Lógica en `src/lib/clases-csv.ts`, 21 pruebas en `scripts/probar-clases-csv.mts`.
+
+### Para Daniel (UX/UI)
+
+Solo cambió el texto de ayuda del panel de importación (`src/componentes/importar-clases-csv.tsx`):
+ahora explica las columnas opcionales y la recarga sin duplicados. Es largo para el teléfono;
+**queda a tu criterio** acortarlo o moverlo a un «¿Cómo se usa?» desplegable. Lo que tiene que
+quedar claro de alguna forma: que el catedrático puede ir vacío, y que recargar es seguro.
+
+### Abierto
+
+- **Las filas base del pensum siguen apareciendo** (una por curso, sin sección, con la mayoría
+  de las inscripciones actuales). Al importar las secciones A y B de un curso, el alumno ve
+  tres opciones. No se desactivaron porque tienen inscripciones reales: es una decisión
+  pendiente de Julio, a tomar después de la primera carga.
+- **Dos importaciones simultáneas sí pueden duplicar**: no hay restricción única en la base y
+  agregarla es una migración. Que importe una sola persona por vez.
+- **La importación completa no tiene prueba de integración** (pide sesión de admin). La primera
+  carga real hay que mirarla: el resumen y la lista de clases tienen que cuadrar.
+
+**Verificado:** typecheck limpio, 154 pruebas unitarias, 26/26 de integración, build de
+producción. Desplegado en `main@1d5c9cc`.
+
 ## Rediseño de la interfaz — 6/10/2026 (Daniel)
 
 **Toda la interfaz se rehízo** sobre un sistema visual nuevo, decidido con prototipos
