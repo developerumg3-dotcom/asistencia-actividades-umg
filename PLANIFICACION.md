@@ -507,7 +507,7 @@ pendiente sería el peor error posible del sistema.
 |---|---|---|
 | A1 | Registro | Correo y contraseña. Abierto a cualquiera. |
 | A2 | Ingreso | Correo y contraseña, con recuperación por enlace. |
-| A3 | Completar perfil | Carné, nombre completo, ciclo que cursa y al menos un curso (combobox tipo select2, sin límite, sobre el mismo catálogo de A4). **Obligatorio**, bloquea el resto de la app. |
+| A3 | Completar perfil | Carné, nombre completo, ciclo que cursa y al menos un curso. Los cursos se eligen en una lista fija de casillas (no un desplegable), sobre el mismo catálogo de A4: muestra los del ciclo elegido y, si ese ciclo tiene más de una sección, los de la sección elegida. El ciclo y la sección solo filtran: el buscador recorre todos los ciclos y no hay límite de cursos. La sección no se guarda. **Obligatorio**, bloquea el resto de la app. |
 | A4 | Elegí tus clases | Catálogo completo del pensum, con buscador por texto y filtro por ciclo. Arranca filtrada en el ciclo del alumno, pero puede ver todos. Selección múltiple. Sugerido tras el perfil, no bloqueante. |
 | A5 | Inicio | **Pantalla de entrada del alumno.** La actividad con el marcaje abierto y qué hacer para marcarla, o la próxima si no hay ninguna abierta. Resumen de puntos y aviso de saldo extra se suman en la Fase 3. |
 | A6 | Marcar asistencia | Página a la que llega el QR. Login en línea si hace falta, botón grande. |

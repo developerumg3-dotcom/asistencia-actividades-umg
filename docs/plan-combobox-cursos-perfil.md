@@ -2,6 +2,12 @@
 
 Decisiones cerradas con Daniel el 2026-08-29, antes de tocar código.
 
+> **Reemplazado en parte el 2026-10-10.** El combobox (`combobox-multiple.tsx`) se quitó: en
+> el teléfono había que tocar dos veces para elegir un curso y la selección casi no se veía.
+> A3 usa ahora una lista fija de casillas filtrada por ciclo y sección
+> (`src/componentes/selector-cursos-perfil.tsx`). Lo demás de este plan sigue vigente: el
+> campo es obligatorio, sin límite, y escribe en `inscripcion`. Ver PLANIFICACION.md §11.
+
 ## Contexto
 
 Hoy A3 (`/perfil/completar`) pide carné, nombre y `ciclo` (select 1..10). El `ciclo` **no

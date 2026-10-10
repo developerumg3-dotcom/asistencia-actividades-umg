@@ -272,7 +272,7 @@ push y pruebas recientes prevalecen las notas de arriba y el registro enlazado.
 | Autoinscripción (A4, A8) | Agregar/quitar clases, con constancia en bitácora al quitar. Buscador por texto, filtro por ciclo y «solo las mías» |
 | Diseño visual | Paleta del escudo UMG y primitivos en `src/componentes/ui/`. Norma en [`docs/diseno-visual.md`](docs/diseno-visual.md) |
 | Catálogo de cursos | Los 50 del pensum 0908 (jornada sábado, Escuintla) sembrados en `clase`, **sin catedrático ni sección** |
-| Perfil con ciclo (A3) | Carné, nombre y ciclo. El ciclo solo decide el filtro inicial de A4, no restringe |
+| Perfil con ciclo (A3) | Carné, nombre, ciclo y cursos. Los cursos van en una lista fija de casillas filtrada por ciclo y, donde hay más de una, por sección; el buscador recorre todos los ciclos. El ciclo decide además el filtro inicial de A4. Nada de esto restringe |
 | Librería del QR | `src/lib/qr/codigo.ts` — derivación HMAC, ventana con gracia, precarga, contador. 21 pruebas: `pnpm probar` |
 | Cuentas de prueba | `admin@ronda.test` y `alumno@ronda.test`, `pnpm db:sembrar-usuarios`. **Borrar antes de usar el sistema de verdad** |
 | Actividades (B4) | `/admin/actividades`. El `secreto_qr` se genera al crear y no sale del servidor |

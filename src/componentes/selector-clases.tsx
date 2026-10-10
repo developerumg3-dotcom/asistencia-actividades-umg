@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { desinscribirse, inscribirse } from "@/app/(protegido)/(con-perfil)/(alumno)/clases/acciones";
+import { CasillaCurso } from "@/componentes/ui/casilla-curso";
 import { Chip, FilaDeChips } from "@/componentes/ui/chip";
 import { Icono } from "@/componentes/ui/icono";
 import { TituloSeccion, Vacio } from "@/componentes/ui/titular";
@@ -17,19 +18,6 @@ function porCicloNumerico(a: string, b: string) {
   const nb = Number(b);
   if (Number.isNaN(na) || Number.isNaN(nb)) return a.localeCompare(b, "es");
   return na - nb;
-}
-
-function Marca({ marcada }: { marcada: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={`grid size-[26px] shrink-0 place-items-center rounded-[9px] border-2 text-white transition-colors ${
-        marcada ? "border-primary-600 bg-primary-600" : "border-neutral-300 bg-white"
-      }`}
-    >
-      {marcada && <Icono nombre="ok" grosor={3} className="size-4" />}
-    </span>
-  );
 }
 
 export function SelectorClases({
@@ -202,28 +190,19 @@ export function SelectorClases({
                   const marcada = inscritos.has(c.id);
                   return (
                     <li key={c.id}>
-                      <label
-                        className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-3.5 transition-shadow ${
-                          marcada ? "shadow-[inset_0_0_0_2px_var(--color-primary-600)]" : "shadow-tarjeta"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={marcada}
-                          disabled={pendiente}
-                          onChange={(evento) => alternar(c.id, evento.target.checked)}
-                          className="sr-only"
-                        />
-                        <Marca marcada={marcada} />
-                        <span className="flex min-w-0 flex-col">
-                          <span className="text-[14.5px] font-bold leading-snug">{enTitulo(c.nombre)}</span>
-                          <span className="text-xs text-neutral-400">
+                      <CasillaCurso
+                        titulo={enTitulo(c.nombre)}
+                        detalle={
+                          <>
                             {c.codigo}
                             {c.seccion && ` · Sección ${c.seccion}`} · {c.jornada}
-                          </span>
-                          {c.docenteNombre && <span className="text-[13px] text-neutral-500">{c.docenteNombre}</span>}
-                        </span>
-                      </label>
+                          </>
+                        }
+                        pie={c.docenteNombre}
+                        marcada={marcada}
+                        disabled={pendiente}
+                        alCambiar={(valor) => alternar(c.id, valor)}
+                      />
                     </li>
                   );
                 })}
