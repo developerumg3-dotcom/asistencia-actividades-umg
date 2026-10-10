@@ -1,11 +1,16 @@
 "use server";
 
 import { parse } from "csv-parse/sync";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
 import { clase, docente } from "@/db/esquema";
-import { columnasFaltantes, interpretarFilas, resumenDeImportacion } from "@/lib/clases-csv";
+import {
+  columnasFaltantes,
+  interpretarFilas,
+  planificarImportacion,
+  resumenDeImportacion,
+} from "@/lib/clases-csv";
 import { requireAdmin } from "@/lib/sesion";
 
 export type EstadoFormulario = { error: string | null; mensaje?: string | null };
@@ -137,28 +142,35 @@ export async function importarClasesCsv(
 
   const { validas, omitidas } = interpretarFilas(filas);
 
-  let creadas = 0;
+  // Lo que ya hay, para no duplicar secciones al volver a cargar un archivo (ver
+  // `planificarImportacion`). Se leen todas, activas o no: reactivar una seccion es una
+  // decision que se toma desde la clase, no algo que la importacion haga por su cuenta.
+  const existentes = await db
+    .select({
+      id: clase.id,
+      codigo: clase.codigo,
+      seccion: clase.seccion,
+      jornada: clase.jornada,
+      emailCatedratico: docente.email,
+    })
+    .from(clase)
+    .leftJoin(docente, eq(clase.docenteId, docente.id));
+
+  const plan = planificarImportacion(validas, existentes);
+
+  // Busca al catedratico por correo y lo crea si no existe. Compartido por las secciones
+  // nuevas y por las que reciben su catedratico ahora.
+  async function idDeCatedratico(c: { nombre: string; email: string }): Promise<string> {
+    const [existente] = await db.select().from(docente).where(eq(docente.email, c.email)).limit(1);
+    if (existente) return existente.id;
+    const [creado] = await db.insert(docente).values({ nombre: c.nombre, email: c.email }).returning();
+    return creado.id;
+  }
+
   let sinCatedratico = 0;
-  for (const fila of validas) {
-    let docenteId: string | null = null;
-
-    if (fila.catedratico) {
-      let [docenteExistente] = await db
-        .select()
-        .from(docente)
-        .where(eq(docente.email, fila.catedratico.email))
-        .limit(1);
-      if (!docenteExistente) {
-        [docenteExistente] = await db
-          .insert(docente)
-          .values({ nombre: fila.catedratico.nombre, email: fila.catedratico.email })
-          .returning();
-      }
-      docenteId = docenteExistente.id;
-    } else {
-      sinCatedratico++;
-    }
-
+  for (const fila of plan.crear) {
+    const docenteId = fila.catedratico ? await idDeCatedratico(fila.catedratico) : null;
+    if (!docenteId) sinCatedratico++;
     await db.insert(clase).values({
       codigo: fila.codigo,
       nombre: fila.nombre,
@@ -167,13 +179,33 @@ export async function importarClasesCsv(
       ciclo: fila.ciclo,
       docenteId,
     });
-    creadas++;
+  }
+
+  let asignadas = 0;
+  for (const { claseId, fila } of plan.asignar) {
+    if (!fila.catedratico) continue;
+    const docenteId = await idDeCatedratico(fila.catedratico);
+    // `isNull` en el WHERE: si alguien le asigno catedratico a mano entre la lectura y este
+    // momento, no se pisa.
+    const actualizadas = await db
+      .update(clase)
+      .set({ docenteId })
+      .where(and(eq(clase.id, claseId), isNull(clase.docenteId)))
+      .returning({ id: clase.id });
+    if (actualizadas.length > 0) asignadas++;
   }
 
   revalidatePath("/admin/clases");
   revalidatePath("/admin/catedraticos");
   return {
     error: null,
-    mensaje: resumenDeImportacion(creadas, filas.length, sinCatedratico, omitidas),
+    mensaje: resumenDeImportacion({
+      total: filas.length,
+      creadas: plan.crear.length,
+      sinCatedratico,
+      asignadas,
+      yaExistian: plan.yaExistian,
+      omitidas: [...omitidas, ...plan.omitidas].sort((a, b) => a.fila - b.fila),
+    }),
   };
 }

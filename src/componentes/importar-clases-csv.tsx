@@ -38,6 +38,10 @@ export function ImportarClasesCsv() {
             todavía no hay catedrático, dejalas vacías: la sección se crea igual y los alumnos se
             pueden inscribir y marcar. Si el catedrático no existe, se crea. Al terminar te dice
             qué filas se omitieron y por qué.
+            <br />
+            Podés volver a cargar el mismo archivo sin duplicar nada: las secciones que ya existen
+            (mismo código, sección y jornada) se saltan. Cuando llegue el listado de profesores,
+            cargalo con los catedráticos llenos y se asignan a las secciones que no tenían.
           </p>
         </div>
         <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
