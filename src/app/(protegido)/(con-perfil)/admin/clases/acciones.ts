@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
 import { clase, docente } from "@/db/esquema";
+import { columnasFaltantes, interpretarFilas, resumenDeImportacion } from "@/lib/clases-csv";
 import { requireAdmin } from "@/lib/sesion";
 
 export type EstadoFormulario = { error: string | null; mensaje?: string | null };
@@ -104,16 +105,6 @@ export async function duplicarClase(
   return { error: null, mensaje: "Clase duplicada. Cambiá la sección en la copia." };
 }
 
-const CABECERA_ESPERADA = [
-  "codigo",
-  "nombre",
-  "seccion",
-  "jornada",
-  "ciclo",
-  "docente_nombre",
-  "docente_email",
-];
-
 export async function importarClasesCsv(
   _estadoPrevio: EstadoFormulario,
   formData: FormData,
@@ -137,45 +128,52 @@ export async function importarClasesCsv(
     return { error: "El archivo no tiene filas." };
   }
 
-  const columnas = Object.keys(filas[0]);
-  const faltantes = CABECERA_ESPERADA.filter((columna) => !columnas.includes(columna));
+  // Las columnas del catedratico son opcionales: las secciones se crean antes de tener el
+  // listado de profesores (ver src/lib/clases-csv.ts).
+  const faltantes = columnasFaltantes(Object.keys(filas[0]));
   if (faltantes.length > 0) {
     return { error: `Faltan columnas en el CSV: ${faltantes.join(", ")}.` };
   }
 
-  let creadas = 0;
-  for (const fila of filas) {
-    const docenteEmail = fila.docente_email?.trim();
-    const docenteNombre = fila.docente_nombre?.trim();
-    const codigo = fila.codigo?.trim();
-    const nombre = fila.nombre?.trim();
-    const seccion = fila.seccion?.trim();
-    const jornada = fila.jornada?.trim();
-    const ciclo = fila.ciclo?.trim();
-    if (!docenteEmail || !docenteNombre || !codigo || !nombre || !seccion || !jornada || !ciclo) {
-      continue;
-    }
+  const { validas, omitidas } = interpretarFilas(filas);
 
-    let [docenteExistente] = await db.select().from(docente).where(eq(docente.email, docenteEmail)).limit(1);
-    if (!docenteExistente) {
-      [docenteExistente] = await db
-        .insert(docente)
-        .values({ nombre: docenteNombre, email: docenteEmail })
-        .returning();
+  let creadas = 0;
+  let sinCatedratico = 0;
+  for (const fila of validas) {
+    let docenteId: string | null = null;
+
+    if (fila.catedratico) {
+      let [docenteExistente] = await db
+        .select()
+        .from(docente)
+        .where(eq(docente.email, fila.catedratico.email))
+        .limit(1);
+      if (!docenteExistente) {
+        [docenteExistente] = await db
+          .insert(docente)
+          .values({ nombre: fila.catedratico.nombre, email: fila.catedratico.email })
+          .returning();
+      }
+      docenteId = docenteExistente.id;
+    } else {
+      sinCatedratico++;
     }
 
     await db.insert(clase).values({
-      codigo,
-      nombre,
-      seccion,
-      jornada,
-      ciclo,
-      docenteId: docenteExistente.id,
+      codigo: fila.codigo,
+      nombre: fila.nombre,
+      seccion: fila.seccion,
+      jornada: fila.jornada,
+      ciclo: fila.ciclo,
+      docenteId,
     });
     creadas++;
   }
 
   revalidatePath("/admin/clases");
   revalidatePath("/admin/catedraticos");
-  return { error: null, mensaje: `Se importaron ${creadas} de ${filas.length} filas.` };
+  return {
+    error: null,
+    mensaje: resumenDeImportacion(creadas, filas.length, sinCatedratico, omitidas),
+  };
 }

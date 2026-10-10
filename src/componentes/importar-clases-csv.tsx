@@ -33,11 +33,11 @@ export function ImportarClasesCsv() {
           <h2 className="font-bold text-tinta">Importar clases por CSV</h2>
           <p className="mt-1 text-xs text-neutral-500">
             Columnas requeridas:{" "}
-            <code className="font-mono">
-              codigo, nombre, seccion, jornada, ciclo, docente_nombre, docente_email
-            </code>
-            . Si el catedrático no existe, se crea. Las filas a las que les falte una columna se
-            omiten en silencio.
+            <code className="font-mono">codigo, nombre, seccion, jornada, ciclo</code>.
+            Opcionales: <code className="font-mono">docente_nombre, docente_email</code> — si
+            todavía no hay catedrático, dejalas vacías: la sección se crea igual y los alumnos se
+            pueden inscribir y marcar. Si el catedrático no existe, se crea. Al terminar te dice
+            qué filas se omitieron y por qué.
           </p>
         </div>
         <Boton variante="enlace" type="button" onClick={() => setAbierto(false)}>
