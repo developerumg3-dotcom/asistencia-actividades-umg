@@ -1,4 +1,4 @@
-import { and, count, eq, gte, lte } from "drizzle-orm";
+import { and, count, eq, gte, lte, or } from "drizzle-orm";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { db } from "@/db/cliente";
@@ -11,6 +11,7 @@ import { Titular, TituloSeccion } from "@/componentes/ui/titular";
 import { detectarSenales } from "@/lib/bitacora/senales";
 import { listarBitacora } from "@/lib/bitacora/consulta";
 import { contarClasesSinCatedratico } from "@/lib/clases";
+import { faseVigente } from "@/lib/qr/fase";
 import { enGuatemala, horaEnGuatemala, inicioDeHoyEnGuatemala } from "@/lib/fechas";
 import { avisoEsUrgente } from "@/lib/puntos/calculo";
 import { contarAlumnosConSaldoPendiente, fechaDeCorteVigente } from "@/lib/puntos/consulta";
@@ -30,9 +31,26 @@ async function actividadConMarcajeAbierto() {
       nombre: actividad.nombre,
       lugar: actividad.lugar,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      marcajeAbreEn: actividad.marcajeAbreEn,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaAbreEn: actividad.salidaAbreEn,
+      salidaCierraEn: actividad.salidaCierraEn,
     })
     .from(actividad)
-    .where(and(eq(actividad.estado, "publicada"), lte(actividad.marcajeAbreEn, ahora), gte(actividad.marcajeCierraEn, ahora)))
+    // La entrada o, si la actividad es de doble marcaje, la salida (PLANIFICACION.md §6.5).
+    .where(
+      and(
+        eq(actividad.estado, "publicada"),
+        or(
+          and(lte(actividad.marcajeAbreEn, ahora), gte(actividad.marcajeCierraEn, ahora)),
+          and(
+            eq(actividad.dobleMarcaje, true),
+            lte(actividad.salidaAbreEn, ahora),
+            gte(actividad.salidaCierraEn, ahora),
+          ),
+        ),
+      ),
+    )
     .limit(1);
   if (!fila) return null;
 
@@ -45,7 +63,9 @@ async function actividadConMarcajeAbierto() {
       .where(and(eq(pantalla.actividadId, fila.id), eq(pantalla.activa, true)))
       .limit(1),
   ]);
-  return { ...fila, asistencias: total, claveKiosco: laPantalla?.clave ?? null };
+  // Hasta cuando se acepta marcaje en la fase vigente.
+  const cierraEn = faseVigente(fila, ahora) === "salida" && fila.salidaCierraEn ? fila.salidaCierraEn : fila.marcajeCierraEn;
+  return { ...fila, marcajeCierraEn: cierraEn, asistencias: total, claveKiosco: laPantalla?.clave ?? null };
 }
 
 /** B1 — panorama general: numeros del dia y alertas para decidir, nunca acciones automaticas. */

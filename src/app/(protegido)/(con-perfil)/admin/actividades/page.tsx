@@ -8,6 +8,7 @@ import { Etiqueta } from "@/componentes/ui/etiqueta";
 import { Fechita } from "@/componentes/ui/fechita";
 import { Titular, Vacio } from "@/componentes/ui/titular";
 import { horaEnGuatemala, relativoEnGuatemala } from "@/lib/fechas";
+import { cierreFinal, faseVigente } from "@/lib/qr/fase";
 
 const FILTROS = [
   { valor: "", etiqueta: "Todas" },
@@ -43,6 +44,9 @@ export default async function ActividadesAdminPage({
         iniciaEn: actividad.iniciaEn,
         marcajeAbreEn: actividad.marcajeAbreEn,
         marcajeCierraEn: actividad.marcajeCierraEn,
+        dobleMarcaje: actividad.dobleMarcaje,
+        salidaAbreEn: actividad.salidaAbreEn,
+        salidaCierraEn: actividad.salidaCierraEn,
       })
       .from(actividad)
       .orderBy(desc(actividad.iniciaEn)),
@@ -93,8 +97,9 @@ export default async function ActividadesAdminPage({
       ) : (
         <ul className="flex flex-col gap-2.5">
           {visibles.map((a) => {
-            const abierta = a.estado === "publicada" && ahora >= a.marcajeAbreEn && ahora <= a.marcajeCierraEn;
-            const apagada = a.estado !== "publicada" || a.marcajeCierraEn < ahora;
+            const fase = a.estado === "publicada" ? faseVigente(a, ahora) : null;
+            const abierta = fase !== null;
+            const apagada = a.estado !== "publicada" || cierreFinal(a) < ahora;
             const total = asistenciasDe.get(a.id) ?? 0;
             return (
               <li key={a.id}>
@@ -116,9 +121,14 @@ export default async function ActividadesAdminPage({
                       ) : a.estado === "cerrada" ? (
                         <Etiqueta>Cerrada</Etiqueta>
                       ) : abierta ? (
-                        <Etiqueta tono="azul">Abierta ahora</Etiqueta>
+                        <Etiqueta tono="azul">
+                          {a.dobleMarcaje ? `${fase === "salida" ? "Salida" : "Entrada"} abierta ahora` : "Abierta ahora"}
+                        </Etiqueta>
                       ) : a.marcajeAbreEn > ahora ? (
                         <Etiqueta tono="celeste">{relativoEnGuatemala(a.iniciaEn, ahora)}</Etiqueta>
+                      ) : !apagada && a.salidaAbreEn ? (
+                        // Hueco entre la entrada y la salida de un doble marcaje.
+                        <Etiqueta tono="celeste">Salida a las {horaEnGuatemala(a.salidaAbreEn)}</Etiqueta>
                       ) : (
                         <Etiqueta>Ya pasó</Etiqueta>
                       )}

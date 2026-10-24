@@ -33,6 +33,11 @@ export type ActividadEditable = {
   lon: string;
   radioM: string;
   exigeUbicacion: boolean;
+  dobleMarcaje: boolean;
+  salidaAbreEn: string;
+  salidaCierraEn: string;
+  /** Ya hay asistencias: el interruptor de doble marcaje queda fijo (PLANIFICACION.md §6.5). */
+  tieneAsistencias: boolean;
 };
 
 /** Un bloque del formulario, con su titulo y su explicacion. */
@@ -61,6 +66,8 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
   const sufijo = valores?.id ?? "nuevo";
   // El tipo decide los puntos por defecto: las globales valen 1 y la extra 2 (decision 9).
   const [tipo, setTipo] = useState(valores?.tipo ?? "global");
+  const [doble, setDoble] = useState(valores?.dobleMarcaje ?? false);
+  const dobleFijo = valores?.tieneAsistencias ?? false;
 
   return (
     <div className="flex flex-col gap-3">
@@ -135,7 +142,7 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
       </Seccion>
 
       <Seccion
-        titulo="Cuándo se puede marcar"
+        titulo={doble ? "Entrada: cuándo se puede marcar" : "Cuándo se puede marcar"}
         ayuda="Fuera de esta ventana el QR no acredita, aunque el código sea el vigente."
       >
         <Campo
@@ -153,8 +160,50 @@ function CamposActividad({ valores }: { valores?: ActividadEditable }) {
           type="datetime-local"
           required
           defaultValue={valores?.marcajeCierraEn ?? ""}
-          ayuda="Por defecto, 24 h después del inicio."
+          ayuda={doble ? "Cuándo se deja de aceptar la entrada." : "Por defecto, 24 h después del inicio."}
         />
+        {/* Checkbox a mano: `Campo` no cubre casillas, por norma de docs/diseno-visual.md. */}
+        <div className="sm:col-span-2">
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              name="dobleMarcaje"
+              checked={doble}
+              disabled={dobleFijo}
+              onChange={(evento) => setDoble(evento.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary-600"
+            />
+            Doble marcaje: entrada y salida
+          </label>
+          <p className="mt-1 text-xs text-neutral-500">
+            {dobleFijo
+              ? "Ya hay asistencias registradas, así que esto no se puede cambiar: apagarlo regalaría el punto a quien solo marcó la entrada, y encenderlo se lo quitaría a quien ya lo tenía."
+              : "El punto solo lo gana quien marque en los dos rangos. Con una sola marca no suma nada."}
+          </p>
+          {/* Un disabled no viaja en el formulario: se manda el valor fijo aparte. */}
+          {dobleFijo && doble && <input type="hidden" name="dobleMarcaje" value="on" />}
+        </div>
+        {doble && (
+          <>
+            <Campo
+              id={`salidaAbreEn-${sufijo}`}
+              name="salidaAbreEn"
+              etiqueta="Salida: abre"
+              type="datetime-local"
+              required
+              defaultValue={valores?.salidaAbreEn ?? ""}
+            />
+            <Campo
+              id={`salidaCierraEn-${sufijo}`}
+              name="salidaCierraEn"
+              etiqueta="Salida: cierra"
+              type="datetime-local"
+              required
+              defaultValue={valores?.salidaCierraEn ?? ""}
+              ayuda="Después de que cierre la entrada. Se usa el mismo QR."
+            />
+          </>
+        )}
         <Campo
           id={`ventanaSeg-${sufijo}`}
           name="ventanaSeg"

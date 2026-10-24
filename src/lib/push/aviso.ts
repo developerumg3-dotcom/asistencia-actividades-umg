@@ -1,4 +1,4 @@
-import { enGuatemala } from "@/lib/fechas";
+import { enGuatemala, horaEnGuatemala } from "@/lib/fechas";
 
 /**
  * Logica pura de los avisos push: armar el texto y decidir que hacer con una suscripcion que
@@ -78,6 +78,24 @@ export function textoDeAviso(actividad: ActividadParaAviso): Aviso {
     cuerpo,
     // Al inicio y no a la pantalla de marcaje: el marcaje se abre escaneando el QR del
     // evento, no desde un enlace (PLANIFICACION.md §6).
+    url: "/inicio",
+  };
+}
+
+/**
+ * Aviso de que se abrio la salida de una actividad de doble marcaje (PLANIFICACION.md §6.5).
+ * El riesgo real es que el alumno se vaya a lo siguiente y se le olvide marcar, asi que el
+ * cuerpo dice hasta que hora y que sin la salida no hay punto. Lo manda el administrador con
+ * un boton: no hay envio automatico a la hora.
+ */
+export function textoDeAvisoSalida(
+  actividad: Pick<ActividadParaAviso, "id" | "nombre"> & { salidaCierraEn: Date },
+): Aviso {
+  return {
+    // Distinto del aviso de la actividad: los dos conviven en la bandeja.
+    id: `salida-${actividad.id}`,
+    titulo: `Marcá tu salida: ${actividad.nombre}`,
+    cuerpo: `Ya se abrió la salida, hasta las ${horaEnGuatemala(actividad.salidaCierraEn)}. Sin ella no suma el punto.`,
     url: "/inicio",
   };
 }

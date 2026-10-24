@@ -6,7 +6,12 @@ import { EnlaceBoton } from "@/componentes/ui/boton";
 import { Icono } from "@/componentes/ui/icono";
 import { Pantalla } from "@/componentes/ui/pantalla";
 import { Titular, TituloSeccion, Vacio } from "@/componentes/ui/titular";
-import { marcajeAbierto, obtenerActividadesDelAlumno } from "@/lib/actividades";
+import {
+  asistenciaCompleta,
+  marcajeAbierto,
+  marcajeTerminado,
+  obtenerActividadesDelAlumno,
+} from "@/lib/actividades";
 import { enGuatemala, fechaCortaEnGuatemala, horaEnGuatemala } from "@/lib/fechas";
 import { avisoEsUrgente } from "@/lib/puntos/calculo";
 import { obtenerEstadoPuntosExtra, obtenerParticipaciones } from "@/lib/puntos/consulta";
@@ -49,11 +54,17 @@ export default async function InicioPage() {
     const a = porId.get(actividadId);
     if (!a) return asistio ? "asististe" : "no asististe";
     const dia = fechaCortaEnGuatemala(a.iniciaEn);
-    if (a.marcadaEn) return `${dia} · marcaste ${horaEnGuatemala(a.marcadaEn)}`;
+    if (asistenciaCompleta(a)) return `${dia} · marcaste ${horaEnGuatemala(a.marcadaEn!)}`;
+    // Doble marcaje con una sola marca: no hay punto (PLANIFICACION.md §6.5).
+    if (a.dobleMarcaje && a.marcadaEn) {
+      return marcajeAbierto(a, ahora) || !marcajeTerminado(a, ahora)
+        ? `${dia} · falta marcar la salida`
+        : `${dia} · sin salida, no suma`;
+    }
     if (marcajeAbierto(a, ahora)) return `${dia} · abierta ahora`;
     return a.marcajeAbreEn > ahora ? `${dia} · todavía no empieza` : `${dia} · no asististe`;
   };
-  const asistidas = new Set(actividades.filter((a) => a.tipo === "global" && a.marcadaEn).map((a) => a.id));
+  const asistidas = new Set(actividades.filter((a) => a.tipo === "global" && asistenciaCompleta(a)).map((a) => a.id));
 
   const clases: ClaseConPuntos[] = tabla.filas.map((fila) => ({
     id: fila.claseId,

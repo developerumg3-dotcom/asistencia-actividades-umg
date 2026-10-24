@@ -2,10 +2,10 @@
 
 import { randomBytes } from "node:crypto";
 
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/cliente";
-import { actividad, pantalla } from "@/db/esquema";
+import { actividad, asistencia, pantalla } from "@/db/esquema";
 import { desdeCampoLocal } from "@/lib/fechas";
 import { codigoCortoAleatorio } from "@/lib/qr/codigo-corto";
 import { generarSecreto } from "@/lib/qr/codigo";
@@ -36,6 +36,9 @@ type CamposActividad = {
   lon: number | null;
   radioM: number | null;
   exigeUbicacion: boolean;
+  dobleMarcaje: boolean;
+  salidaAbreEn: Date | null;
+  salidaCierraEn: Date | null;
 };
 
 /**
@@ -136,6 +139,21 @@ function leerCampos(formData: FormData): CamposActividad | string {
   if (terminaEn <= iniciaEn) return "La actividad no puede terminar antes de empezar.";
   if (marcajeCierraEn <= marcajeAbreEn) return "El marcaje no puede cerrar antes de abrir.";
 
+  // Doble marcaje (PLANIFICACION.md §6.5): dos rangos fijos y separados. Sin el interruptor,
+  // la salida no existe y se guarda nula aunque el formulario la traiga.
+  const dobleMarcaje = formData.get("dobleMarcaje") !== null;
+  let salidaAbreEn: Date | null = null;
+  let salidaCierraEn: Date | null = null;
+  if (dobleMarcaje) {
+    salidaAbreEn = desdeCampoLocal(String(formData.get("salidaAbreEn") ?? ""));
+    salidaCierraEn = desdeCampoLocal(String(formData.get("salidaCierraEn") ?? ""));
+    if (!salidaAbreEn || !salidaCierraEn) return "Completá cuándo abre y cuándo cierra la salida.";
+    if (salidaCierraEn <= salidaAbreEn) return "La salida no puede cerrar antes de abrir.";
+    if (salidaAbreEn <= marcajeCierraEn) {
+      return "La salida tiene que abrir después de que cierre la entrada.";
+    }
+  }
+
   const zona = leerZona(formData);
   if (typeof zona === "string") return zona;
 
@@ -150,6 +168,9 @@ function leerCampos(formData: FormData): CamposActividad | string {
     terminaEn,
     marcajeAbreEn,
     marcajeCierraEn,
+    dobleMarcaje,
+    salidaAbreEn,
+    salidaCierraEn,
     ventanaSeg,
     estado: estado as "borrador" | "publicada" | "cerrada",
   };
@@ -201,6 +222,28 @@ export async function actualizarActividad(
 
   const campos = leerCampos(formData);
   if (typeof campos === "string") return { error: campos };
+
+  // Con asistencias ya registradas el interruptor de doble marcaje queda fijo (§6.5): apagarlo
+  // regalaria el punto a quien solo marco entrada, y encenderlo se lo quitaria a quien ya lo
+  // tenia. Los horarios si se pueden seguir editando.
+  const [actual] = await db
+    .select({ dobleMarcaje: actividad.dobleMarcaje })
+    .from(actividad)
+    .where(eq(actividad.id, id))
+    .limit(1);
+  if (!actual) return { error: "Esa actividad ya no existe." };
+  if (actual.dobleMarcaje !== campos.dobleMarcaje) {
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(asistencia)
+      .where(eq(asistencia.actividadId, id));
+    if (total > 0) {
+      return {
+        error:
+          "Esta actividad ya tiene asistencias registradas, así que no se puede activar ni desactivar el doble marcaje. Los horarios sí se pueden editar.",
+      };
+    }
+  }
 
   // El secreto y el codigo corto no se tocan al editar: cambiarlos invalidaria en el acto
   // el QR que ya esta proyectado.

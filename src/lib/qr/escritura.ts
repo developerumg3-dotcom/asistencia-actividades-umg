@@ -1,3 +1,4 @@
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { asistencia, bitacora } from "@/db/esquema";
 
@@ -20,7 +21,7 @@ import { asistencia, bitacora } from "@/db/esquema";
  * pasar (AGENTS.md, regla 9).
  */
 
-type Base = Pick<NeonHttpDatabase<Record<string, never>>, "insert" | "batch">;
+type Base = Pick<NeonHttpDatabase<Record<string, never>>, "insert" | "update" | "batch">;
 
 export type DatosDeEscritura = {
   asistencia: typeof asistencia.$inferInsert;
@@ -53,6 +54,56 @@ export function sentenciasDeMarcajeOk(base: Base, datos: DatosDeEscritura) {
 export async function escribirMarcajeOk(base: Base, datos: DatosDeEscritura): Promise<void> {
   const [insertarAsistencia, insertarBitacora] = sentenciasDeMarcajeOk(base, datos);
   await base.batch([insertarAsistencia, insertarBitacora]);
+}
+
+export type DatosDeSalida = {
+  alumnoId: string;
+  actividadId: string;
+  salidaEn: Date;
+  /** Nulo cuando la salida es manual: no hay codigo que la respalde. */
+  slotSalida: bigint | null;
+  /** Solo en la salida manual: se agrega a la nota que ya tenga la asistencia. */
+  notaManual?: string;
+  ip?: string | null;
+  dispositivoId?: string | null;
+};
+
+/** Las dos sentencias de la salida, ya armadas pero sin ejecutar. */
+export function sentenciasDeSalidaOk(base: Base, datos: DatosDeSalida) {
+  return [
+    base
+      .update(asistencia)
+      .set({
+        salidaEn: datos.salidaEn,
+        slotSalida: datos.slotSalida,
+        ...(datos.notaManual !== undefined && {
+          // La entrada pudo ser por QR (sin nota) o manual (con nota): se conserva lo que haya.
+          notaManual: sql`case when ${asistencia.notaManual} is null then ${`Salida manual: ${datos.notaManual}`} else ${asistencia.notaManual} || ${` | Salida manual: ${datos.notaManual}`} end`,
+        }),
+      })
+      // `salida_en is null` hace que dos pulsaciones simultaneas no se pisen la hora.
+      .where(
+        and(
+          eq(asistencia.alumnoId, datos.alumnoId),
+          eq(asistencia.actividadId, datos.actividadId),
+          isNull(asistencia.salidaEn),
+        ),
+      ),
+    base.insert(bitacora).values({
+      alumnoId: datos.alumnoId,
+      actividadId: datos.actividadId,
+      evento: "marcaje",
+      resultado: "ok",
+      ip: datos.ip ?? null,
+      dispositivoId: datos.dispositivoId ?? null,
+    }),
+  ] as const;
+}
+
+/** Completa la asistencia con la salida y anota el "ok", las dos o ninguna (como la entrada). */
+export async function escribirSalidaOk(base: Base, datos: DatosDeSalida): Promise<void> {
+  const [completar, anotar] = sentenciasDeSalidaOk(base, datos);
+  await base.batch([completar, anotar]);
 }
 
 /**

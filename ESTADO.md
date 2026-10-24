@@ -2,6 +2,59 @@
 
 Dónde estamos, qué existe, qué sigue. **Actualizá este archivo al terminar cada fase.**
 
+## Doble marcaje (entrada y salida) — 24/10/2026
+
+**Migración `0007_flaky_genesis.sql` aplicada** a la base (24/10/2026) y `pnpm probar:base`
+pasa 34 de 34, incluidas las 8 de `integracion-doble-marcaje.mts`. Solo agrega columnas con
+valor por defecto, así que lo existente no cambió. Falta desplegar el código.
+
+Regla (PLANIFICACION.md §6.5): una actividad puede pedir **entrada y salida**, cada una en
+su rango fijo (ej. 2:00–2:30 y 3:30–4:00). El punto, de cualquier valor, solo lo gana quien
+marcó las dos; con una sola marca no hay nada. Es opcional por actividad; las demás siguen
+con un solo marcaje.
+
+- **Datos:** `actividad.doble_marcaje`, `salida_abre_en`, `salida_cierra_en`;
+  `asistencia.salida_en`, `slot_salida`; resultado de bitácora `sin_entrada`. Sigue habiendo
+  una sola fila por alumno y actividad.
+- **Mismo QR y mismo kiosco.** El servidor decide entrada o salida con la hora de llegada
+  del botón (`src/lib/qr/fase.ts`). El kiosco solo muestra la etiqueta.
+- **Puntos:** `asistenciaCompleta` (`src/lib/puntos/completa.ts`) filtra en las consultas
+  de puntos, saldo extra, reparto, alerta del tablero y Excel. La fecha de corte del reparto
+  usa el cierre de la salida si la hay.
+- **Interruptor fijo:** no se puede activar ni desactivar `doble_marcaje` si la actividad ya
+  tiene asistencias (`actualizarActividad`). Los horarios sí se editan.
+- **Admin:** formulario con el interruptor y la ventana de salida; en vivo cuenta «entraron /
+  completos / sin salida»; marcaje manual con selector Entrada/Salida; botón **Avisar salida**
+  (push manual, `avisarDeSalida`). No hay envío automático a la hora.
+- **Alumno:** el resultado de la entrada dice que falta la salida; el aviso de inicio y la
+  lista de actividades muestran «falta la salida» y «sin salida, no suma».
+- **Pruebas:** `probar-fase.mts` y casos nuevos en `probar-escritura-marcaje.mts` (162 de 162
+  en `pnpm probar`); `integracion-doble-marcaje.mts` corrida y en verde.
+- **No se probó en navegador** ninguna pantalla nueva.
+- **Para Daniel (UX/UI):** la UI es funcional con los componentes existentes. Tonos `oro` /
+  `accent-50` para «falta la salida»; la etiqueta del kiosco («Marcá tu entrada / salida») es
+  nueva.
+
+## Carga de la programación real — 10/10/2026 (Daniel)
+
+**Pendiente de aplicar.** El archivo
+[`scripts/sql/2026-10-10-limpiar-y-cargar-2sem2026.sql`](scripts/sql/2026-10-10-limpiar-y-cargar-2sem2026.sql)
+está escrito y cruzado contra el pensum, pero **no se ejecutó contra la base** (ni en ensayo).
+Se pega entero en el SQL Editor de Neon; es una sola transacción con una comprobación al
+final que revierte todo si los conteos no cuadran.
+
+- Borra todos los datos de prueba: actividades, asistencias, puntos extra, inscripciones,
+  bitácora, pantallas, las clases y los catedráticos.
+- Borra las cuentas de alumno y las dos `@ronda.test`. **Conserva las 2 cuentas admin
+  reales**: hoy ningún correo está verificado, y sin eso `ADMIN_EMAILS` no devuelve el rol.
+  No toca el esquema `neon_auth`.
+- Carga 19 catedráticos y 45 clases (curso × sección) de la programación del segundo
+  semestre 2026, todas con catedrático. Ética Profesional: Claudia María Santos Conde.
+- Fuera a propósito: los cursos de ciclos impares y la auxiliatura de Proyecto de
+  Graduación II. Ver PLANIFICACION.md §4.
+
+Al aplicarlo, cambiar este encabezado a «aplicado» con la fecha.
+
 ## Puesta a punto — 10/10/2026: clases sin catedrático
 
 **La facultad todavía no entregó la lista de profesores y secciones.** La pregunta del día

@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db/cliente";
+import { asistenciaCompleta } from "@/lib/puntos/completa";
 import { actividad, alumno, asignacionExtra, asistencia, clase, docente, inscripcion } from "@/db/esquema";
 import { calcularReporteDeClase, type ActividadGlobal, type FilaReporte } from "@/lib/puntos/calculo";
 
@@ -60,7 +61,7 @@ async function construirHoja(claseInfo: ClaseParaHoja, actividadesGlobales: Acti
             .select({ alumnoId: asistencia.alumnoId, actividadId: asistencia.actividadId })
             .from(asistencia)
             .innerJoin(actividad, eq(asistencia.actividadId, actividad.id))
-            .where(and(inArray(asistencia.alumnoId, alumnoIds), eq(actividad.tipo, "global"))),
+            .where(and(inArray(asistencia.alumnoId, alumnoIds), eq(actividad.tipo, "global"), asistenciaCompleta)),
           db
             .select({ alumnoId: asignacionExtra.alumnoId, puntos: asignacionExtra.puntos })
             .from(asignacionExtra)

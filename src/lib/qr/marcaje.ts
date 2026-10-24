@@ -5,7 +5,8 @@ import { db } from "@/db/cliente";
 import { actividad, alumno, asistencia, bitacora, inscripcion } from "@/db/esquema";
 import { slotDe, validarCodigo } from "@/lib/qr/codigo";
 import { esPuntoValido, evaluarZona } from "@/lib/geo";
-import { escribirMarcajeOk, esViolacionDeUnicidad } from "@/lib/qr/escritura";
+import { escribirMarcajeOk, escribirSalidaOk, esViolacionDeUnicidad } from "@/lib/qr/escritura";
+import { faseVigente, type FaseMarcaje } from "@/lib/qr/fase";
 
 /**
  * Registro de asistencia por QR. Junta la derivacion del codigo (`codigo.ts`, logica pura)
@@ -27,10 +28,21 @@ export type ResultadoMarcaje =
   | "invalido"
   | "fuera_de_horario"
   | "sin_perfil"
-  | "fuera_de_zona";
+  | "fuera_de_zona"
+  | "sin_entrada";
 
 export type Marcaje =
-  | { resultado: "ok"; marcadaEn: Date; actividadNombre: string }
+  | {
+      resultado: "ok";
+      marcadaEn: Date;
+      actividadNombre: string;
+      fase: FaseMarcaje;
+      /**
+       * Solo en la entrada de una actividad de doble marcaje: el punto todavia no esta,
+       * falta la salida. `salidaAbreEn` es lo que se le dice al alumno que recuerde.
+       */
+      faltaSalida: { abreEn: Date } | null;
+    }
   | { resultado: "duplicado"; marcadaEn: Date; actividadNombre: string }
   | { resultado: Exclude<ResultadoMarcaje, "ok" | "duplicado">; actividadNombre: string | null };
 
@@ -51,9 +63,13 @@ export type Ubicacion = {
 };
 
 /** Los textos exactos de PLANIFICACION.md §7. No improvisar variantes. */
-export function mensajeDe(marcaje: Marcaje, horaLegible?: string): string {
+export function mensajeDe(marcaje: Marcaje, horaLegible?: string, horaSalida?: string): string {
   switch (marcaje.resultado) {
     case "ok":
+      if (marcaje.faltaSalida) {
+        return `Quedó registrada tu entrada. Para sumar el punto, marcá también la salida a partir de las ${horaSalida ?? "la hora de salida"}.`;
+      }
+      if (marcaje.fase === "salida") return "Listo, quedó registrada tu salida. Ya tenés el punto.";
       return "Listo, quedó registrada tu asistencia.";
     case "expirado":
       return "El código ya cambió. Escaneá otra vez el de la pantalla.";
@@ -67,6 +83,8 @@ export function mensajeDe(marcaje: Marcaje, horaLegible?: string): string {
       return "La actividad todavía no abre o ya cerró.";
     case "fuera_de_zona":
       return "Parece que no estás en el lugar de la actividad. Acercate y probá otra vez.";
+    case "sin_entrada":
+      return "No marcaste la entrada de esta actividad, así que no suma punto.";
   }
 }
 
@@ -122,6 +140,9 @@ export async function registrarMarcaje({
       lon: actividad.lon,
       radioM: actividad.radioM,
       exigeUbicacion: actividad.exigeUbicacion,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaAbreEn: actividad.salidaAbreEn,
+      salidaCierraEn: actividad.salidaCierraEn,
     })
     .from(actividad)
     .where(eq(actividad.codigoCorto, codigoCorto))
@@ -147,7 +168,10 @@ export async function registrarMarcaje({
     return { resultado: "fuera_de_horario", actividadNombre: nombre };
   }
 
-  if (momento < laActividad.marcajeAbreEn || momento > laActividad.marcajeCierraEn) {
+  // Entrada o salida segun la hora en que llega el boton (§6.5). Fuera de los rangos, y en
+  // el hueco entre ellos, no hay fase: no se acepta marcaje.
+  const fase = faseVigente(laActividad, momento);
+  if (!fase) {
     await anotar(alumno.id, laActividad.id, "fuera_de_horario", datos);
     return { resultado: "fuera_de_horario", actividadNombre: nombre };
   }
@@ -155,14 +179,26 @@ export async function registrarMarcaje({
   // El duplicado se consulta antes de validar el codigo: al alumno que ya marco hay que
   // decirle que ya marco, no que su codigo vencio.
   const [yaMarco] = await db
-    .select({ marcadaEn: asistencia.marcadaEn })
+    .select({ marcadaEn: asistencia.marcadaEn, salidaEn: asistencia.salidaEn })
     .from(asistencia)
     .where(and(eq(asistencia.alumnoId, alumno.id), eq(asistencia.actividadId, laActividad.id)))
     .limit(1);
 
-  if (yaMarco) {
+  if (fase === "entrada" && yaMarco) {
     await anotar(alumno.id, laActividad.id, "duplicado", datos);
     return { resultado: "duplicado", marcadaEn: yaMarco.marcadaEn, actividadNombre: nombre };
+  }
+
+  if (fase === "salida") {
+    // Sin entrada no hay punto: se le dice claro en vez de dejarlo marcar algo que no cuenta.
+    if (!yaMarco) {
+      await anotar(alumno.id, laActividad.id, "sin_entrada", datos);
+      return { resultado: "sin_entrada", actividadNombre: nombre };
+    }
+    if (yaMarco.salidaEn) {
+      await anotar(alumno.id, laActividad.id, "duplicado", datos);
+      return { resultado: "duplicado", marcadaEn: yaMarco.salidaEn, actividadNombre: nombre };
+    }
   }
 
   const veredicto = validarCodigo({
@@ -200,6 +236,25 @@ export async function registrarMarcaje({
   if (laActividad.exigeUbicacion && zona === "fuera") {
     await anotar(alumno.id, laActividad.id, "fuera_de_zona", datos);
     return { resultado: "fuera_de_zona", actividadNombre: nombre };
+  }
+
+  if (fase === "salida") {
+    // La salida completa la fila de la entrada. No hay clases_snapshot que tomar.
+    await escribirSalidaOk(db, {
+      alumnoId: alumno.id,
+      actividadId: laActividad.id,
+      salidaEn: momento,
+      slotSalida: BigInt(slotDe(momento, laActividad.ventanaSeg)),
+      ip: datos.ip,
+      dispositivoId: datos.dispositivoId,
+    });
+    return {
+      resultado: "ok",
+      marcadaEn: momento,
+      actividadNombre: nombre,
+      fase: "salida",
+      faltaSalida: null,
+    };
   }
 
   // Foto de las clases del alumno en este instante. Solo auditoria: los puntos se calculan
@@ -253,7 +308,14 @@ export async function registrarMarcaje({
     throw error;
   }
 
-  return { resultado: "ok", marcadaEn: momento, actividadNombre: nombre };
+  return {
+    resultado: "ok",
+    marcadaEn: momento,
+    actividadNombre: nombre,
+    fase: "entrada",
+    faltaSalida:
+      laActividad.dobleMarcaje && laActividad.salidaAbreEn ? { abreEn: laActividad.salidaAbreEn } : null,
+  };
 }
 
 export type ResultadoMarcajeManual =
@@ -261,7 +323,11 @@ export type ResultadoMarcajeManual =
   | { resultado: "duplicado"; marcadaEn: Date }
   | { resultado: "sin_perfil" }
   | { resultado: "no_encontrado" }
-  | { resultado: "actividad_no_encontrada" };
+  | { resultado: "actividad_no_encontrada" }
+  /** Salida manual de alguien sin entrada: no hay fila que completar. */
+  | { resultado: "sin_entrada" }
+  /** Salida manual en una actividad que no es de doble marcaje. */
+  | { resultado: "no_aplica" };
 
 /**
  * B8 — marcaje manual, para quien no tiene telefono o tuvo un problema tecnico durante la
@@ -270,23 +336,30 @@ export type ResultadoMarcajeManual =
  * justificacion obligatoria mas el propio acto del administrador de crearlo son la
  * aprobacion; no hay un paso adicional. Sigue valiendo "un escaneo por actividad" (duplicado)
  * y el perfil incompleto, igual que el marcaje por QR — ver `registrarMarcaje`.
+ *
+ * En una actividad de doble marcaje se elige la fase (§6.5): la entrada crea la asistencia y
+ * la salida completa la que ya existe. Son dos pasos separados a proposito, para cubrir a
+ * quien fallo solo en uno de los dos.
  */
 export async function registrarMarcajeManual({
   actividadId,
   identificadorAlumno,
   justificacion,
+  fase = "entrada",
 }: {
   actividadId: string;
   /** Carne o correo, coincidencia exacta: es una busqueda puntual durante un evento en vivo. */
   identificadorAlumno: string;
   justificacion: string;
+  fase?: FaseMarcaje;
 }): Promise<ResultadoMarcajeManual> {
   const [laActividad] = await db
-    .select({ ventanaSeg: actividad.ventanaSeg })
+    .select({ ventanaSeg: actividad.ventanaSeg, dobleMarcaje: actividad.dobleMarcaje })
     .from(actividad)
     .where(eq(actividad.id, actividadId))
     .limit(1);
   if (!laActividad) return { resultado: "actividad_no_encontrada" };
+  if (fase === "salida" && !laActividad.dobleMarcaje) return { resultado: "no_aplica" };
 
   const termino = identificadorAlumno.trim();
   const [elAlumno] = await db
@@ -302,16 +375,37 @@ export async function registrarMarcajeManual({
   }
 
   const [yaMarco] = await db
-    .select({ marcadaEn: asistencia.marcadaEn })
+    .select({ marcadaEn: asistencia.marcadaEn, salidaEn: asistencia.salidaEn })
     .from(asistencia)
     .where(and(eq(asistencia.alumnoId, elAlumno.id), eq(asistencia.actividadId, actividadId)))
     .limit(1);
+
+  const momento = new Date();
+
+  if (fase === "salida") {
+    if (!yaMarco) {
+      await anotar(elAlumno.id, actividadId, "sin_entrada", {});
+      return { resultado: "sin_entrada" };
+    }
+    if (yaMarco.salidaEn) {
+      await anotar(elAlumno.id, actividadId, "duplicado", {});
+      return { resultado: "duplicado", marcadaEn: yaMarco.salidaEn };
+    }
+    await escribirSalidaOk(db, {
+      alumnoId: elAlumno.id,
+      actividadId,
+      salidaEn: momento,
+      slotSalida: null,
+      notaManual: justificacion,
+    });
+    return { resultado: "ok", marcadaEn: momento };
+  }
+
   if (yaMarco) {
     await anotar(elAlumno.id, actividadId, "duplicado", {});
     return { resultado: "duplicado", marcadaEn: yaMarco.marcadaEn };
   }
 
-  const momento = new Date();
   const inscripciones = await db
     .select({ claseId: inscripcion.claseId })
     .from(inscripcion)

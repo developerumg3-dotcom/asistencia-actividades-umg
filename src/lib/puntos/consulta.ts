@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, max, sql } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad, asignacionExtra, asistencia, clase, inscripcion } from "@/db/esquema";
+import { asistenciaCompleta } from "./completa";
 import {
   calcularFechaDeCorte,
   calcularParticipaciones,
@@ -37,7 +38,8 @@ export async function obtenerParticipaciones(alumnoId: string): Promise<TablaPar
     db
       .select({ actividadId: asistencia.actividadId })
       .from(asistencia)
-      .where(eq(asistencia.alumnoId, alumnoId)),
+      .innerJoin(actividad, eq(asistencia.actividadId, actividad.id))
+      .where(and(eq(asistencia.alumnoId, alumnoId), asistenciaCompleta)),
     db
       .select({ actividadId: asignacionExtra.actividadId, claseId: asignacionExtra.claseId, puntos: asignacionExtra.puntos })
       .from(asignacionExtra)
@@ -59,7 +61,8 @@ export async function obtenerParticipaciones(alumnoId: string): Promise<TablaPar
  */
 export async function fechaDeCorteVigente(): Promise<Date | null> {
   const [fila] = await db
-    .select({ maxCierre: max(actividad.marcajeCierraEn) })
+    // Con doble marcaje el reparto sigue abierto hasta que cierra la salida, no la entrada.
+    .select({ maxCierre: max(sql`coalesce(${actividad.salidaCierraEn}, ${actividad.marcajeCierraEn})`) })
     .from(actividad)
     .where(inArray(actividad.estado, ESTADOS_VISIBLES));
   const maxCierre = fila?.maxCierre;
@@ -71,7 +74,7 @@ async function asistenciasExtraDe(alumnoId: string) {
     .select({ actividadId: asistencia.actividadId, puntos: actividad.puntos, iniciaEn: actividad.iniciaEn })
     .from(asistencia)
     .innerJoin(actividad, eq(asistencia.actividadId, actividad.id))
-    .where(and(eq(asistencia.alumnoId, alumnoId), eq(actividad.tipo, "extra")))
+    .where(and(eq(asistencia.alumnoId, alumnoId), eq(actividad.tipo, "extra"), asistenciaCompleta))
     .orderBy(asc(actividad.iniciaEn));
 }
 
@@ -207,6 +210,7 @@ export async function repartirPuntos(
           from asistencia s
           join actividad a on a.id = s.actividad_id
           where s.alumno_id = ${alumnoId} and s.actividad_id = q.actividad_id and a.tipo = 'extra'
+            and (a.doble_marcaje = false or s.salida_en is not null)
         )
       )
       returning id
@@ -232,6 +236,7 @@ export async function contarAlumnosConSaldoPendiente(): Promise<number> {
       from asistencia a
       join actividad act on act.id = a.actividad_id
       where act.tipo = 'extra' and act.estado in ('publicada', 'cerrada')
+        and (act.doble_marcaje = false or a.salida_en is not null)
       group by a.alumno_id
     ),
     repartido as (

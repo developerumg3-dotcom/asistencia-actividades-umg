@@ -25,6 +25,9 @@ export const asistencia = pgTable(
       .references(() => actividad.id),
     marcadaEn: timestamp("marcada_en", { withTimezone: true }).notNull().defaultNow(),
     slot: bigint("slot", { mode: "bigint" }).notNull(),
+    /** Marcaje de salida. Solo en actividades con doble marcaje (PLANIFICACION.md §6.5). */
+    salidaEn: timestamp("salida_en", { withTimezone: true }),
+    slotSalida: bigint("slot_salida", { mode: "bigint" }),
     origen: origenAsistenciaEnum("origen").notNull(),
     notaManual: text("nota_manual"),
     ip: inet("ip"),

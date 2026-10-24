@@ -26,6 +26,15 @@ export const actividad = pgTable("actividad", {
   secretoQr: bytea("secreto_qr").notNull(),
   ventanaSeg: integer("ventana_seg").notNull().default(60),
 
+  /**
+   * Doble marcaje (PLANIFICACION.md §6.5): el punto exige entrada y salida. La entrada usa
+   * la ventana de `marcaje_abre_en`/`marcaje_cierra_en`; la salida, estas dos, que son
+   * obligatorias cuando el interruptor esta encendido y nulas cuando no.
+   */
+  dobleMarcaje: boolean("doble_marcaje").notNull().default(false),
+  salidaAbreEn: timestamp("salida_abre_en", { withTimezone: true }),
+  salidaCierraEn: timestamp("salida_cierra_en", { withTimezone: true }),
+
   // Zona del evento. Los tres admiten nulo y nulo significa "esta actividad no usa
   // ubicacion", que es el comportamiento por defecto. Ver docs/plan-geolocalizacion.md.
   lat: doublePrecision("lat"),

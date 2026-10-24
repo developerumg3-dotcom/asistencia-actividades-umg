@@ -17,6 +17,7 @@ import {
   escribirMarcajeOk,
   esViolacionDeUnicidad,
   sentenciasDeMarcajeOk,
+  sentenciasDeSalidaOk,
 } from "../src/lib/qr/escritura.ts";
 
 const base = drizzle("postgresql://usuario:clave@localhost.invalid/prueba");
@@ -96,7 +97,7 @@ test("marcaje.ts: el caso ok ya no hace dos escrituras sueltas y los rechazos si
   assert.equal((fuente.match(/escribirMarcajeOk\(db/g) ?? []).length, 2);
 
   // Cada rechazo conserva su rastro individual en bitacora.
-  for (const r of ["invalido", "sin_perfil", "fuera_de_horario", "duplicado", "fuera_de_zona"]) {
+  for (const r of ["invalido", "sin_perfil", "fuera_de_horario", "duplicado", "fuera_de_zona", "sin_entrada"]) {
     assert.match(fuente, new RegExp(`anotar\\([^)]*"${r}"`), `falta anotar ${r}`);
   }
   assert.match(fuente, /anotar\([^)]*veredicto/); // expirado / invalido por codigo
@@ -108,13 +109,46 @@ test("marcaje.ts: el orden de comprobaciones sigue siendo perfil, estado, horari
   const orden = [
     "!alumno.perfilCompleto",
     'estado !== "publicada"',
-    "momento < laActividad.marcajeAbreEn",
+    "faseVigente(laActividad, momento)",
     "yaMarco",
     "validarCodigo(",
     'zona === "fuera"',
+    // La salida tambien escribe solo despues de validar codigo y zona.
+    "escribirSalidaOk(",
     "escribirMarcajeOk(",
   ].map((marca) => cuerpo.indexOf(marca));
 
   assert.ok(orden.every((i) => i >= 0), "falta alguna comprobacion");
   assert.deepEqual([...orden].sort((x, y) => x - y), orden);
+});
+
+test("la salida es un update de asistencia (solo si aun no tiene salida) y la bitacora 'ok'", () => {
+  const [actualizar, anotar] = sentenciasDeSalidaOk(base, {
+    alumnoId: "alumno-1",
+    actividadId: "11111111-1111-4111-8111-111111111111",
+    salidaEn: new Date("2026-09-01T17:00:00Z"),
+    slotSalida: BigInt(456),
+    ip: "10.0.0.7",
+  });
+  const sqlA = actualizar.toSQL();
+  const sqlB = anotar.toSQL();
+
+  assert.match(sqlA.sql, /^update "asistencia" set "salida_en" = /);
+  assert.match(sqlA.sql, /"salida_en" is null/, "dos pulsaciones no se pisan la hora");
+  assert.ok(sqlA.params.includes("alumno-1"));
+  assert.match(sqlB.sql, /^insert into "bitacora"/);
+  assert.ok(sqlB.params.includes("ok"));
+});
+
+test("la salida manual agrega su justificacion a la nota que ya tenia la entrada", () => {
+  const [actualizar] = sentenciasDeSalidaOk(base, {
+    alumnoId: "alumno-1",
+    actividadId: "11111111-1111-4111-8111-111111111111",
+    salidaEn: new Date("2026-09-01T17:00:00Z"),
+    slotSalida: null,
+    notaManual: "se le cayo el telefono",
+  });
+  const q = actualizar.toSQL();
+  assert.match(q.sql, /"nota_manual"/);
+  assert.ok(q.params.some((p) => typeof p === "string" && p.includes("Salida manual: se le cayo el telefono")));
 });

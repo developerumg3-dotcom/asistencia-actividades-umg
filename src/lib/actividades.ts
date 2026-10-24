@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad, asistencia } from "@/db/esquema";
+import { cierreFinal, faseVigente, type FaseMarcaje } from "@/lib/qr/fase";
 
 export type ActividadDelAlumno = {
   id: string;
@@ -13,8 +14,14 @@ export type ActividadDelAlumno = {
   terminaEn: Date;
   marcajeAbreEn: Date;
   marcajeCierraEn: Date;
-  /** Cuando la marco, si es que la marco. */
+  /** Doble marcaje (PLANIFICACION.md §6.5): el punto exige entrada y salida. */
+  dobleMarcaje: boolean;
+  salidaAbreEn: Date | null;
+  salidaCierraEn: Date | null;
+  /** Cuando marco la entrada (o el unico marcaje), si es que lo marco. */
   marcadaEn: Date | null;
+  /** Cuando marco la salida. Solo existe con doble marcaje. */
+  salidaEn: Date | null;
 };
 
 /**
@@ -43,7 +50,11 @@ export async function obtenerActividadesDelAlumno(
       terminaEn: actividad.terminaEn,
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaAbreEn: actividad.salidaAbreEn,
+      salidaCierraEn: actividad.salidaCierraEn,
       marcadaEn: asistencia.marcadaEn,
+      salidaEn: asistencia.salidaEn,
     })
     .from(actividad)
     .leftJoin(
@@ -58,7 +69,33 @@ export async function obtenerActividadesDelAlumno(
     .orderBy(asc(actividad.iniciaEn));
 }
 
-/** Si el marcaje esta abierto en este momento. Una actividad cerrada a mano nunca lo esta. */
+/** Que se puede marcar ahora, si algo. Una actividad cerrada a mano nunca acepta marcaje. */
+export function faseAbierta(a: ActividadDelAlumno, ahora: Date): FaseMarcaje | null {
+  return a.estado === "publicada" ? faseVigente(a, ahora) : null;
+}
+
+/** Si el marcaje esta abierto en este momento (entrada o salida). */
 export function marcajeAbierto(a: ActividadDelAlumno, ahora: Date): boolean {
-  return a.estado === "publicada" && ahora >= a.marcajeAbreEn && ahora <= a.marcajeCierraEn;
+  return faseAbierta(a, ahora) !== null;
+}
+
+/** Si a este alumno le toca marcar ahora: la entrada si no la tiene, la salida si ya entro. */
+export function lePuedeTocarMarcar(a: ActividadDelAlumno, ahora: Date): boolean {
+  const fase = faseAbierta(a, ahora);
+  if (fase === "entrada") return a.marcadaEn === null;
+  if (fase === "salida") return a.marcadaEn !== null && a.salidaEn === null;
+  return false;
+}
+
+/**
+ * Si la asistencia da el punto: la de un solo marcaje con tenerla basta; la de doble marcaje
+ * exige tambien la salida (PLANIFICACION.md §5 y §6.5). Con solo la entrada no hay punto.
+ */
+export function asistenciaCompleta(a: ActividadDelAlumno): boolean {
+  return a.marcadaEn !== null && (!a.dobleMarcaje || a.salidaEn !== null);
+}
+
+/** Si ya no se va a aceptar ningun marcaje mas (la salida es el ultimo, si la hay). */
+export function marcajeTerminado(a: ActividadDelAlumno, ahora: Date): boolean {
+  return a.estado === "cerrada" || cierreFinal(a) < ahora;
 }

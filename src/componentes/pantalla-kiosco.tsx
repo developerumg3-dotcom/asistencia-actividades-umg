@@ -6,7 +6,17 @@ import QRCode from "qrcode";
 type CodigoProgramado = { codigo: string; vigenteDesde: string; url: string };
 
 type Respuesta = {
-  actividad: { nombre: string; lugar: string | null; estado: string; ventanaSeg: number };
+  actividad: {
+    nombre: string;
+    lugar: string | null;
+    estado: string;
+    ventanaSeg: number;
+    marcajeAbreEn: string;
+    marcajeCierraEn: string;
+    dobleMarcaje: boolean;
+    salidaAbreEn: string | null;
+    salidaCierraEn: string | null;
+  };
   servidorEn: string;
   codigos: CodigoProgramado[];
 };
@@ -107,6 +117,13 @@ export function PantallaKiosco({ clave }: { clave: string }) {
     ? Math.max(0, Math.ceil((new Date(vigente.vigenteDesde).getTime() + ventanaMs - ahora) / 1000))
     : 0;
 
+  // Solo una etiqueta (PLANIFICACION.md §6.5): el servidor decide la fase de cada marcaje.
+  const etiquetaDeFase = !datos?.actividad.dobleMarcaje
+    ? null
+    : datos.actividad.salidaAbreEn && ahora >= new Date(datos.actividad.salidaAbreEn).getTime()
+      ? "Marcá tu salida"
+      : "Marcá tu entrada";
+
   const sinRedHaceRato = ahora - ultimoExitoRef.current > TOLERANCIA_SIN_RED_MS;
 
   if (!datos && error) {
@@ -132,6 +149,11 @@ export function PantallaKiosco({ clave }: { clave: string }) {
         <h1 className="text-[clamp(26px,4.4vh,54px)] font-extrabold leading-tight tracking-tight text-tinta">
           {datos.actividad.nombre}
         </h1>
+        {etiquetaDeFase && (
+          <p className="mt-[0.6vh] inline-block rounded-full bg-primary-600 px-[2vh] py-[0.5vh] text-[clamp(16px,2.6vh,30px)] font-extrabold uppercase tracking-wider text-white">
+            {etiquetaDeFase}
+          </p>
+        )}
         {datos.actividad.lugar && (
           <p className="text-[clamp(15px,2.2vh,24px)] text-neutral-500">{datos.actividad.lugar}</p>
         )}

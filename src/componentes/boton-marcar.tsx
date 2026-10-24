@@ -49,7 +49,7 @@ function Resultado({
 
       <div className="max-w-sm">
         <h1 className="text-[26px] font-extrabold leading-tight tracking-tight">
-          {exito ? "¡Asistencia registrada!" : estado.mensaje}
+          {exito ? (estado.parcial ? "¡Entrada registrada!" : "¡Asistencia registrada!") : estado.mensaje}
         </h1>
         {exito && estado.mensaje && <p className="mt-2.5 text-[15px] opacity-90">{estado.mensaje}</p>}
         {estado.resultado === "expirado" && (
@@ -65,7 +65,7 @@ function Resultado({
         )}
       </div>
 
-      {exito && (
+      {exito && !estado.parcial && (
         <p className="text-[64px] font-extrabold leading-none tracking-tight tabular-nums">
           +{puntos}
           <span className="mt-2 block text-[13px] font-bold uppercase tracking-wider opacity-85">

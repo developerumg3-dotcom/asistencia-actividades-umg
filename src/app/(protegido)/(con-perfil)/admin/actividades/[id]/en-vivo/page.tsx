@@ -16,6 +16,7 @@ import { Icono } from "@/componentes/ui/icono";
 import { Tarjeta } from "@/componentes/ui/tarjeta";
 import { SubBarra, TituloSeccion, Vacio } from "@/componentes/ui/titular";
 import { enGuatemala, haciaCampoLocal, horaEnGuatemala } from "@/lib/fechas";
+import { faseVigente } from "@/lib/qr/fase";
 import { requireAdmin } from "@/lib/sesion";
 
 // Se recarga sola (`RefrescoAutomatico`): durante el evento interesa el numero de ahora.
@@ -50,6 +51,9 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
       lon: actividad.lon,
       radioM: actividad.radioM,
       exigeUbicacion: actividad.exigeUbicacion,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaAbreEn: actividad.salidaAbreEn,
+      salidaCierraEn: actividad.salidaCierraEn,
     })
     .from(actividad)
     .where(eq(actividad.id, id))
@@ -63,6 +67,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
         id: asistencia.id,
         alumnoId: asistencia.alumnoId,
         marcadaEn: asistencia.marcadaEn,
+        salidaEn: asistencia.salidaEn,
         origen: asistencia.origen,
         notaManual: asistencia.notaManual,
         distanciaM: asistencia.distanciaM,
@@ -83,8 +88,15 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
   ]);
 
   const ahora = new Date();
-  const abierto =
-    laActividad.estado === "publicada" && ahora >= laActividad.marcajeAbreEn && ahora <= laActividad.marcajeCierraEn;
+  const fase = laActividad.estado === "publicada" ? faseVigente(laActividad, ahora) : null;
+  const abierto = fase !== null;
+  const doble = laActividad.dobleMarcaje;
+  // En doble marcaje solo cuenta quien tiene las dos marcas (PLANIFICACION.md §6.5).
+  const completos = marcajes.filter((m) => m.salidaEn !== null).length;
+  // Hasta cuando se acepta marcaje ahora mismo, o el cierre final si ya no hay fase.
+  const cierreVigente =
+    fase === "salida" && laActividad.salidaCierraEn ? laActividad.salidaCierraEn : laActividad.marcajeCierraEn;
+  const cierreFinal = doble && laActividad.salidaCierraEn ? laActividad.salidaCierraEn : laActividad.marcajeCierraEn;
   const radioM = laActividad.radioM;
   const fueraDeZona = (m: (typeof marcajes)[number]) =>
     radioM !== null && m.distanciaM !== null && m.distanciaM - (m.precisionM ?? 0) > radioM;
@@ -109,6 +121,10 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
     lon: laActividad.lon?.toString() ?? "",
     radioM: laActividad.radioM?.toString() ?? "",
     exigeUbicacion: laActividad.exigeUbicacion,
+    dobleMarcaje: laActividad.dobleMarcaje,
+    salidaAbreEn: laActividad.salidaAbreEn ? haciaCampoLocal(laActividad.salidaAbreEn) : "",
+    salidaCierraEn: laActividad.salidaCierraEn ? haciaCampoLocal(laActividad.salidaCierraEn) : "",
+    tieneAsistencias: marcajes.length > 0,
   };
 
   return (
@@ -134,7 +150,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
             ) : laActividad.estado === "cerrada" ? (
               <Etiqueta>Cerrada</Etiqueta>
             ) : abierto ? (
-              <Etiqueta tono="azul">Abierta ahora</Etiqueta>
+              <Etiqueta tono="azul">{doble ? `${fase === "salida" ? "Salida" : "Entrada"} abierta ahora` : "Abierta ahora"}</Etiqueta>
             ) : (
               <Etiqueta tono="celeste">Publicada</Etiqueta>
             )}
@@ -142,6 +158,7 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
               {laActividad.tipo === "extra" && "Extra · "}
               {laActividad.puntos} {laActividad.puntos === 1 ? "punto" : "puntos"}
             </Etiqueta>
+            {doble && <Etiqueta>Entrada y salida</Etiqueta>}
             {radioM !== null && (
               <Etiqueta>
                 <Icono nombre="lugar" grosor={2.4} className="size-[13px]" />
@@ -158,17 +175,22 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
         )}
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-            {abierto ? "En vivo · se actualiza solo" : "Asistencias registradas"}
+            {abierto ? "En vivo · se actualiza solo" : doble ? "Asistencias completas" : "Asistencias registradas"}
           </p>
           <p className="text-[54px] font-extrabold leading-none tabular-nums tracking-tight text-primary-700">
-            {marcajes.length}
+            {doble ? completos : marcajes.length}
           </p>
+          {doble && (
+            <p className="text-[13px] text-neutral-500">
+              {marcajes.length} entraron · {marcajes.length - completos} sin salida (no suman punto)
+            </p>
+          )}
         </div>
         <p className="text-right text-[13px] text-neutral-500">
           {abierto ? "cierra" : "marcaje hasta"}
           <br />
           <b className="text-tinta">
-            {abierto ? horaEnGuatemala(laActividad.marcajeCierraEn) : enGuatemala(laActividad.marcajeCierraEn)}
+            {abierto ? horaEnGuatemala(cierreVigente) : enGuatemala(cierreFinal)}
           </b>
         </p>
       </Tarjeta>
@@ -186,9 +208,10 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
             </button>
           </form>
         )}
-        <FormularioMarcajeManual actividadId={id} />
+        <FormularioMarcajeManual actividadId={id} dobleMarcaje={doble} />
         <BotonAvisarActividad actividadId={id} />
         <FormularioEditarActividad actividad={editable} />
+        {doble && <BotonAvisarActividad actividadId={id} salida />}
       </div>
 
       {radioM !== null && marcajes.length > 0 && (
@@ -251,7 +274,11 @@ export default async function EnVivoPage({ params }: { params: Promise<{ id: str
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <p className="text-[13.5px] font-bold tabular-nums">{horaEnGuatemala(m.marcadaEn)}</p>
+                  <p className="text-[13.5px] font-bold tabular-nums">
+                    {horaEnGuatemala(m.marcadaEn)}
+                    {doble && m.salidaEn && <> → {horaEnGuatemala(m.salidaEn)}</>}
+                  </p>
+                  {doble && !m.salidaEn && <Etiqueta tono="oro">Falta salida</Etiqueta>}
                   {m.origen === "manual" ? (
                     <span title={m.notaManual ?? undefined}>
                       <Etiqueta tono="oro">Manual</Etiqueta>

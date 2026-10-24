@@ -27,6 +27,8 @@ function ipCliente(cabeceras: Headers): string | null {
 export type EstadoMarcaje = {
   resultado: Marcaje["resultado"] | "sin_sesion" | null;
   mensaje: string | null;
+  /** Entrada de una actividad de doble marcaje: se registro, pero el punto aun no esta. */
+  parcial?: boolean;
 };
 
 export async function marcarAsistencia(
@@ -72,5 +74,11 @@ export async function marcarAsistencia(
   revalidatePath("/inicio");
 
   const hora = "marcadaEn" in marcaje ? horaEnGuatemala(marcaje.marcadaEn) : undefined;
-  return { resultado: marcaje.resultado, mensaje: mensajeDe(marcaje, hora) };
+  const horaSalida =
+    marcaje.resultado === "ok" && marcaje.faltaSalida ? horaEnGuatemala(marcaje.faltaSalida.abreEn) : undefined;
+  return {
+    resultado: marcaje.resultado,
+    mensaje: mensajeDe(marcaje, hora, horaSalida),
+    parcial: marcaje.resultado === "ok" && marcaje.faltaSalida !== null,
+  };
 }

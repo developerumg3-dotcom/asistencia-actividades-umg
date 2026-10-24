@@ -163,6 +163,16 @@ lo imparte y en qué sección. Por eso `docente_id` y `seccion` **admiten nulo**
 catedrático es un curso del catálogo todavía sin asignar; el alumno puede inscribirse igual y
 sus puntos se calculan igual.
 
+**Desde el segundo semestre de 2026 el catálogo es la programación oficial, no el pensum
+entero.** Con la lista de catedráticos y secciones ya en mano, `clase` lleva una fila por
+curso y sección que se imparte (45: ciclos II, IV, VI, VIII y X), cada una con su
+catedrático. Los cursos de ciclos impares no se cargan, porque no se imparten en ese
+semestre y un alumno no puede estar llevándolos. El alumno sigue eligiendo uno por uno, de
+cualquier ciclo. La carga está en
+[`scripts/sql/2026-10-10-limpiar-y-cargar-2sem2026.sql`](scripts/sql/2026-10-10-limpiar-y-cargar-2sem2026.sql).
+`pnpm db:sembrar` ya no debe correrse sobre esa base: volvería a meter los cursos impares
+sin sección ni catedrático.
+
 **Lo que sí bloquea el nulo:** la exportación a Excel (§9) agrupa por catedrático. Una clase
 sin `docente_id` no puede exportarse. Antes del primer envío hay que completar el catedrático
 de toda clase que tenga al menos un alumno inscrito, desde B2/B3. La pantalla de exportación
@@ -195,8 +205,11 @@ Restricción: `UNIQUE (alumno_id, clase_id)`
 | `puntos` | int | 1 para globales, 2 para la extra |
 | `inicia_en` | timestamptz | Informativo, se muestra al alumno |
 | `termina_en` | timestamptz | Informativo |
-| `marcaje_abre_en` | timestamptz | Inicio de la ventana en que se acepta el marcaje |
-| `marcaje_cierra_en` | timestamptz | Fin de la ventana. Por defecto `inicia_en + 24 h` |
+| `marcaje_abre_en` | timestamptz | Inicio de la ventana en que se acepta el marcaje (la **entrada**, si hay doble marcaje) |
+| `marcaje_cierra_en` | timestamptz | Fin de esa ventana. Por defecto `inicia_en + 24 h` |
+| `doble_marcaje` | bool | **Falso por defecto.** Si es verdadero, el punto exige marcar entrada **y** salida (§6.5) |
+| `salida_abre_en` | timestamptz, nullable | Inicio de la ventana de salida. Obligatoria si `doble_marcaje` |
+| `salida_cierra_en` | timestamptz, nullable | Fin de la ventana de salida. Obligatoria si `doble_marcaje` |
 | `estado` | enum `borrador` \| `publicada` \| `cerrada` | |
 | `secreto_qr` | bytea | 32 bytes. **Nunca sale del servidor** |
 | `ventana_seg` | int | Duración del código. Por defecto 60 |
@@ -216,6 +229,8 @@ Un marcaje válido. Único por alumno y actividad.
 | `actividad_id` | → `actividad` | |
 | `marcada_en` | timestamptz | |
 | `slot` | bigint | Slot del código consumido |
+| `salida_en` | timestamptz, nullable | Hora del marcaje de salida. Solo en actividades con `doble_marcaje` (§6.5) |
+| `slot_salida` | bigint, nullable | Slot del código de la salida. Nulo cuando la salida fue manual |
 | `origen` | enum `qr` \| `manual` | |
 | `nota_manual` | texto | Obligatoria cuando `origen = manual` |
 | `ip` | inet | Solo bitácora, nunca criterio de rechazo |
@@ -262,7 +277,7 @@ auditar después.
 | `alumno_id` | → `alumno` |
 | `actividad_id` | → `actividad`, nullable |
 | `evento` | enum |
-| `resultado` | enum `ok` \| `expirado` \| `duplicado` \| `invalido` \| `fuera_de_horario` \| `sin_perfil` \| `fuera_de_zona` |
+| `resultado` | enum `ok` \| `expirado` \| `duplicado` \| `invalido` \| `fuera_de_horario` \| `sin_perfil` \| `fuera_de_zona` \| `sin_entrada` |
 | `ocurrio_en` | timestamptz |
 | `ip` | inet |
 | `dispositivo_id` | texto |
@@ -282,6 +297,10 @@ de verano). El servidor nunca confía en el reloj del teléfono para validar nad
 |---|---|---|
 | `global` | 1 pt | Acredita **el punto completo en cada una de las clases** del alumno. No se divide: si está en 3 clases, gana 1 punto en cada una. |
 | `extra` | 2 pts | Abona **saldo** de 2 puntos. El alumno decide dónde caen: 2 en una clase, o 1 y 1 en dos clases distintas. |
+
+**Doble marcaje.** En una actividad con `doble_marcaje`, la asistencia cuenta solo si tiene
+`salida_en` (§6.5). Donde esta sección dice «con asistencia registrada», léase «con asistencia
+completa»: la de una actividad de un solo marcaje siempre lo está.
 
 ### Fórmula
 
@@ -428,9 +447,31 @@ alumnos que inicien sesión antes de que empiece la actividad.
 Si en el ensayo de campo (§9) esta fricción resulta mayor de lo esperado, el escáner dentro
 de la app queda como mejora posterior, no como requisito de la versión 1.
 
-### 6.5 Un escaneo por actividad
+### 6.5 Un escaneo por actividad, o dos si se pide
 
-Un solo escaneo acredita la asistencia. No se exige un segundo escaneo de salida.
+Por defecto, un solo escaneo acredita la asistencia.
+
+**Doble marcaje (opcional, por actividad).** Cuando el administrador enciende
+`doble_marcaje` al crear la actividad, el punto exige marcar **entrada y salida**, cada una
+dentro de su propio rango fijo. Ejemplo: actividad de 2:00 a 4:00 p. m., entrada de 2:00 a
+2:30 y salida de 3:30 a 4:00.
+
+- Es el mismo QR y el mismo kiosco. El servidor decide si el marcaje es entrada o salida por
+  **la hora en que llega el botón**, no por la del escaneo; el kiosco solo muestra la etiqueta
+  de la fase vigente.
+- Entrada: crea la fila de `asistencia`. Salida: completa `salida_en` en esa misma fila.
+- **Una salida sin entrada se rechaza** (`sin_entrada`) y queda en la bitácora.
+- **Solo vale haber marcado las dos.** Con una sola marca, o con ninguna, la actividad da 0
+  puntos. No se reparte: la entrada no vale una parte y la salida otra.
+- Aplica a cualquier cantidad de puntos y a los dos tipos. En una `extra`, el saldo de puntos
+  solo se abona cuando la asistencia está completa.
+- Fuera de los dos rangos (incluido el hueco entre ellos) se responde `fuera_de_horario`.
+- El interruptor `doble_marcaje` **no se puede cambiar** una vez que la actividad tiene al
+  menos una asistencia: apagarlo regalaría el punto a quien solo marcó entrada, y encenderlo se
+  lo quitaría a quien ya lo tenía. Los horarios sí se pueden seguir editando.
+- El marcaje manual (B8) permite registrar entrada y salida por separado.
+- El administrador puede avisar por push que se abrió la salida, con un botón en el detalle de
+  la actividad. No hay envío automático a la hora.
 
 ---
 
@@ -492,6 +533,7 @@ automático**.
 | `invalido` | Ese código no corresponde a esta actividad. |
 | `fuera_de_horario` | La actividad todavía no abre / ya cerró. |
 | `fuera_de_zona` | Parece que no estás en el lugar de la actividad. Acercate y probá otra vez. |
+| `sin_entrada` | No marcaste la entrada de esta actividad, así que no suma punto. |
 
 **Si el alumno no está inscrito a ninguna clase, la asistencia se guarda de todas formas.**
 Los puntos aparecen solos cuando se inscriba. Perder una asistencia real por un trámite

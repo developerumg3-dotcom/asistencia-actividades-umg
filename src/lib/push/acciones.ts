@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/cliente";
 import { actividad } from "@/db/esquema";
-import { frasePorcentajeAlcance, resumenDeEnvio, textoDeAviso } from "@/lib/push/aviso";
+import { frasePorcentajeAlcance, resumenDeEnvio, textoDeAviso, textoDeAvisoSalida } from "@/lib/push/aviso";
 import { enviarAvisoATodos } from "@/lib/push/envio";
 import {
   borrarSuscripcionPorEndpoint,
@@ -93,7 +93,34 @@ export async function avisarDeActividad(actividadId: string): Promise<ResultadoA
 
   if (!datos) return { ok: false, error: "Esa actividad ya no existe." };
 
-  const resultado = await enviarAvisoATodos(textoDeAviso(datos));
+  return enviarYResumir(textoDeAviso(datos));
+}
+
+/** "Se abrió la salida": solo para actividades de doble marcaje. Lo pulsa el administrador. */
+export async function avisarDeSalida(actividadId: string): Promise<ResultadoAviso> {
+  await requireAdmin();
+
+  const [datos] = await db
+    .select({
+      id: actividad.id,
+      nombre: actividad.nombre,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaCierraEn: actividad.salidaCierraEn,
+    })
+    .from(actividad)
+    .where(eq(actividad.id, actividadId))
+    .limit(1);
+
+  if (!datos) return { ok: false, error: "Esa actividad ya no existe." };
+  if (!datos.dobleMarcaje || !datos.salidaCierraEn) {
+    return { ok: false, error: "Esta actividad no tiene doble marcaje, así que no hay salida que avisar." };
+  }
+
+  return enviarYResumir(textoDeAvisoSalida({ ...datos, salidaCierraEn: datos.salidaCierraEn }));
+}
+
+async function enviarYResumir(aviso: Parameters<typeof enviarAvisoATodos>[0]): Promise<ResultadoAviso> {
+  const resultado = await enviarAvisoATodos(aviso);
 
   if (!resultado.configurado) {
     return {

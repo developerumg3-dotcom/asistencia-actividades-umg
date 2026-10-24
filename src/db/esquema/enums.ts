@@ -36,4 +36,6 @@ export const resultadoBitacoraEnum = pgEnum("resultado_bitacora", [
   // Etapa 2 de la geolocalizacion: el alumno marco lejos del lugar declarado, con una
   // lectura buena. Ver docs/plan-geolocalizacion.md.
   "fuera_de_zona",
+  // Doble marcaje: intento de salida de quien no marco la entrada.
+  "sin_entrada",
 ]);

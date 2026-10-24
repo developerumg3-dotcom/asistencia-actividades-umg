@@ -34,6 +34,9 @@ export async function GET(
       ventanaSeg: actividad.ventanaSeg,
       marcajeAbreEn: actividad.marcajeAbreEn,
       marcajeCierraEn: actividad.marcajeCierraEn,
+      dobleMarcaje: actividad.dobleMarcaje,
+      salidaAbreEn: actividad.salidaAbreEn,
+      salidaCierraEn: actividad.salidaCierraEn,
       secretoQr: actividad.secretoQr,
       codigoCorto: actividad.codigoCorto,
     })
@@ -70,6 +73,11 @@ export async function GET(
         ventanaSeg: fila.ventanaSeg,
         marcajeAbreEn: fila.marcajeAbreEn.toISOString(),
         marcajeCierraEn: fila.marcajeCierraEn.toISOString(),
+        // Para que la pantalla diga "Entrada" o "Salida" (§6.5). Es solo una etiqueta: quien
+        // decide de verdad la fase de cada marcaje es el servidor, con la hora de llegada.
+        dobleMarcaje: fila.dobleMarcaje,
+        salidaAbreEn: fila.salidaAbreEn?.toISOString() ?? null,
+        salidaCierraEn: fila.salidaCierraEn?.toISOString() ?? null,
       },
       servidorEn: ahora.toISOString(),
       segundosRestantes: segundosRestantes(ahora, fila.ventanaSeg),

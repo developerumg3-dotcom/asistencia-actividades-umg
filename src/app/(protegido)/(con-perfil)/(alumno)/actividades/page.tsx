@@ -5,7 +5,14 @@ import { Icono } from "@/componentes/ui/icono";
 import { Pantalla } from "@/componentes/ui/pantalla";
 import { Tarjeta } from "@/componentes/ui/tarjeta";
 import { Titular, TituloSeccion, Vacio } from "@/componentes/ui/titular";
-import { marcajeAbierto, obtenerActividadesDelAlumno, type ActividadDelAlumno } from "@/lib/actividades";
+import {
+  asistenciaCompleta,
+  faseAbierta,
+  lePuedeTocarMarcar,
+  marcajeTerminado,
+  obtenerActividadesDelAlumno,
+  type ActividadDelAlumno,
+} from "@/lib/actividades";
 import { fechaCortaEnGuatemala, horaEnGuatemala, relativoEnGuatemala } from "@/lib/fechas";
 import { requireAlumno } from "@/lib/sesion";
 
@@ -30,11 +37,13 @@ export default async function ActividadesPage() {
   const actividades = await obtenerActividadesDelAlumno(alumnoActual.id, { incluirCerradas: true });
   const ahora = new Date();
 
-  const abiertas = actividades.filter((a) => marcajeAbierto(a, ahora));
+  // "Ahora" incluye el hueco entre la entrada y la salida de una actividad de doble marcaje:
+  // sigue en curso y el alumno tiene que saber que le falta la salida.
+  const abiertas = actividades.filter(
+    (a) => a.estado === "publicada" && a.marcajeAbreEn <= ahora && !marcajeTerminado(a, ahora),
+  );
   const proximas = actividades.filter((a) => a.estado === "publicada" && a.marcajeAbreEn > ahora);
-  const pasadas = actividades
-    .filter((a) => a.estado === "cerrada" || a.marcajeCierraEn < ahora)
-    .reverse();
+  const pasadas = actividades.filter((a) => marcajeTerminado(a, ahora)).reverse();
 
   const tarjeta = (a: ActividadDelAlumno, abierta: boolean) => (
     <li key={a.id} className="flex items-start gap-3 rounded-2xl bg-white p-3.5 shadow-tarjeta">
@@ -48,19 +57,37 @@ export default async function ActividadesPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {a.marcadaEn ? (
+          {asistenciaCompleta(a) ? (
             <Etiqueta tono="verde">
               <Icono nombre="ok" grosor={2.6} className="size-[13px]" />
               Asististe
             </Etiqueta>
+          ) : a.dobleMarcaje && a.marcadaEn ? (
+            <Etiqueta tono="oro">Entrada marcada · falta la salida</Etiqueta>
           ) : abierta ? (
-            <Etiqueta tono="azul">Abierta ahora</Etiqueta>
+            <Etiqueta tono="azul">
+              {faseAbierta(a, ahora) === "salida"
+                ? "Salida abierta ahora"
+                : a.dobleMarcaje && faseAbierta(a, ahora) === null
+                  ? `Salida desde las ${horaEnGuatemala(a.salidaAbreEn!)}`
+                  : a.dobleMarcaje
+                    ? "Entrada abierta ahora"
+                    : "Abierta ahora"}
+            </Etiqueta>
           ) : (
             <Etiqueta tono="celeste">{relativoEnGuatemala(a.iniciaEn, ahora)}</Etiqueta>
           )}
           <EtiquetaDePuntos a={a} />
         </div>
-        {abierta && !a.marcadaEn && <ComoMarcar variante="suave" chico etiqueta="Cómo marco" />}
+        {abierta && a.dobleMarcaje && (
+          <p className="text-[12.5px] text-neutral-500">
+            Doble marcaje: entrada hasta las {horaEnGuatemala(a.marcajeCierraEn)} y salida de{" "}
+            {horaEnGuatemala(a.salidaAbreEn!)} a {horaEnGuatemala(a.salidaCierraEn!)}. Sin las dos no suma punto.
+          </p>
+        )}
+        {abierta && lePuedeTocarMarcar(a, ahora) && (
+          <ComoMarcar variante="suave" chico etiqueta="Cómo marco" />
+        )}
       </div>
     </li>
   );
@@ -87,13 +114,13 @@ export default async function ActividadesPage() {
 
       {pasadas.length > 0 && (
         <>
-          <TituloSeccion lado={`asististe a ${pasadas.filter((a) => a.marcadaEn).length} de ${pasadas.length}`}>
+          <TituloSeccion lado={`asististe a ${pasadas.filter(asistenciaCompleta).length} de ${pasadas.length}`}>
             Ya pasaron
           </TituloSeccion>
           <Tarjeta>
             <ol className="flex flex-col">
               {pasadas.map((a, indice) => {
-                const asistio = a.marcadaEn !== null;
+                const asistio = asistenciaCompleta(a);
                 const ultima = indice === pasadas.length - 1;
                 return (
                   <li key={a.id} className={`relative flex items-start gap-3 ${ultima ? "" : "pb-4"}`}>
@@ -112,7 +139,11 @@ export default async function ActividadesPage() {
                       <p className="text-[14.5px] font-bold leading-snug">{a.nombre}</p>
                       <p className="text-xs text-neutral-400">
                         {fechaCortaEnGuatemala(a.iniciaEn)}
-                        {a.marcadaEn ? ` · marcaste ${horaEnGuatemala(a.marcadaEn)}` : " · no asististe"}
+                        {asistio
+                          ? ` · marcaste ${horaEnGuatemala(a.marcadaEn!)}${a.dobleMarcaje && a.salidaEn ? ` y ${horaEnGuatemala(a.salidaEn)}` : ""}`
+                          : a.dobleMarcaje && a.marcadaEn
+                            ? " · sin salida, no suma"
+                            : " · no asististe"}
                       </p>
                     </div>
                     {a.tipo === "extra" && <Etiqueta tono="oro">Extra</Etiqueta>}

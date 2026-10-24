@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import {
   avisarDeActividad,
+  avisarDeSalida,
   consultarAlcance,
   type AlcanceConFrase,
 } from "@/lib/push/acciones";
@@ -22,7 +23,14 @@ import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
  * cifra enfrente se siente como "le avise a todo el curso" cuando pudo haber llegado a seis
  * personas. Y no hay nada despues que lo desmienta.
  */
-export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
+export function BotonAvisarActividad({
+  actividadId,
+  salida = false,
+}: {
+  actividadId: string;
+  /** El aviso de "se abrió la salida" de una actividad de doble marcaje. */
+  salida?: boolean;
+}) {
   const [alcance, setAlcance] = useState<AlcanceConFrase | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +52,7 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
   function enviar() {
     setError(null);
     iniciarTransicion(async () => {
-      const r = await avisarDeActividad(actividadId);
+      const r = await (salida ? avisarDeSalida : avisarDeActividad)(actividadId);
       // La confirmacion se cierra en los dos casos: la cifra que se mostro ya quedo vieja
       // (el envio pudo borrar direcciones muertas) y dejarla a la vista mentiria.
       setAlcance(null);
@@ -63,9 +71,9 @@ export function BotonAvisarActividad({ actividadId }: { actividadId: string }) {
   return (
     <>
       <BotonAccion icono="campana" onClick={abrirConfirmacion} disabled={pendiente}>
-        {pendiente && !alcance ? "Consultando…" : "Avisar a alumnos"}
+        {pendiente && !alcance ? "Consultando…" : salida ? "Avisar salida" : "Avisar a alumnos"}
       </BotonAccion>
-      <Hoja abierta={hojaAbierta} alCerrar={cerrar} titulo="Avisar a los alumnos">
+      <Hoja abierta={hojaAbierta} alCerrar={cerrar} titulo={salida ? "Avisar que abrió la salida" : "Avisar a los alumnos"}>
         {alcance && (
           <>
             <Tarjeta className="flex flex-col gap-1.5">

@@ -14,7 +14,13 @@ import { MensajeFormulario } from "@/componentes/ui/mensaje-formulario";
 const estadoInicial: EstadoFormulario = { error: null };
 
 /** B8 — para quien no tiene teléfono. Sin restricción de horario: ver docs/fase-4.md. */
-export function FormularioMarcajeManual({ actividadId }: { actividadId: string }) {
+export function FormularioMarcajeManual({
+  actividadId,
+  dobleMarcaje = false,
+}: {
+  actividadId: string;
+  dobleMarcaje?: boolean;
+}) {
   const [estado, accion, enviando] = useActionState(marcarAsistenciaManual, estadoInicial);
   const [abierto, setAbierto] = useState(false);
 
@@ -29,6 +35,19 @@ export function FormularioMarcajeManual({ actividadId }: { actividadId: string }
         </p>
         <form action={accion} className="flex flex-col gap-3">
           <input type="hidden" name="actividadId" value={actividadId} />
+          {dobleMarcaje && (
+            <Campo
+              id="fase"
+              name="fase"
+              as="select"
+              etiqueta="Qué registrar"
+              defaultValue="entrada"
+              ayuda="La salida solo se puede registrar a quien ya tiene la entrada."
+            >
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+            </Campo>
+          )}
           <Campo id="identificadorAlumno" name="identificadorAlumno" etiqueta="Carné o correo del alumno" required />
           <Campo
             id="justificacion"
